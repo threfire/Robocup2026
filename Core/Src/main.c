@@ -87,6 +87,13 @@ void Main_Tasktick(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define ODOM_TEST_TARGET_X_MM 200.0f
+#define ODOM_TEST_TARGET_Y_MM 200.0f
+#define ODOM_TEST_HOME_X_MM   0.0f
+#define ODOM_TEST_HOME_Y_MM   0.0f
+#define ODOM_TEST_REACHED_M   0.003f
+#define OPEN_LOOP_TEST_TIME_MS 500U
+#define OPEN_LOOP_STOP_TIME_MS 200U
 
 /* USER CODE END 0 */
 
@@ -178,6 +185,28 @@ int main(void)
 	//	HAL_UART_Transmit_IT(&huart3,gy33sendbuffer1 ,sizeof (gy33sendbuffer1 ));
 	//	HAL_UART_Transmit_IT(&huart3,gy33sendbuffer1 ,sizeof (gy33sendbuffer2 ));
 		HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);
+		Start_flag = 1;
+		EnableAttitudeStabilization(1);
+		SetTargetYaw(0.0f);
+		pospid_reinit(LOWSPEED);
+		SetTargetPosition(ODOM_TEST_TARGET_X_MM, ODOM_TEST_TARGET_Y_MM);
+		PositionControl_Enable(1);
+		while (!IsPositionReached(ODOM_TEST_REACHED_M)) {
+			HAL_Delay(5);
+		}
+		PositionControl_Enable(0);
+		HAL_Delay(3000);
+		SetTargetPosition(ODOM_TEST_HOME_X_MM, ODOM_TEST_HOME_Y_MM);
+		PositionControl_Enable(1);
+		while (!IsPositionReached(ODOM_TEST_REACHED_M)) {
+			HAL_Delay(5);
+		}
+		PositionControl_Enable(0);
+		stop();
+		{
+		motor1.speed_rpm= 0;motor2.speed_rpm = 0;motor3.speed_rpm= 0;motor4.speed_rpm = 0;}
+		HAL_Delay (100);
+		Start_flag = 0;
 //		HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);
 //		HAL_TIM_PWM_Start(&htim14,TIM_CHANNEL_1);
 //		Servo_Action_Group(3);
@@ -198,7 +227,7 @@ int main(void)
 		}
 		if(Start_flag){
 			servo_init();
-			if(!is_task1_active()){			//启动任务1
+			if(!debug && !is_task1_active()){			//启动任务1
 			start_task1();}
 			break ;
 		}

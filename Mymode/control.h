@@ -169,6 +169,7 @@ typedef struct {
 // 获取电机控制数据（外部调用）
 extern Motor_t motor1, motor2, motor3, motor4;
 void SetTargetVelocity(float vx, float vy, float omega);
+void SetTargetLinearVelocity(float vx, float vy);
 extern uint8_t task1state;
 
 // 初始化底盘
