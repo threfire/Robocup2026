@@ -13,7 +13,7 @@ typedef struct {
 
 extern Relative_coord Camera_err;
 
-// º¯ÊıÉùÃ÷
+// å‡½æ•°å£°æ˜
 void Process_usart1_packet(void);
 
 #endif

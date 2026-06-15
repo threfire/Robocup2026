@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-// ÉùÃ÷Í¼Æ¬¶¨Òå£¬ÒÔ±ãÆäËüÎÄ¼şÒıÓÃ
+// å£°æ˜å›¾ç‰‡å®šä¹‰ï¼Œä»¥ä¾¿å…¶å®ƒæ–‡ä»¶å¼•ç”¨
 
 extern const uint8_t    Image_Android_83x83[];	
 extern const uint8_t	Image_Message_83x83[];

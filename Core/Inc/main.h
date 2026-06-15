@@ -41,7 +41,6 @@ extern uint8_t IsFollowline;
 extern uint64_t Tick_Time;
 extern uint8_t QAtx_buff[];
 extern uint8_t QArxbuff[100];
-extern uint8_t HWT101rxbuff[100];
 extern uint8_t uart5buff[100];
 extern uint8_t qanum;
 extern uint8_t rx_data[2];

@@ -24,7 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "usart.h"
 #include "QAma.h"
-#include "hwt101.h"
+#include "hwt_imu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,9 +44,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-uint8_t uart_state = 0;     // ״̬��״̬��0=�ȴ�֡ͷ1, 1=�ȴ�֡ͷ2, 2=��������
-uint8_t frame_count = 0;    // ��ǰ֡�ѽ����ֽڼ���
-uint8_t frame_buffer[8];    // ֡���ݻ�������8�ֽڣ�
+uint8_t uart_state = 0;     // 串口3帧解析状态：0等第1个帧头，1等第2个帧头，2接收数据帧
+uint8_t frame_count = 0;    // 当前帧已接收字节数
+uint8_t frame_buffer[8];    // 串口3颜色传感器8字节帧缓存
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -312,10 +312,10 @@ void CAN1_RX0_IRQHandler(void)
 {
   /* USER CODE BEGIN CAN1_RX0_IRQn 0 */
 	uint8_t i = 0;
-	// 接收一包数据
+	// 接收一包CAN数据
 	if(HAL_CAN_GetRxMessage((&hcan1), CAN_RX_FIFO0, (CAN_RxHeaderTypeDef *)(&can.CAN_RxMsg), (uint8_t *)(&can.rxData)) == HAL_OK)
 	{
-		// 一帧数据接收完成，置位帧标志位
+		// 一帧数据接收完成，补齐剩余字节并置位接收标志
 		for(i=can.CAN_RxMsg.DLC; i < 8; i++) { can.rxData[i] = 0; } can.rxFrameFlag = true;
 	}
   /* USER CODE END CAN1_RX0_IRQn 0 */
@@ -333,18 +333,18 @@ void USART1_IRQHandler(void)
   /* USER CODE BEGIN USART1_IRQn 0 */
 uint32_t tmp_flag = 0;
 	uint32_t temp;
-	tmp_flag =__HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE); //��ȡIDLE��־λ
-	if((tmp_flag != RESET))//idle��־����λ
+	tmp_flag =__HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE); // 读取IDLE标志位
+	if((tmp_flag != RESET))// IDLE标志置位
 	{ 
-		__HAL_UART_CLEAR_IDLEFLAG(&huart1);//�����־λ
-		//temp = huart1.Instance->SR;  //���״̬�Ĵ���SR,��ȡSR�Ĵ�������ʵ�����SR�Ĵ����Ĺ���
-		//temp = huart1.Instance->DR; //��ȡ���ݼĴ����е�����
-		//������������Ǿ��Ч
-		HAL_UART_DMAStop(&huart1); //  ֹͣDMA���䣬��ֹ
-		temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);// ��ȡDMA��δ��������ݸ���   
-		//temp  = hdma_usart1_rx.Instance->NDTR;// ��ȡNDTR�Ĵ�������ȡDMA��δ��������ݸ�����
-		rx_len =  BUFFER_SIZE - temp; //�ܼ�����ȥδ��������ݸ������õ��Ѿ����յ����ݸ���
-		recv_end_flag = 1;	// ������ɱ�־λ��1	
+		__HAL_UART_CLEAR_IDLEFLAG(&huart1);// 清除IDLE标志位
+		//temp = huart1.Instance->SR;  // 读SR寄存器可清除部分串口状态标志
+		//temp = huart1.Instance->DR;  // 读DR寄存器可清除部分串口状态标志
+		// 停止DMA后读取本帧实际长度
+		HAL_UART_DMAStop(&huart1); // 停止DMA接收
+		temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);// 读取DMA剩余接收计数
+		//temp  = hdma_usart1_rx.Instance->NDTR;// 直接读取NDTR也可得到DMA剩余计数
+		rx_len =  BUFFER_SIZE - temp; // 计算本帧已接收长度
+		recv_end_flag = 1;	// 置位接收完成标志
 		Is_coordgot = 1;
 	 }
   /* USER CODE END USART1_IRQn 0 */
@@ -360,14 +360,7 @@ uint32_t tmp_flag = 0;
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-if(__HAL_UART_GET_FLAG(&huart2,UART_FLAG_IDLE)!=RESET)
-{
-	__HAL_UART_CLEAR_IDLEFLAG(&huart2);
-	HAL_UART_DMAStop(&huart2);//�ȹرս���
-	uint8_t len=100-__HAL_DMA_GET_COUNTER(huart2.hdmarx);//����ʵ�ʽ��յ������ݵĳ���
-//	HAL_UART_Transmit_DMA(&huart2,HWT101rxbuff,len);//���ͻ�ȥ
-	HAL_UART_Receive_DMA(&huart2,HWT101rxbuff,100);//������������
-}
+
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
@@ -388,12 +381,12 @@ void USART3_IRQHandler(void)
     uint8_t rx_byte = rx_data[0];
     switch (uart_state)
     {
-      case 0: // �ȴ���һ��0x5A
+      case 0: // 等待第1个0x5A帧头
         if (rx_byte == 0x5A) {
           uart_state = 1;
 		}
         break;
-      case 1: // �ȴ��ڶ���0x5A
+      case 1: // 等待第2个0x5A帧头
         if (rx_byte == 0x5A) {
           uart_state = 2;
           frame_count = 2;
@@ -402,28 +395,28 @@ void USART3_IRQHandler(void)
 		} 
 		else {
           uart_state = 0;
-		} // δ�յ�����֡ͷ������״̬
+		} // 未收到连续帧头则复位状态
         break;  
-      case 2: // ��������֡
+      case 2: // 接收数据帧
         if (frame_count < 8) {
           frame_buffer[frame_count] = rx_byte;
           frame_count++;
 		}
-        // ����Ƿ��յ�����֡
+        // 判断是否接收完整8字节帧
         if (frame_count == 8) {
-          // ����У��ͣ�ǰ7�ֽ��ۼӺ͵�8λ��
+          // 校验和为前7字节累加和的低8位
           uint8_t checksum = 0;
           for (int i = 0; i < 7; i++) {
             checksum += frame_buffer[i];
 		  }
-          // ��֤У���
+          // 验证校验和
           if ((checksum & 0xFF) == frame_buffer[7]) {
-            // ��ȡRGBֵ����5��6��7�ֽڶ�Ӧ��������4��5��6��
+            // 读取RGB值，帧内第5/6/7字节对应数组索引4/5/6
             scan_information.R = frame_buffer[4];
             scan_information.G = frame_buffer[5];
             scan_information.B = frame_buffer[6];
 		  }
-          // ����״̬��׼��������һ֡
+          // 复位状态，准备接收下一帧
           uart_state = 0;
 		}
         break; 
@@ -457,16 +450,11 @@ void UART4_IRQHandler(void)
   /* USER CODE BEGIN UART4_IRQn 0 */
 	if(__HAL_UART_GET_FLAG(&huart4, UART_FLAG_IDLE) != RESET)
 	{
-		__HAL_UART_CLEAR_IDLEFLAG(&huart4); // ���IDLE��־
-		HAL_UART_DMAStop(&huart4); // ֹͣDMA��Ϊ����������DMA���Ͷ�������
+		__HAL_UART_CLEAR_IDLEFLAG(&huart4); // 清除IDLE标志
+		HAL_UART_DMAStop(&huart4); // 停止DMA后读取本帧长度
 		rxCount = CMD_LEN - __HAL_DMA_GET_COUNTER(&hdma_uart4_rx);	 
-//		rxFrameFlag = true; // ��λһ֡���������ϱ�־λ
-		
-		// ������յ�������
-        for(int i = 0; i < rxCount; i++)
-        {
-            Data_Analyse(rxCmd[i]);
-        }
+		// 解析新OPS里程计8字节位置帧
+		OPS_Odometer_RxParse((const uint8_t *)rxCmd, rxCount);
 		HAL_UART_Receive_DMA(&huart4, (uint8_t *)rxCmd, CMD_LEN);
 	}
   /* USER CODE END UART4_IRQn 0 */
@@ -482,18 +470,17 @@ void UART4_IRQHandler(void)
 void UART5_IRQHandler(void)
 {
   /* USER CODE BEGIN UART5_IRQn 0 */
-if(__HAL_UART_GET_FLAG(&huart5,UART_FLAG_IDLE)!=RESET)
-{
-	__HAL_UART_CLEAR_IDLEFLAG(&huart5);
-	HAL_UART_DMAStop(&huart5);//�ȹرս���
-//	for(int i = 0;i<4;i++)
-//	{
-//		uart5buff[i] = 0;
-//	}
-//	uint8_t len=100-__HAL_DMA_GET_COUNTER(huart5.hdmarx);//����ʵ�ʽ��յ������ݵĳ���
-//	HAL_UART_Transmit_DMA(&huart5,uart5buff,len);//���ͻ�ȥ
-	HAL_UART_Receive_DMA(&huart5,uart5buff,100);//������������
-}
+	uint8_t len;
+
+	if(__HAL_UART_GET_FLAG(&huart5,UART_FLAG_IDLE)!=RESET)
+	{
+		__HAL_UART_CLEAR_IDLEFLAG(&huart5);
+		HAL_UART_DMAStop(&huart5);
+		len = 100 - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
+		hwt906_rx_parse(uart5buff, len);
+		HWT906_Update_Attitude();
+		HAL_UART_Receive_DMA(&huart5,uart5buff,100);
+	}
   /* USER CODE END UART5_IRQn 0 */
   HAL_UART_IRQHandler(&huart5);
   /* USER CODE BEGIN UART5_IRQn 1 */
@@ -580,9 +567,9 @@ void USART6_IRQHandler(void)
 if(__HAL_UART_GET_FLAG(&huart6,UART_FLAG_IDLE)!=RESET)
 {
 	__HAL_UART_CLEAR_IDLEFLAG(&huart6);
-	HAL_UART_DMAStop(&huart6);//�ȹرս���
-	uint8_t len=100-__HAL_DMA_GET_COUNTER(huart6.hdmarx);//����ʵ�ʽ��յ������ݵĳ���
-//	HAL_UART_Transmit_DMA(&huart1,QArxbuff,len);//���ͻ�ȥ
+	HAL_UART_DMAStop(&huart6);// 停止DMA接收
+	uint8_t len=100-__HAL_DMA_GET_COUNTER(huart6.hdmarx);// 计算本帧实际接收长度
+//	HAL_UART_Transmit_DMA(&huart1,QArxbuff,len);// 调试回传
 	if(len == 2 && QArxbuff[len-1] == 0x0D)
 	{
 		qanum = QArxbuff[0]%48;
@@ -591,7 +578,7 @@ if(__HAL_UART_GET_FLAG(&huart6,UART_FLAG_IDLE)!=RESET)
 	{
 		qanum = 10+QArxbuff[1]%48;
 	}
-	HAL_UART_Receive_DMA(&huart6,QArxbuff,100);//������������
+	HAL_UART_Receive_DMA(&huart6,QArxbuff,100);// 重新开启DMA接收
 }	
   /* USER CODE END USART6_IRQn 0 */
   HAL_UART_IRQHandler(&huart6);

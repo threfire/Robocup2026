@@ -40,10 +40,10 @@ robocup\control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 robocup\control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 robocup\control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 robocup\control.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\control.o: ../UserDrivers/Emm_V5.h
-robocup\control.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
-robocup\control.o: ../Core/Inc/can.h
+robocup\control.o: ../Mymode/ZDT_X42_V2.h
 robocup\control.o: ../Core/Inc/main.h
+robocup\control.o: ../Core/Inc/can.h
+robocup\control.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
 robocup\control.o: ../Core/Inc/tim.h
 robocup\control.o: ../Core/Inc/adc.h
 robocup\control.o: ../Mymode/useradc.h
@@ -53,7 +53,7 @@ robocup\control.o: ../Core/Inc/usart.h
 robocup\control.o: ../UserDrivers/lcd_fonts.h
 robocup\control.o: ../UserDrivers/lcd_image.h
 robocup\control.o: ..\Mymode\my_delay.h
-robocup\control.o: ..\Mymode\hwt101.h
+robocup\control.o: ..\Mymode\hwt_imu.h
 robocup\control.o: ..\Mymode\servo.h
 robocup\control.o: ..\Mymode\graysensor.h
 robocup\control.o: ..\Mymode\userkey.h

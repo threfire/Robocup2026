@@ -2,7 +2,7 @@
 #include <string.h> 
 #include "lcd_spi_154.h"
 #include "my_delay.h"
-#include "hwt101.h"
+#include "hwt_imu.h"
 #include "servo.h"
 #include "graysensor.h"
 #include "userkey.h"
@@ -189,8 +189,8 @@ uint8_t IsPositionReached(float tolerance_xy) {
     }
     
     // 单位转换
-    float current_x_m = pos_x * 0.001f;
-    float current_y_m = pos_y * 0.001f;
+    float current_x_m = robot_pose_state.pos_x_mm * 0.001f;
+    float current_y_m = robot_pose_state.pos_y_mm * 0.001f;
     
     // 计算位置误差（米）
     float error_x = position_control.target_x * 0.001f - current_x_m;
@@ -217,8 +217,8 @@ void UpdatePositionControl(float dt) {
     float current_yaw_rad = GetYaw() * 3.1415926f / 180.0f;
     
     // 获取当前位置（全局坐标系）
-    float current_x_global = pos_x * 0.001f;
-    float current_y_global = pos_y * 0.001f;
+    float current_x_global = robot_pose_state.pos_x_mm * 0.001f;
+    float current_y_global = robot_pose_state.pos_y_mm * 0.001f;
     float target_x_global = position_control.target_x * 0.001f;
     float target_y_global = position_control.target_y * 0.001f;
     
@@ -849,7 +849,7 @@ float PID_Update_angle(PID_Controller* pid, float error, float dt) {
     float derivative = pid->Kd * (error - pid->prev_error) / dt;
     pid->prev_error = error;
     
-	float G = w_z*g;
+	float G = robot_pose_state.yaw_gyro_dps*g;
     // 计算总输出
     float output = proportional + integral + derivative;
     
@@ -1035,108 +1035,130 @@ void run_task1(void) {
 				Servo_Action_Group(1);
 				tasknum = 1;
 				pospid_reinit(LOWSPEED);
-				if (move_to_target(task1_targets[0].x, task1_targets[0].y)/*点二维码*/) {Servo_Action_Group(2);task1_state.current_step++;}
-				if(IsPositionReached(0.50f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);}
-				if(IsPositionReached(0.45f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);}if(IsPositionReached(0.40f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);}
-				if(IsPositionReached(0.35f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1900);}if(IsPositionReached(0.30f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);}
-				if(IsPositionReached(0.25f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);}if(IsPositionReached(0.20f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);}
-				if(IsPositionReached(0.15f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1820);}if(IsPositionReached(0.10f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1810);}
-				if(IsPositionReached(0.04f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);}
+				if (move_to_target(task1_targets[0].x, task1_targets[0].y)/*点二维码*/) {task1_state.current_step++;}
 				break;       
-        case 2:Servo_Action_Group(2);PositionControl_Enable(0);EnableAttitudeStabilization(0);
-				SetTargetVelocity(1.0f, 0.0f, -2.47f);
-				HAL_Delay(500);
-				Move_to_turnplate(2);
-				HAL_Delay(1000);
-				Get_Materialcolor(0);
-				Move_to_turnplate(3);
-				HAL_Delay(450);
-				SetTargetVelocity(1.0f, 0.0f, -2.08f);
-				HAL_Delay(500);
-				Get_Materialcolor(1);
-				Move_to_turnplate(4);
-				HAL_Delay(500);
-				SetTargetVelocity(1.0f, 0.0f, -2.14f);
-				HAL_Delay(550);
-				Get_Materialcolor(2);
-				Move_to_turnplate(5);
-				HAL_Delay(1000);Get_Materialcolor(3);__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[3]+200);
-				stop();
-				task1_state.current_step =11;
-				break;
-
-
-		case 11:EnableAttitudeStabilization(1);
-				pospid_reinit(MIDSPEED);SetTargetYaw(-90.0f);Get_Materialcolor(4);
-				if (move_to_target(task1_targets[6].x, task1_targets[6].y)/*移到点a*/) {
-										Find_corresponding_material(1);
-										task1_state.current_step++;}break;
-		case 12:if(Wait_for_uart_with_search(6)) { task1_state.current_step++; } 
-				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
-		case 13:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){POS_move();task1_state.current_step++;}break;
-		case 14:pospid_reinit(HIGHSPEED);if (move_to_target(task1_targets[7].x, task1_targets[7].y)/*移到点b*/) {
-					Find_corresponding_material(2);
-					task1_state.current_step++;}break;
-		case 15:if(Wait_for_uart_with_search(7)) { task1_state.current_step++; } 
-				else {task1_state.current_step++;/* 超时处理，比如重试或错误处理 */ } break;
-		case 16:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
-						POS_move();task1_state.current_step++;}break;
-		case 17:if (move_to_target(task1_targets[8].x, task1_targets[8].y)) {
-					Find_corresponding_material(3);
-					task1_state.current_step++;}break;
-		case 18:if(Wait_for_uart_with_search(8)) { task1_state.current_step++; } 
-				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
-		case 19:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
-						POS_move();task1_state.current_step++;}break;
-		case 20:if (move_to_target(task1_targets[9].x, task1_targets[9].y)) {
-					Find_corresponding_material(4);
-					task1_state.current_step++;}break;
-		case 21:if(Wait_for_uart_with_search(9)) { task1_state.current_step++; } 
-				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
-		case 22:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
-						POS_move();task1_state.current_step++;}break;
-		case 23:if (move_to_target(task1_targets[10].x, task1_targets[10].y)) {
-					Find_corresponding_material(5);
-					task1_state.current_step++;}break;
-		case 24:if(Wait_for_uart_with_search(10)) { task1_state.current_step++; } 
-				else { task1_state.current_step++;/* 超时处理，比如重试或错误处理 */ } break;
-		case 25:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
-						POS_move();task1_state.current_step++;}break;
-		case 26://Servo_Action_Group(2);EnableAttitudeStabilization(1);
-				tasknum = 2;SetTargetYaw(0.0f);if (move_to_target(task1_targets[11].x, task1_targets[11].y)/*点二维码2*/) {Move_to_turnplate(3);/*移到转盘1*/task1_state.current_step++;}break;
-		case 27:SetTargetYaw(-90.0f);if (move_to_target(task1_targets[19].x, task1_targets[19].y)/*奖杯3下面*/){task1_state.current_step++;}break;
-		case 28:pospid_reinit(LOWESTSPEED);SetTargetYaw(-90.0f);if (move_to_target(task1_targets[12].x, task1_targets[12].y)/*奖杯3*/){task1_state.current_step++;Move_to_turnplate(2);}break;
-		case 29:if (move_to_target(task1_targets[13].x, task1_targets[13].y)/*奖杯2*/) {task1_state.current_step++;Move_to_turnplate(1);}break;
-		case 30:if (move_to_target(task1_targets[14].x, task1_targets[14].y)/*奖杯1*/) {__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1]+200);SetTargetYaw(-90.0f);task1_state.current_step++;}	break;
-		case 31:
-				pospid_reinit(HIGHSPEED);
-				if (move_to_target(task1_targets[15].x, task1_targets[15].y+15.0f)/*亚军台*/) {Servo_Action_Group(6);Find_corresponding_material(2);task1_state.current_step++;break;}
-				if(IsPositionReached(0.6f)){Servo_Action_Group(5);}break;
-		case 32:if(Wait_for_uart_with_search(15)) { task1_state.current_step++; } 
-				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
-		case 33:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
-						POS_move();Servo_Action_Group(3);HAL_Delay(100);
-						task1_state.current_step++;}break;
-		case 34:if (move_to_target(task1_targets[16].x, task1_targets[16].y+15.0f)/*冠军台*/) {Servo_Action_Group(4);Find_corresponding_material(1);task1_state.current_step++;}break;
-		case 35:if(Wait_for_uart_with_search(16)) { task1_state.current_step++; } 
-				else { task1_state.current_step++;/* 超时处理，比如重试或错误处理 */ } break;
-		case 36:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
-						POS_move();Servo_Action_Group(3);
-						task1_state.current_step++;}break;
-		case 37:if (move_to_target(task1_targets[17].x, task1_targets[17].y+25.0f)) {Servo_Action_Group(7);Find_corresponding_material(3);task1_state.current_step++;}break;
-		case 38:if(Wait_for_uart_with_search(17)) { task1_state.current_step++; } 
-				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
-		case 39:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
-						POS_move();task1_state.current_step++;}break;
-		case 40:pospid_reinit(HIGHESTSPEED);raceh = 0.200f;
-				if (move_to_target(task1_targets[20].x, task1_targets[20].y)/*回家*/) {task1_state.current_step = 41;}break;
-		case 41:raceh = 0.002f;if (move_to_target(task1_targets[18].x, task1_targets[18].y)/*回家*/) {task1_state.current_step++;}break;
         default:
             task1_state.active = 0;
             task1_state.completed = 1;
             break;
     }
 }
+//void run_task1(void) {
+//    if (!task1_state.active) return;//未使能任务则返回
+//    uint32_t current_time = HAL_GetTick();
+//    switch (task1_state.current_step) {
+////		case 0:	EnableAttitudeStabilization(1);SetTargetYaw(0.0f);
+////				Servo_Action_Group(1);pospid_reinit(LOWSPEED);
+////				if (move_to_target(task1_targets[20].x, task1_targets[20].y)/*点1*/) {task1_state.current_step++;}
+////				if(IsPositionReached(0.10f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);}
+//////				if(IsPositionReached(0.05f)){SetTargetPosition(task1_targets[0].x, task1_targets[0].y);task1_state.current_step++;}
+////				break;       
+//        case 1:	EnableAttitudeStabilization(1);SetTargetYaw(0.0f);Move_to_turnplate(1);
+//				Servo_Action_Group(1);
+//				tasknum = 1;
+//				pospid_reinit(LOWSPEED);
+//				if (move_to_target(task1_targets[0].x, task1_targets[0].y)/*点二维码*/) {Servo_Action_Group(2);task1_state.current_step++;}
+//				if(IsPositionReached(0.50f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);}
+//				if(IsPositionReached(0.45f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);}if(IsPositionReached(0.40f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);}
+//				if(IsPositionReached(0.35f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1900);}if(IsPositionReached(0.30f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);}
+//				if(IsPositionReached(0.25f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);}if(IsPositionReached(0.20f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);}
+//				if(IsPositionReached(0.15f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1820);}if(IsPositionReached(0.10f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1810);}
+//				if(IsPositionReached(0.04f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);}
+//				break;       
+//        case 2:Servo_Action_Group(2);PositionControl_Enable(0);EnableAttitudeStabilization(0);
+//				SetTargetVelocity(1.0f, 0.0f, -2.47f);
+//				HAL_Delay(500);
+//				Move_to_turnplate(2);
+//				HAL_Delay(1000);
+//				Get_Materialcolor(0);
+//				Move_to_turnplate(3);
+//				HAL_Delay(450);
+//				SetTargetVelocity(1.0f, 0.0f, -2.08f);
+//				HAL_Delay(500);
+//				Get_Materialcolor(1);
+//				Move_to_turnplate(4);
+//				HAL_Delay(500);
+//				SetTargetVelocity(1.0f, 0.0f, -2.14f);
+//				HAL_Delay(550);
+//				Get_Materialcolor(2);
+//				Move_to_turnplate(5);
+//				HAL_Delay(1000);Get_Materialcolor(3);__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[3]+200);
+//				stop();
+//				task1_state.current_step =11;
+//				break;
+
+
+//		case 11:EnableAttitudeStabilization(1);
+//				pospid_reinit(MIDSPEED);SetTargetYaw(-90.0f);Get_Materialcolor(4);
+//				if (move_to_target(task1_targets[6].x, task1_targets[6].y)/*移到点a*/) {
+//										Find_corresponding_material(1);
+//										task1_state.current_step++;}break;
+//		case 12:if(Wait_for_uart_with_search(6)) { task1_state.current_step++; } 
+//				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
+//		case 13:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){POS_move();task1_state.current_step++;}break;
+//		case 14:pospid_reinit(HIGHSPEED);if (move_to_target(task1_targets[7].x, task1_targets[7].y)/*移到点b*/) {
+//					Find_corresponding_material(2);
+//					task1_state.current_step++;}break;
+//		case 15:if(Wait_for_uart_with_search(7)) { task1_state.current_step++; } 
+//				else {task1_state.current_step++;/* 超时处理，比如重试或错误处理 */ } break;
+//		case 16:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+//						POS_move();task1_state.current_step++;}break;
+//		case 17:if (move_to_target(task1_targets[8].x, task1_targets[8].y)) {
+//					Find_corresponding_material(3);
+//					task1_state.current_step++;}break;
+//		case 18:if(Wait_for_uart_with_search(8)) { task1_state.current_step++; } 
+//				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
+//		case 19:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+//						POS_move();task1_state.current_step++;}break;
+//		case 20:if (move_to_target(task1_targets[9].x, task1_targets[9].y)) {
+//					Find_corresponding_material(4);
+//					task1_state.current_step++;}break;
+//		case 21:if(Wait_for_uart_with_search(9)) { task1_state.current_step++; } 
+//				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
+//		case 22:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+//						POS_move();task1_state.current_step++;}break;
+//		case 23:if (move_to_target(task1_targets[10].x, task1_targets[10].y)) {
+//					Find_corresponding_material(5);
+//					task1_state.current_step++;}break;
+//		case 24:if(Wait_for_uart_with_search(10)) { task1_state.current_step++; } 
+//				else { task1_state.current_step++;/* 超时处理，比如重试或错误处理 */ } break;
+//		case 25:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+//						POS_move();task1_state.current_step++;}break;
+//		case 26://Servo_Action_Group(2);EnableAttitudeStabilization(1);
+//				tasknum = 2;SetTargetYaw(0.0f);if (move_to_target(task1_targets[11].x, task1_targets[11].y)/*点二维码2*/) {Move_to_turnplate(3);/*移到转盘1*/task1_state.current_step++;}break;
+//		case 27:SetTargetYaw(-90.0f);if (move_to_target(task1_targets[19].x, task1_targets[19].y)/*奖杯3下面*/){task1_state.current_step++;}break;
+//		case 28:pospid_reinit(LOWESTSPEED);SetTargetYaw(-90.0f);if (move_to_target(task1_targets[12].x, task1_targets[12].y)/*奖杯3*/){task1_state.current_step++;Move_to_turnplate(2);}break;
+//		case 29:if (move_to_target(task1_targets[13].x, task1_targets[13].y)/*奖杯2*/) {task1_state.current_step++;Move_to_turnplate(1);}break;
+//		case 30:if (move_to_target(task1_targets[14].x, task1_targets[14].y)/*奖杯1*/) {__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1]+200);SetTargetYaw(-90.0f);task1_state.current_step++;}	break;
+//		case 31:
+//				pospid_reinit(HIGHSPEED);
+//				if (move_to_target(task1_targets[15].x, task1_targets[15].y+15.0f)/*亚军台*/) {Servo_Action_Group(6);Find_corresponding_material(2);task1_state.current_step++;break;}
+//				if(IsPositionReached(0.6f)){Servo_Action_Group(5);}break;
+//		case 32:if(Wait_for_uart_with_search(15)) { task1_state.current_step++; } 
+//				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
+//		case 33:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+//						POS_move();Servo_Action_Group(3);HAL_Delay(100);
+//						task1_state.current_step++;}break;
+//		case 34:if (move_to_target(task1_targets[16].x, task1_targets[16].y+15.0f)/*冠军台*/) {Servo_Action_Group(4);Find_corresponding_material(1);task1_state.current_step++;}break;
+//		case 35:if(Wait_for_uart_with_search(16)) { task1_state.current_step++; } 
+//				else { task1_state.current_step++;/* 超时处理，比如重试或错误处理 */ } break;
+//		case 36:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+//						POS_move();Servo_Action_Group(3);
+//						task1_state.current_step++;}break;
+//		case 37:if (move_to_target(task1_targets[17].x, task1_targets[17].y+25.0f)) {Servo_Action_Group(7);Find_corresponding_material(3);task1_state.current_step++;}break;
+//		case 38:if(Wait_for_uart_with_search(17)) { task1_state.current_step++; } 
+//				else {task1_state.current_step++; /* 超时处理，比如重试或错误处理 */ } break;
+//		case 39:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+//						POS_move();task1_state.current_step++;}break;
+//		case 40:pospid_reinit(HIGHESTSPEED);raceh = 0.200f;
+//				if (move_to_target(task1_targets[20].x, task1_targets[20].y)/*回家*/) {task1_state.current_step = 41;}break;
+//		case 41:raceh = 0.002f;if (move_to_target(task1_targets[18].x, task1_targets[18].y)/*回家*/) {task1_state.current_step++;}break;
+//        default:
+//            task1_state.active = 0;
+//            task1_state.completed = 1;
+//            break;
+//    }
+//}
 //非阻塞写法
 //case 6:SetTargetYaw(-90.0f);if (move_to_target(task1_targets[6].x, task1_targets[6].y)/*点a*/) {
 //										Pos_moveconctrl(1,100,6400);task1_state.step_start = current_time; task1_state.current_step++;}break;

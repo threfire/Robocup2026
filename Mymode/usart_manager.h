@@ -5,25 +5,25 @@
 #include "stm32f4xx.h"                  // Device header
 
 
-// ½ÓÊÕ×´Ì¬»ú×´Ì¬¶¨Òå
+// æ¥æ”¶çŠ¶æ€æœºçŠ¶æ€å®šä¹‰
 typedef enum {
-    UART_WAIT_HEAD1,     // µÈ´ıµÚÒ»¸ö°üÍ·
-    UART_WAIT_HEAD2,     // µÈ´ıµÚ¶ş¸ö°üÍ·
-    UART_RECEIVING_DATA  // ½ÓÊÕÊı¾İ½×¶Î
+    UART_WAIT_HEAD1,     // ç­‰å¾…ç¬¬ä¸€ä¸ªåŒ…å¤´
+    UART_WAIT_HEAD2,     // ç­‰å¾…ç¬¬äºŒä¸ªåŒ…å¤´
+    UART_RECEIVING_DATA  // æ¥æ”¶æ•°æ®é˜¶æ®µ
 } UART_State;
 
-// Í¨ÓÃ½ÓÊÕ½á¹¹Ìå£¨Ã¿¸ö´®¿Ú¶ÀÁ¢ÊµÀı£©
+// é€šç”¨æ¥æ”¶ç»“æ„ä½“ï¼ˆæ¯ä¸ªä¸²å£ç‹¬ç«‹å®ä¾‹ï¼‰
 typedef struct {
-    UART_State state;        // µ±Ç°×´Ì¬»ú×´Ì¬
-    UART_HandleTypeDef *huart; // °ó¶¨µÄ´®¿Ú¾ä±ú
-    uint8_t buffer[9];       // Êı¾İ»º³åÇø£¨¸ù¾İĞ­Òé³¤¶È£©
-    uint8_t index;           // µ±Ç°»º³åÎ»ÖÃ
+    UART_State state;        // å½“å‰çŠ¶æ€æœºçŠ¶æ€
+    UART_HandleTypeDef *huart; // ç»‘å®šçš„ä¸²å£å¥æŸ„
+    uint8_t buffer[9];       // æ•°æ®ç¼“å†²åŒºï¼ˆæ ¹æ®åè®®é•¿åº¦ï¼‰
+    uint8_t index;           // å½“å‰ç¼“å†²ä½ç½®
 } UART_Receiver;
 
 extern uint8_t QAtx_buff[];
 
 
-// ³õÊ¼»¯º¯Êı
+// åˆå§‹åŒ–å‡½æ•°
 void UART_Manager_Init(void);
 void DMA_Usart_Send(uint8_t *buf,uint8_t len);
 void DMA_resend(void);

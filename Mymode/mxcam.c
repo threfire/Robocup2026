@@ -3,12 +3,12 @@
 #include "usart.h"
 #include "main.h"
 
-//ÎïÁÏ£º Êı¾İ°üdata = bytes([0xb3, 0xb3, 0x03, int(Data[0]), int(Data[1]), int(Data[2]), int(Data[3]), int(Data[4]), 0x5b])
-//int(Data[0]), int(Data[1])´æÎïÁÏºá×ø±ê£¬Èç¹ûData[1]<255,ÔòData[0]Îª0£¬Èç¹ûData[1]>255,Ôò³¬³ö²¿·Ö´æµ½Data[0]£¬ÇÒData[1]=255
-//int(Data[2]), int(Data[3])´æÎïÁÏÊú×ø±ê£¬Èç¹ûData[3]<255,ÔòData[2]Îª0£¬Èç¹ûData[3]>255,Ôò³¬³ö²¿·Ö´æµ½Data[2]£¬ÇÒData[3]=255
-//ÓÉÓÚÄ¿Ç°ÆÁÄ»·Ö±æÂÊÉèÖÃÎª240*240£¬ËùÒÔ×ø±êÖ»¶ÁData[1]ºÍData[3]¼´¿É£¬Data[4]ÎªÑÕÉ«12345·Ö±ğ¶ÔÓ¦ºìÂÌÀ¶ºÚ°×
-//Ô²»·£º Êı¾İ°üdata = bytes([0xb3, 0xb3, 0x02, int(Data[0]), int(Data[1]), int(Data[2]), int(Data[3]), 0, 0x5b])
-//×ø±êºÍÎïÁÏÒ»Ñù£¬ËùÒÔ×ø±êÖ»¶ÁData[1]ºÍData[3]¼´¿É£¬Îªºá×İ×ø±ê
+//ç‰©æ–™ï¼š æ•°æ®åŒ…data = bytes([0xb3, 0xb3, 0x03, int(Data[0]), int(Data[1]), int(Data[2]), int(Data[3]), int(Data[4]), 0x5b])
+//int(Data[0]), int(Data[1])å­˜ç‰©æ–™æ¨ªåæ ‡ï¼Œå¦‚æœData[1]<255,åˆ™Data[0]ä¸º0ï¼Œå¦‚æœData[1]>255,åˆ™è¶…å‡ºéƒ¨åˆ†å­˜åˆ°Data[0]ï¼Œä¸”Data[1]=255
+//int(Data[2]), int(Data[3])å­˜ç‰©æ–™ç«–åæ ‡ï¼Œå¦‚æœData[3]<255,åˆ™Data[2]ä¸º0ï¼Œå¦‚æœData[3]>255,åˆ™è¶…å‡ºéƒ¨åˆ†å­˜åˆ°Data[2]ï¼Œä¸”Data[3]=255
+//ç”±äºç›®å‰å±å¹•åˆ†è¾¨ç‡è®¾ç½®ä¸º240*240ï¼Œæ‰€ä»¥åæ ‡åªè¯»Data[1]å’ŒData[3]å³å¯ï¼ŒData[4]ä¸ºé¢œè‰²12345åˆ†åˆ«å¯¹åº”çº¢ç»¿è“é»‘ç™½
+//åœ†ç¯ï¼š æ•°æ®åŒ…data = bytes([0xb3, 0xb3, 0x02, int(Data[0]), int(Data[1]), int(Data[2]), int(Data[3]), 0, 0x5b])
+//åæ ‡å’Œç‰©æ–™ä¸€æ ·ï¼Œæ‰€ä»¥åæ ‡åªè¯»Data[1]å’ŒData[3]å³å¯ï¼Œä¸ºæ¨ªçºµåæ ‡
 // 320
 // *y
 // *
@@ -22,10 +22,10 @@ extern uint8_t cammode;
 extern uint8_t lookmode_centrl;
 Relative_coord Camera_err;
 /********************************************************
-* º¯ÊıÃû£ºprocess_usart1_packet
-* ¹¦ÄÜ£º´¦ÀíUSART1µÄÍêÕûÊı¾İ°ü
-* ²ÎÊı£ºdata-ÍêÕûÊı¾İ°üÖ¸Õë
-* ËµÃ÷£º´Óuart_managerµ÷ÓÃ
+* å‡½æ•°åï¼šprocess_usart1_packet
+* åŠŸèƒ½ï¼šå¤„ç†USART1çš„å®Œæ•´æ•°æ®åŒ…
+* å‚æ•°ï¼šdata-å®Œæ•´æ•°æ®åŒ…æŒ‡é’ˆ
+* è¯´æ˜ï¼šä»uart_managerè°ƒç”¨
 ********************************************************/
 void Process_usart1_packet(void) {
     uint8_t camera_packet[9] = {0};
@@ -36,14 +36,14 @@ void Process_usart1_packet(void) {
 		if(camera_packet [2] == 0x02){
 			int16_t x_coord = camera_packet [3]+camera_packet [4];
 			int16_t y_coord = camera_packet [5]+camera_packet [6];
-			Camera_err.x = 158-x_coord;//Æ«ÓÒ¾Í¼ÓÆ«×ó¾Í¼õ
+			Camera_err.x = 158-x_coord;//åå³å°±åŠ åå·¦å°±å‡
 			Camera_err.y = 110-y_coord;
 		}
 	}
-    // ½âÎö×ø±ê
+    // è§£æåæ ‡
 	
 
     
-    // µ÷ÓÃÊµ¼Ê´¦Àíº¯Êı£¨Ê¾Àı£©
+    // è°ƒç”¨å®é™…å¤„ç†å‡½æ•°ï¼ˆç¤ºä¾‹ï¼‰
     // display_material(packet.x, packet.y, packet.color);
 }

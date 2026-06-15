@@ -11,24 +11,24 @@ extern uint8_t cammode;
 extern uint16_t Material[5];
 void Setmaixcam_mode(uint8_t ch);
 
-//********************************½Ç¶Èpid²¿·Ö************************************//
-#define DEAD_ZONE 0.5f  // ËÀÇø´óĞ¡(¶È)
-float GetAttitudeCorrection(void);  // »ñÈ¡×ËÌ¬Ğ£ÕıÁ¿
-extern float attitude_correction;   // ×ËÌ¬Ğ£ÕıÁ¿£¨Íâ²¿¿É·ÃÎÊ£©
-extern uint8_t isPosture_correction;	// ¿ªÆô×ËÌ¬Ğ£Õı±êÖ¾Î»£¨Íâ²¿¿É·ÃÎÊ£©
+//********************************è§’åº¦pidéƒ¨åˆ†************************************//
+#define DEAD_ZONE 0.5f  // æ­»åŒºå¤§å°(åº¦)
+float GetAttitudeCorrection(void);  // è·å–å§¿æ€æ ¡æ­£é‡
+extern float attitude_correction;   // å§¿æ€æ ¡æ­£é‡ï¼ˆå¤–éƒ¨å¯è®¿é—®ï¼‰
+extern uint8_t isPosture_correction;	// å¼€å¯å§¿æ€æ ¡æ­£æ ‡å¿—ä½ï¼ˆå¤–éƒ¨å¯è®¿é—®ï¼‰
 void AttitudeStabilization_Init(void);
 void SetTargetYaw(float target);
 void UpdateAttitudeStabilization(float dt);
 void EnableAttitudeStabilization(uint8_t enable);
-//********************************Ñ­¼£pid²¿·Ö************************************//
+//********************************å¾ªè¿¹pidéƒ¨åˆ†************************************//
 typedef struct {
-    float Kp;       // ±ÈÀıÏµÊı
+    float Kp;       // æ¯”ä¾‹ç³»æ•°
 	float Kp2;
-    float Ki;       // »ı·ÖÏµÊı
-    float Kd;       // Î¢·ÖÏµÊı
-    float integral; // »ı·ÖÏî
-    float prev_error; // ÉÏÒ»´ÎÎó²î
-    float max_output; // ×î´óÊä³öÏŞÖÆ
+    float Ki;       // ç§¯åˆ†ç³»æ•°
+    float Kd;       // å¾®åˆ†ç³»æ•°
+    float integral; // ç§¯åˆ†é¡¹
+    float prev_error; // ä¸Šä¸€æ¬¡è¯¯å·®
+    float max_output; // æœ€å¤§è¾“å‡ºé™åˆ¶
 } PID_Controller;
 
 void PID_Init(PID_Controller* pid, float Kp, float Ki, float Kd, float max_output);
@@ -38,8 +38,8 @@ float PID_Update_cam(PID_Controller* pid, float error, float dt);
 float PID_Update_angle(PID_Controller* pid, float error, float dt);
 void Line_Follow_Init(void);
 void Follow_line_task(void);
-//********************************Ñ­¼£pid²¿·Ö************************************//
-//********************************Î»ÖÃ¿ØÖÆpid²¿·Ö************************************//
+//********************************å¾ªè¿¹pidéƒ¨åˆ†************************************//
+//********************************ä½ç½®æ§åˆ¶pidéƒ¨åˆ†************************************//
 #define HIGHESTSPEED 7.0f
 #define HIGHSPEED 5.4f
 #define MIDSPEED 3.0f
@@ -47,32 +47,32 @@ void Follow_line_task(void);
 #define LOWESTSPEED  1.0f
 
 #define MAKEUP_FOR_ANGLE 2.0f
-// Î»ÖÃ¿ØÖÆPID½á¹¹Ìå
+// ä½ç½®æ§åˆ¶PIDç»“æ„ä½“
 typedef struct {
-    PID_Controller pid_x;      // XÖáÎ»ÖÃPID
-    PID_Controller pid_y;      // YÖáÎ»ÖÃPID  
-    uint8_t is_enabled;        // Î»ÖÃ¿ØÖÆÊ¹ÄÜ±êÖ¾
-    float target_x;            // Ä¿±êX×ø±ê
-    float target_y;            // Ä¿±êY×ø±ê
-    uint32_t last_update_time; // ×îºó¸üĞÂÊ±¼ä
+    PID_Controller pid_x;      // Xè½´ä½ç½®PID
+    PID_Controller pid_y;      // Yè½´ä½ç½®PID  
+    uint8_t is_enabled;        // ä½ç½®æ§åˆ¶ä½¿èƒ½æ ‡å¿—
+    float target_x;            // ç›®æ ‡Xåæ ‡
+    float target_y;            // ç›®æ ‡Yåæ ‡
+    uint32_t last_update_time; // æœ€åæ›´æ–°æ—¶é—´
 } PositionController_t;
-// ÉùÃ÷È«¾ÖÎ»ÖÃ¿ØÖÆ±äÁ¿
+// å£°æ˜å…¨å±€ä½ç½®æ§åˆ¶å˜é‡
 extern PositionController_t position_control;
 extern uint8_t is_position_control_enabled;
 
-// Î»ÖÃ¿ØÖÆº¯ÊıÉùÃ÷
+// ä½ç½®æ§åˆ¶å‡½æ•°å£°æ˜
 void PositionControl_Init(void);
 void PositionControl_Enable(uint8_t enable);
 void SetTargetPosition(float x, float y);
 void UpdatePositionControl(float dt);
 uint8_t IsPositionReached(float tolerance_xy);
-//********************************ÉãÏñÍ·Ğ£Õıpid²¿·Ö************************************//
+//********************************æ‘„åƒå¤´æ ¡æ­£pidéƒ¨åˆ†************************************//
 #define TOLERANCE 3
 #define max_min_error 3
-#define ERROR_QUEUE_SIZE 10		  // ¶¨ÒåÎó²î¶ÓÁĞ³¤¶È
-#define UART_WAIT_TIMEOUT_MS 500  // ³¬Ê±Ê±¼ä£¬¸ù¾İĞèÒªµ÷Õû
+#define ERROR_QUEUE_SIZE 10		  // å®šä¹‰è¯¯å·®é˜Ÿåˆ—é•¿åº¦
+#define UART_WAIT_TIMEOUT_MS 500  // è¶…æ—¶æ—¶é—´ï¼Œæ ¹æ®éœ€è¦è°ƒæ•´
 
-typedef struct {				// ¶¨ÒåÎó²î¶ÓÁĞ½á¹¹Ìå
+typedef struct {				// å®šä¹‰è¯¯å·®é˜Ÿåˆ—ç»“æ„ä½“
     int errors_x[ERROR_QUEUE_SIZE];
     int errors_y[ERROR_QUEUE_SIZE];
     uint8_t index;
@@ -80,101 +80,101 @@ typedef struct {				// ¶¨ÒåÎó²î¶ÓÁĞ½á¹¹Ìå
     uint8_t is_full;
 } ErrorQueue_t;
 
-// ÉãÏñÍ·PID½á¹¹Ìå
+// æ‘„åƒå¤´PIDç»“æ„ä½“
 typedef struct {
-    PID_Controller pid_x;  // XÖáPID
-    PID_Controller pid_y;  // YÖáPID
-    uint8_t is_enabled;    // Ê¹ÄÜ±êÖ¾
+    PID_Controller pid_x;  // Xè½´PID
+    PID_Controller pid_y;  // Yè½´PID
+    uint8_t is_enabled;    // ä½¿èƒ½æ ‡å¿—
 } CamStabilization_t;
 
-// ÉùÃ÷È«¾ÖÉãÏñÍ·Ğ£Õı±äÁ¿
+// å£°æ˜å…¨å±€æ‘„åƒå¤´æ ¡æ­£å˜é‡
 extern CamStabilization_t cam_stabilization;
-extern float cam_correction_x; // XÖáĞ£ÕıÁ¿
-extern float cam_correction_y; // YÖáĞ£ÕıÁ¿
+extern float cam_correction_x; // Xè½´æ ¡æ­£é‡
+extern float cam_correction_y; // Yè½´æ ¡æ­£é‡
 
-// ÉùÃ÷º¯Êı
+// å£°æ˜å‡½æ•°
 void CamStabilization_Init(void);
 void CamStabilization_Enable(uint8_t enable);
 void UpdateCamStabilization(float x_err, float y_err, float dt);
-//********************************ÉãÏñÍ·Ğ£Õıpid²¿·Ö************************************//
-// ÔÚ control.h ÖĞÌí¼Ó
+//********************************æ‘„åƒå¤´æ ¡æ­£pidéƒ¨åˆ†************************************//
+// åœ¨ control.h ä¸­æ·»åŠ 
 typedef struct {
-    float center_x;        // Ô²ĞÄx×ø±ê£¨ºÁÃ×£©
-    float center_y;        // Ô²ĞÄy×ø±ê£¨ºÁÃ×£©
-    float radius;          // Ô²»¡°ë¾¶£¨ºÁÃ×£©
-    float start_angle;     // ÆğÊ¼½Ç¶È£¨»¡¶È£©
-    float end_angle;       // ½áÊø½Ç¶È£¨»¡¶È£©
-    uint8_t direction;     // ·½Ïò: 0-ÄæÊ±Õë, 1-Ë³Ê±Õë
-    float current_angle;   // µ±Ç°Ä¿±ê½Ç¶È
-    uint32_t start_time;   // ¿ªÊ¼Ê±¼ä
-    float total_time;      // ×ÜÔË¶¯Ê±¼ä
+    float center_x;        // åœ†å¿ƒxåæ ‡ï¼ˆæ¯«ç±³ï¼‰
+    float center_y;        // åœ†å¿ƒyåæ ‡ï¼ˆæ¯«ç±³ï¼‰
+    float radius;          // åœ†å¼§åŠå¾„ï¼ˆæ¯«ç±³ï¼‰
+    float start_angle;     // èµ·å§‹è§’åº¦ï¼ˆå¼§åº¦ï¼‰
+    float end_angle;       // ç»“æŸè§’åº¦ï¼ˆå¼§åº¦ï¼‰
+    uint8_t direction;     // æ–¹å‘: 0-é€†æ—¶é’ˆ, 1-é¡ºæ—¶é’ˆ
+    float current_angle;   // å½“å‰ç›®æ ‡è§’åº¦
+    uint32_t start_time;   // å¼€å§‹æ—¶é—´
+    float total_time;      // æ€»è¿åŠ¨æ—¶é—´
 } ArcTrajectory_t;
 
-// Ô²»¡¸ú×ÙPID½á¹¹Ìå
+// åœ†å¼§è·Ÿè¸ªPIDç»“æ„ä½“
 typedef struct {
-    PID_Controller angle_pid;    // ½Ç¶È¸ú×ÙPID
-    PID_Controller radius_pid;   // °ë¾¶¸ú×ÙPID
+    PID_Controller angle_pid;    // è§’åº¦è·Ÿè¸ªPID
+    PID_Controller radius_pid;   // åŠå¾„è·Ÿè¸ªPID
     uint8_t is_enabled;
 } ArcTracking_t;
 
-// º¯ÊıÉùÃ÷
+// å‡½æ•°å£°æ˜
 void ArcTracking_Init(void);
 uint8_t MoveAlongArc(float center_x, float center_y, float radius, 
                     float start_angle, float end_angle, uint8_t direction, float speed);
 uint8_t IsArcMotionCompleted(void);
 void ArcTracking_Enable(uint8_t enable);
 void UpdateArcTracking(float dt);
-//********************************ÈÎÎñµ÷¶È²¿·Ö************************************//
-// ÈÎÎñ×´Ì¬½á¹¹Ìå
+//********************************ä»»åŠ¡è°ƒåº¦éƒ¨åˆ†************************************//
+// ä»»åŠ¡çŠ¶æ€ç»“æ„ä½“
 typedef struct {
-    uint8_t active;         // ÈÎÎñÊÇ·ñ¼¤»î
-    uint8_t current_step;   // µ±Ç°Ö´ĞĞ²½Öè
-    uint32_t step_start;    // µ±Ç°²½Öè¿ªÊ¼Ê±¼ä
-	uint8_t completed;      // ÈÎÎñÊÇ·ñÍê³É£¬ÈÎÎñ½áÊøÊ±ÖÃ1
+    uint8_t active;         // ä»»åŠ¡æ˜¯å¦æ¿€æ´»
+    uint8_t current_step;   // å½“å‰æ‰§è¡Œæ­¥éª¤
+    uint32_t step_start;    // å½“å‰æ­¥éª¤å¼€å§‹æ—¶é—´
+	uint8_t completed;      // ä»»åŠ¡æ˜¯å¦å®Œæˆï¼Œä»»åŠ¡ç»“æŸæ—¶ç½®1
 } TaskState_t;
-// ÈÎÎñµ÷¶Èº¯Êı1
+// ä»»åŠ¡è°ƒåº¦å‡½æ•°1
 void start_task1(void);
 void run_task1(void);
 uint8_t is_task1_active(void);
 
-//********************************ÈÎÎñµ÷¶È²¿·Ö************************************//
+//********************************ä»»åŠ¡è°ƒåº¦éƒ¨åˆ†************************************//
 typedef struct {
     float x;
     float y;
 } Point2D_t;
 
-// È«¾ÖÄ¿±êËÙ¶È½á¹¹Ìå
+// å…¨å±€ç›®æ ‡é€Ÿåº¦ç»“æ„ä½“
 typedef struct {
     float vx;
     float vy;
     float omega;
 } TargetVelocity_t;
 
-extern TargetVelocity_t target_velocity; // È«¾ÖÄ¿±êËÙ¶È
-// µç»ú½á¹¹Ìå£¨ËÙ¶ÈºÍ·½Ïò£©
+extern TargetVelocity_t target_velocity; // å…¨å±€ç›®æ ‡é€Ÿåº¦
+// ç”µæœºç»“æ„ä½“ï¼ˆé€Ÿåº¦å’Œæ–¹å‘ï¼‰
 typedef struct {
-    int16_t speed_rpm;      // ×ªËÙ·¶Î§£º-32768~32767 RPM£¨ÓĞ·ûºÅÊı±íÊ¾·½Ïò£©
-	uint8_t direction;  // ·½Ïò±êÊ¶£º0=Í£Ö¹£¬1=Õı×ª£¬2=·´×ª£¨¿É×Ô¶¨Òå£©
+    int16_t speed_rpm;      // è½¬é€ŸèŒƒå›´ï¼š-32768~32767 RPMï¼ˆæœ‰ç¬¦å·æ•°è¡¨ç¤ºæ–¹å‘ï¼‰
+	uint8_t direction;  // æ–¹å‘æ ‡è¯†ï¼š0=åœæ­¢ï¼Œ1=æ­£è½¬ï¼Œ2=åè½¬ï¼ˆå¯è‡ªå®šä¹‰ï¼‰
 } Motor_t;
 
-// µ×ÅÌ²ÎÊıÅäÖÃ
+// åº•ç›˜å‚æ•°é…ç½®
 typedef struct {
-    float wheel_radius;  // ÂÖ×Ó°ë¾¶£¨Ã×£©
-    float wheel_dist_x;  // XÖáÂÖ¾à£¨Ã×£©
-    float wheel_dist_y;  // YÖáÂÖ¾à£¨Ã×£©
-    float max_rpm;       // µç»ú×î´ó×ªËÙ£¨RPM£©
+    float wheel_radius;  // è½®å­åŠå¾„ï¼ˆç±³ï¼‰
+    float wheel_dist_x;  // Xè½´è½®è·ï¼ˆç±³ï¼‰
+    float wheel_dist_y;  // Yè½´è½®è·ï¼ˆç±³ï¼‰
+    float max_rpm;       // ç”µæœºæœ€å¤§è½¬é€Ÿï¼ˆRPMï¼‰
 } ChassisConfig_t;
 
 
-// »ñÈ¡µç»ú¿ØÖÆÊı¾İ£¨Íâ²¿µ÷ÓÃ£©
+// è·å–ç”µæœºæ§åˆ¶æ•°æ®ï¼ˆå¤–éƒ¨è°ƒç”¨ï¼‰
 extern Motor_t motor1, motor2, motor3, motor4;
 void SetTargetVelocity(float vx, float vy, float omega);
 extern uint8_t task1state;
 
-// ³õÊ¼»¯µ×ÅÌ
+// åˆå§‹åŒ–åº•ç›˜
 void Mecanum_Init(ChassisConfig_t config);
 
-// ÔË¶¯½âËãº¯Êı
+// è¿åŠ¨è§£ç®—å‡½æ•°
 void Mecanum_Kinematics(float vx, float vy, float omega);
 
 void stop(void);

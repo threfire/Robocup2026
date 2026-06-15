@@ -6,44 +6,44 @@ servo_t duoji_doing[DJ_NUM];
 uint8_t startServo = 0;
 
 
-// Âö¿í·¶Î§¶¨Òå
-#define SERVO_MIN_PULSE  500   // ×îĞ¡Âö³å¿í¶È (¦Ìs)
-#define SERVO_MAX_PULSE  2500  // ×î´óÂö³å¿í¶È (¦Ìs)
-#define SERVO_MID_PULSE  1500  // ÖĞÎ»Âö³å¿í¶È (¦Ìs)
+// è„‰å®½èŒƒå›´å®šä¹‰
+#define SERVO_MIN_PULSE  500   // æœ€å°è„‰å†²å®½åº¦ (Î¼s)
+#define SERVO_MAX_PULSE  2500  // æœ€å¤§è„‰å†²å®½åº¦ (Î¼s)
+#define SERVO_MID_PULSE  1500  // ä¸­ä½è„‰å†²å®½åº¦ (Î¼s)
 
-// ÉèÖÃÂö³å¿í¶È (Ö±½ÓÉèÖÃÕ¼¿Õ±È)
+// è®¾ç½®è„‰å†²å®½åº¦ (ç›´æ¥è®¾ç½®å ç©ºæ¯”)
 void Servo_SetPulseWidth(uint16_t pulse_us)
 {
-    // °²È«ÏŞÖÆ
+    // å®‰å…¨é™åˆ¶
     if(pulse_us < SERVO_MIN_PULSE) pulse_us = SERVO_MIN_PULSE;
     if(pulse_us > SERVO_MAX_PULSE) pulse_us = SERVO_MAX_PULSE;
     
 //	HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);
-    // Ö±½ÓÉèÖÃ±È½ÏÖµ (1¼ÆÊı=1¦Ìs)
+    // ç›´æ¥è®¾ç½®æ¯”è¾ƒå€¼ (1è®¡æ•°=1Î¼s)
     __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse_us);
 //	HAL_TIM_PWM_Stop(&htim13,TIM_CHANNEL_1);
 }
 
-// ÉèÖÃ½Ç¶È (0-270¶È)
+// è®¾ç½®è§’åº¦ (0-270åº¦)
 void Servo_SetAngle(uint16_t angle)
 {
-    // ½Ç¶ÈÏŞÖÆ
+    // è§’åº¦é™åˆ¶
     if(angle > 270) angle = 270;
     
-    // ½Ç¶È×ªÂö³å¿í¶È: 500 + (angle/270)*2000
+    // è§’åº¦è½¬è„‰å†²å®½åº¦: 500 + (angle/270)*2000
     uint32_t pulse_width = SERVO_MIN_PULSE + 
                           (angle * (SERVO_MAX_PULSE - SERVO_MIN_PULSE)) / 270;
     
     Servo_SetPulseWidth(pulse_width);
 }
-/* ¶æ»ú³õÊ¼»¯ */
+/* èˆµæœºåˆå§‹åŒ– */
 void servo_init(void)
 {
 	
 	HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);		//0	PF7
     HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);		//1 PF8
 	HAL_TIM_PWM_Start(&htim14,TIM_CHANNEL_1);		//2 PF9
-	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);//´ò¿ªledµÆpwmÍ¨µÀ
+	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);//æ‰“å¼€ledç¯pwmé€šé“
 //    for (i = 0; i < DJ_NUM; i++)
 //    {
 //        duoji_doing[i].aim = 500;
@@ -56,19 +56,19 @@ void servo_init(void)
 ////	__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, duoji_doing[1].aim);
 ////	__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, duoji_doing[2].aim);
 //	
-//	duoji_doing_set(0,800,5000);		//µ¹×ª±Û
+//	duoji_doing_set(0,800,5000);		//å€’è½¬è‡‚
 //	duoji_doing_set(1,575,5000);
 //	duoji_doing_set(2,550,5000);
 }
 
 /***********************************************
-    ¹¦ÄÜ½éÉÜ£º	ÉèÖÃ¶æ»ú¿ØÖÆ²ÎÊıº¯Êı
-    º¯Êı²ÎÊı£º	index ¶æ»ú±àºÅ aim Ö´ĞĞÄ¿±ê time Ö´ĞĞÊ±¼ä(Èç¹ûaim Ö´ĞĞÄ¿±ê==0£¬ÊÓÎª¶æ»úÍ£Ö¹)
-    ·µ»ØÖµ£º		ÎŞ
+    åŠŸèƒ½ä»‹ç»ï¼š	è®¾ç½®èˆµæœºæ§åˆ¶å‚æ•°å‡½æ•°
+    å‡½æ•°å‚æ•°ï¼š	index èˆµæœºç¼–å· aim æ‰§è¡Œç›®æ ‡ time æ‰§è¡Œæ—¶é—´(å¦‚æœaim æ‰§è¡Œç›®æ ‡==0ï¼Œè§†ä¸ºèˆµæœºåœæ­¢)
+    è¿”å›å€¼ï¼š		æ— 
  ***********************************************/
 void duoji_doing_set(uint8_t index, int aim, int time)
 {
-    /* ÏŞÖÆÊäÈëÖµ´óĞ¡ */
+    /* é™åˆ¶è¾“å…¥å€¼å¤§å° */
     if (index >= DJ_NUM)
         return;
 
@@ -92,7 +92,7 @@ void duoji_doing_set(uint8_t index, int aim, int time)
         aim = aim + 0.0077;
     }
 
-    if (time < 20) /* Ö´ĞĞÊ±¼äÌ«¶Ì£¬¶æ»úÖ±½ÓÒÔ×î¿ìËÙ¶ÈÔË¶¯ */
+    if (time < 20) /* æ‰§è¡Œæ—¶é—´å¤ªçŸ­ï¼Œèˆµæœºç›´æ¥ä»¥æœ€å¿«é€Ÿåº¦è¿åŠ¨ */
     {
         duoji_doing[index].aim = aim;
         duoji_doing[index].cur = aim;
@@ -106,7 +106,7 @@ void duoji_doing_set(uint8_t index, int aim, int time)
     }
 }
 
-/* ÉèÖÃ¶æ»úÃ¿´ÎÔö¼ÓµÄÆ«ÒÆÁ¿ */
+/* è®¾ç½®èˆµæœºæ¯æ¬¡å¢åŠ çš„åç§»é‡ */
 void servo_inc_offset(uint8_t index)
 {
     int aim_temp;
@@ -145,9 +145,9 @@ void servo_tick(void)
 }
 void jiazhuadongzuo(void)
 {
-	duoji_doing_set(0,490,5000);		//¼Ğ
-	//·Ç×èÈûÑÓÊ±
-	duoji_doing_set(0,700,5000);		//ËÉ
+	duoji_doing_set(0,490,5000);		//å¤¹
+	//éé˜»å¡å»¶æ—¶
+	duoji_doing_set(0,700,5000);		//æ¾
 }
 void wuliaopanxuanzhuan(void)
 {
@@ -165,11 +165,11 @@ void Servo_Action_Group(uint8_t num){
 		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);
 //		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 770);
 	}
-	if(num == 3){//¾ÙÆğÀ´£¨¹Ú¾üÌ¨£©
+	if(num == 3){//ä¸¾èµ·æ¥ï¼ˆå† å†›å°ï¼‰
 		__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1460);
 		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1580);
 	}
-	if(num == 4){//·ÅÆ½£¨¹Ú¾üÌ¨£©
+	if(num == 4){//æ”¾å¹³ï¼ˆå† å†›å°ï¼‰
 		uint16_t pwm13last = 1460;
 		uint16_t pwm14last = 1580;
 
@@ -179,11 +179,11 @@ void Servo_Action_Group(uint8_t num){
 			HAL_Delay(2);
 		}
 	}
-	if(num == 5){//¾ÙÆğÀ´£¨ÑÇ¾üÌ¨£©
+	if(num == 5){//ä¸¾èµ·æ¥ï¼ˆäºšå†›å°ï¼‰
 		__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1390);
 		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1660);
 	}
-	if(num == 6){//·ÅÆ½£¨ÑÇ¾üÌ¨£©
+	if(num == 6){//æ”¾å¹³ï¼ˆäºšå†›å°ï¼‰
 		uint16_t pwm13last = 1390;
 		uint16_t pwm14last = 1660;
 
@@ -193,7 +193,7 @@ void Servo_Action_Group(uint8_t num){
 			HAL_Delay(2);
 		}
 	}
-	if(num == 7){//·ÅÆ½£¨¼¾¾üÌ¨£©
+	if(num == 7){//æ”¾å¹³ï¼ˆå­£å†›å°ï¼‰
 		uint16_t pwm13last = 1460;
 		uint16_t pwm14last = 1580;
 

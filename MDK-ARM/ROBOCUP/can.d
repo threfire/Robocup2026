@@ -40,10 +40,10 @@ robocup\can.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 robocup\can.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 robocup\can.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 robocup\can.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\can.o: ../UserDrivers/Emm_V5.h
-robocup\can.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
-robocup\can.o: ../Core/Inc/can.h
-robocup\can.o: ../Core/Inc/tim.h
+robocup\can.o: ../Mymode/ZDT_X42_V2.h
 robocup\can.o: ../Core/Inc/main.h
+robocup\can.o: ../Core/Inc/can.h
+robocup\can.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
+robocup\can.o: ../Core/Inc/tim.h
 robocup\can.o: ../Core/Inc/adc.h
 robocup\can.o: ../Mymode/useradc.h

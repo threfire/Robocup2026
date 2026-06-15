@@ -39,10 +39,10 @@ robocup\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 robocup\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 robocup\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 robocup\main.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\main.o: ../UserDrivers/Emm_V5.h
-robocup\main.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
-robocup\main.o: ../Core/Inc/can.h
+robocup\main.o: ../Mymode/ZDT_X42_V2.h
 robocup\main.o: ../Core/Inc/main.h
+robocup\main.o: ../Core/Inc/can.h
+robocup\main.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
 robocup\main.o: ../Core/Inc/tim.h
 robocup\main.o: ../Core/Inc/adc.h
 robocup\main.o: ../Mymode/useradc.h
@@ -61,7 +61,7 @@ robocup\main.o: ../Mymode/woniudonghua.h
 robocup\main.o: ../Mymode/usart_manager.h
 robocup\main.o: ../Mymode/userkey.h
 robocup\main.o: ../Mymode/servo.h
-robocup\main.o: ../Mymode/hwt101.h
+robocup\main.o: ../Mymode/hwt_imu.h
 robocup\main.o: ../Mymode/graysensor.h
 robocup\main.o: ../Mymode/mxcam.h
 robocup\main.o: ../Mymode/QAma.h

@@ -41,10 +41,10 @@ robocup\hardware_iic.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 robocup\hardware_iic.o: ../Core/Inc/i2c.h
 robocup\hardware_iic.o: ../Core/Inc/main.h
 robocup\hardware_iic.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\hardware_iic.o: ../UserDrivers/Emm_V5.h
-robocup\hardware_iic.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
-robocup\hardware_iic.o: ../Core/Inc/can.h
+robocup\hardware_iic.o: ../Mymode/ZDT_X42_V2.h
 robocup\hardware_iic.o: ../Core/Inc/main.h
+robocup\hardware_iic.o: ../Core/Inc/can.h
+robocup\hardware_iic.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
 robocup\hardware_iic.o: ../Core/Inc/tim.h
 robocup\hardware_iic.o: ../Core/Inc/adc.h
 robocup\hardware_iic.o: ../Mymode/useradc.h

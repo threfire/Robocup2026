@@ -1,8 +1,8 @@
-#include "hwt_imu.h"
-#include "robot_param.h"
+﻿#include "hwt_imu.h"
+#include <math.h>
 #include <string.h>
 
-#define HWT_PI              PI
+#define HWT_PI              3.14159265358979323846f
 #define HWT_TWO_PI          (2.0f * HWT_PI)
 #define HWT_DEG_TO_RAD      (HWT_PI / 180.0f)
 #define HWT_RAD_TO_DEG      (180.0f / HWT_PI)
@@ -10,6 +10,7 @@
 #define HWT_ANGLE_RANGE_DEG 180.0f
 #define HWT_ACCEL_RANGE_G   16.0f
 #define HWT_GRAVITY_MPS2    9.8f
+#define OPS_ODOMETER_FRAME_LEN 8u
 
 uint8_t imu101_rx_buf[IMU101_RX_BUF_LEN];
 uint8_t imu906_rx_buf[IMU906_RX_BUF_LEN];
@@ -17,6 +18,11 @@ uint8_t imu906_rx_buf[IMU906_RX_BUF_LEN];
 /* 使用全局变量，方便调试器直接监测 */
 hwt_imu_info_t hwt101_info;
 hwt_imu_info_t hwt906_info;
+robot_pose_state_t robot_pose_state;
+
+static float s_ops_last_body_x_mm;
+static float s_ops_last_body_y_mm;
+static uint8_t s_ops_body_inited;
 
 typedef struct
 {
@@ -163,8 +169,8 @@ static void hwt_parse_accel_frame(hwt_imu_info_t *imu, const uint8_t *frame)
 
     for (axis = 0; axis < 3u; axis++)
     {
-        imu->accel.g[axis] = ((float)imu->accel.raw[axis]) / 32768.0f * HWT_ACCEL_RANGE_G;
-        imu->accel.mps2[axis] = imu->accel.g[axis] * HWT_GRAVITY_MPS2;
+        imu->accel.accel_g[axis] = ((float)imu->accel.raw[axis]) / 32768.0f * HWT_ACCEL_RANGE_G;
+        imu->accel.mps2[axis] = imu->accel.accel_g[axis] * HWT_GRAVITY_MPS2;
     }
 
     imu->accel.updated = 1u;
@@ -268,6 +274,20 @@ static void hwt_parse_stream(hwt_parser_t *parser, hwt_imu_info_t *imu, uint8_t 
     }
 }
 
+static void hwt906_sync_robot_pose_state(void)
+{
+    const hwt_imu_info_t *imu = hwt906_get_info();
+
+    robot_pose_state.yaw_deg = imu->angle.yaw_total_deg;
+    robot_pose_state.roll_deg = imu->angle.deg[HWT_AXIS_ROLL];
+    robot_pose_state.pitch_deg = imu->angle.deg[HWT_AXIS_PITCH];
+    robot_pose_state.gyro_dps[HWT_AXIS_ROLL] = imu->gyro.dps[HWT_AXIS_ROLL];
+    robot_pose_state.gyro_dps[HWT_AXIS_PITCH] = imu->gyro.dps[HWT_AXIS_PITCH];
+    robot_pose_state.gyro_dps[HWT_AXIS_YAW] = imu->gyro.dps[HWT_AXIS_YAW];
+    robot_pose_state.yaw_gyro_dps = imu->gyro.dps[HWT_AXIS_YAW];
+    robot_pose_state.imu_updated = 1u;
+}
+
 void hwt_imu_init(void)
 {
     memset(&s_hwt101_parser, 0, sizeof(s_hwt101_parser));
@@ -275,6 +295,7 @@ void hwt_imu_init(void)
 
     memset(&hwt101_info, 0, sizeof(hwt101_info));
     memset(&hwt906_info, 0, sizeof(hwt906_info));
+    memset(&robot_pose_state, 0, sizeof(robot_pose_state));
 
     memset(s_hwt101_chassis_yaw, 0, sizeof(s_hwt101_chassis_yaw));
     memset(s_hwt906_gimbal_angle, 0, sizeof(s_hwt906_gimbal_angle));
@@ -290,6 +311,70 @@ void hwt101_rx_parse(const uint8_t *data, uint16_t len)
 void hwt906_rx_parse(const uint8_t *data, uint16_t len)
 {
     hwt_parse_stream(&s_hwt906_parser, &hwt906_info, 1u, data, len);
+}
+
+void HWT906_Update_Attitude(void)
+{
+    hwt906_sync_robot_pose_state();
+}
+
+void OPS_Odometer_RxParse(const uint8_t *data, uint16_t len)
+{
+    float xy_mm[2];
+    float delta_body_x_mm;
+    float delta_body_y_mm;
+    float yaw_rad;
+    float cos_yaw;
+    float sin_yaw;
+    uint16_t frame_offset;
+
+    if ((data == 0) || (len < OPS_ODOMETER_FRAME_LEN))
+    {
+        return;
+    }
+
+    frame_offset = (uint16_t)(len - OPS_ODOMETER_FRAME_LEN);
+    memcpy(xy_mm, &data[frame_offset], OPS_ODOMETER_FRAME_LEN);
+    hwt906_sync_robot_pose_state();
+
+    if (s_ops_body_inited == 0u)
+    {
+        s_ops_last_body_x_mm = xy_mm[0];
+        s_ops_last_body_y_mm = xy_mm[1];
+        s_ops_body_inited = 1u;
+        robot_pose_state.odom_updated = 1u;
+        return;
+    }
+
+    delta_body_x_mm = xy_mm[0] - s_ops_last_body_x_mm;
+    delta_body_y_mm = xy_mm[1] - s_ops_last_body_y_mm;
+    s_ops_last_body_x_mm = xy_mm[0];
+    s_ops_last_body_y_mm = xy_mm[1];
+
+    yaw_rad = robot_pose_state.yaw_deg * HWT_DEG_TO_RAD;
+    cos_yaw = cosf(yaw_rad);
+    sin_yaw = sinf(yaw_rad);
+
+    robot_pose_state.pos_x_mm += delta_body_x_mm * cos_yaw - delta_body_y_mm * sin_yaw;
+    robot_pose_state.pos_y_mm += delta_body_x_mm * sin_yaw + delta_body_y_mm * cos_yaw;
+    robot_pose_state.odom_updated = 1u;
+}
+
+float GetYaw(void)
+{
+    HWT906_Update_Attitude();
+    return robot_pose_state.yaw_deg;
+}
+
+void Update_zero(void)
+{
+    robot_pose_state.pos_x_mm = 0.0f;
+    robot_pose_state.pos_y_mm = 0.0f;
+    s_ops_last_body_x_mm = 0.0f;
+    s_ops_last_body_y_mm = 0.0f;
+    s_ops_body_inited = 0u;
+    robot_pose_state.odom_updated = 0u;
+    /* 新OPS只输出车体系累计坐标，这里执行软件世界坐标清零。 */
 }
 
 const hwt_imu_info_t *hwt101_get_info(void)

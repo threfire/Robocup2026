@@ -119,80 +119,80 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 
 /* USER CODE BEGIN 1 */
 /**
-	* @brief   ³õÊ¼»¯ÂË²¨Æ÷
-	* @param   ÎŞ
-	* @retval  ÎŞ
+	* @brief   åˆå§‹åŒ–æ»¤æ³¢å™¨
+	* @param   æ— 
+	* @retval  æ— 
 	*/
 void USER_CAN1_Filter_Init(void)
 {
-	// ¹ıÂËÆ÷½á¹¹Ìå
+	// è¿‡æ»¤å™¨ç»“æ„ä½“
 	CAN_FilterTypeDef  sFilterConfig;
 
-	// ÉèÖÃSTM32µÄÖ¡ID - À©Õ¹Ö¡¸ñÊ½ - ²»¹ıÂËÈÎºÎÊı¾İÖ¡
+	// è®¾ç½®STM32çš„å¸§ID - æ‰©å±•å¸§æ ¼å¼ - ä¸è¿‡æ»¤ä»»ä½•æ•°æ®å¸§
 	__IO uint8_t id_o, im_o; __IO uint16_t id_l, id_h, im_l, im_h;
 	id_o = (0x00);
-	id_h = (uint16_t)((uint16_t)id_o >> 5);								// ¸ß3Î»
-	id_l = (uint16_t)((uint16_t)id_o << 11) | CAN_ID_EXT; // µÍ5Î»
+	id_h = (uint16_t)((uint16_t)id_o >> 5);								// é«˜3ä½
+	id_l = (uint16_t)((uint16_t)id_o << 11) | CAN_ID_EXT; // ä½5ä½
 	im_o = (0x00);
 	im_h = (uint16_t)((uint16_t)im_o >> 5);
 	im_l = (uint16_t)((uint16_t)im_o << 11) | CAN_ID_EXT;
 
-	// ¹ıÂËÆ÷²ÎÊı
-	sFilterConfig.FilterBank = 0;                      		// ¹ıÂËÆ÷1
-	sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;  		// ÑÚÂëÄ£Ê½
-	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT; 		// 32Î»¹ıÂËÆ÷Î»¿í
-	sFilterConfig.FilterIdHigh = id_h;               			// ¹ıÂËÆ÷±êÊ¶·ûµÄ¸ß16Î»Öµ
-	sFilterConfig.FilterIdLow = id_l;                			// ¹ıÂËÆ÷±êÊ¶·ûµÄµÍ16Î»Öµ
-	sFilterConfig.FilterMaskIdHigh = im_h;           			// ¹ıÂËÆ÷ÆÁ±Î±êÊ¶·ûµÄ¸ß16Î»Öµ
-	sFilterConfig.FilterMaskIdLow = im_l;            			// ¹ıÂËÆ÷ÆÁ±Î±êÊ¶·ûµÄµÍ16Î»Öµ
-	sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0; 		// Ö¸Ïò¹ıÂËÆ÷µÄFIFOÎª0
-	sFilterConfig.FilterActivation = ENABLE;           		// Ê¹ÄÜ¹ıÂËÆ÷
-	sFilterConfig.SlaveStartFilterBank = 0;           		// ´Ó¹ıÂËÆ÷ÅäÖÃ£¬ÓÃÀ´Ñ¡Ôñ´Ó¹ıÂËÆ÷µÄ¼Ä´æÆ÷±àºÅ
+	// è¿‡æ»¤å™¨å‚æ•°
+	sFilterConfig.FilterBank = 0;                      		// è¿‡æ»¤å™¨1
+	sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;  		// æ©ç æ¨¡å¼
+	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT; 		// 32ä½è¿‡æ»¤å™¨ä½å®½
+	sFilterConfig.FilterIdHigh = id_h;               			// è¿‡æ»¤å™¨æ ‡è¯†ç¬¦çš„é«˜16ä½å€¼
+	sFilterConfig.FilterIdLow = id_l;                			// è¿‡æ»¤å™¨æ ‡è¯†ç¬¦çš„ä½16ä½å€¼
+	sFilterConfig.FilterMaskIdHigh = im_h;           			// è¿‡æ»¤å™¨å±è”½æ ‡è¯†ç¬¦çš„é«˜16ä½å€¼
+	sFilterConfig.FilterMaskIdLow = im_l;            			// è¿‡æ»¤å™¨å±è”½æ ‡è¯†ç¬¦çš„ä½16ä½å€¼
+	sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0; 		// æŒ‡å‘è¿‡æ»¤å™¨çš„FIFOä¸º0
+	sFilterConfig.FilterActivation = ENABLE;           		// ä½¿èƒ½è¿‡æ»¤å™¨
+	sFilterConfig.SlaveStartFilterBank = 0;           		// ä»è¿‡æ»¤å™¨é…ç½®ï¼Œç”¨æ¥é€‰æ‹©ä»è¿‡æ»¤å™¨çš„å¯„å­˜å™¨ç¼–å·
 	
-	// ÅäÖÃ²¢×Ô¼ì
+	// é…ç½®å¹¶è‡ªæ£€
 	while(HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig) != HAL_OK);
 }
 
 /**
-	* @brief   CAN·¢ËÍ¶à¸ö×Ö½Ú
-	* @param   ÎŞ
-	* @retval  ÎŞ
+	* @brief   CANå‘é€å¤šä¸ªå­—èŠ‚
+	* @param   æ— 
+	* @retval  æ— 
 	*/
 void can_SendCmd(__IO uint8_t *cmd, uint8_t len)
 {
 	static uint32_t TxMailbox; __IO uint8_t i = 0, j = 0, k = 0, l = 0, packNum = 0;
 
-	// ³ıÈ¥IDµØÖ·ºÍ¹¦ÄÜÂëºóµÄÊı¾İ³¤¶È
+	// é™¤å»IDåœ°å€å’ŒåŠŸèƒ½ç åçš„æ•°æ®é•¿åº¦
 	j = len - 2;
 
-	// ·¢ËÍÊı¾İ
+	// å‘é€æ•°æ®
 	while(i < j)
 	{
-		// Êı¾İ¸öÊı
+		// æ•°æ®ä¸ªæ•°
 		k = j - i;
 
-		// Ìî³ä»º´æ
+		// å¡«å……ç¼“å­˜
 		can.CAN_TxMsg.StdId = 0x00;
 		can.CAN_TxMsg.ExtId = ((uint32_t)cmd[0] << 8) | (uint32_t)packNum;
 		can.txData[0] = cmd[1];
 		can.CAN_TxMsg.IDE = CAN_ID_EXT;
 		can.CAN_TxMsg.RTR = CAN_RTR_DATA;
 
-		// Ğ¡ÓÚ8×Ö½ÚÃüÁî
+		// å°äº8å­—èŠ‚å‘½ä»¤
 		if(k < 8)
 		{
 			for(l=0; l < k; l++,i++) { can.txData[l + 1] = cmd[i + 2]; } can.CAN_TxMsg.DLC = k + 1;
 		}
-		// ´óÓÚ8×Ö½ÚÃüÁî£¬·Ö°ü·¢ËÍ£¬Ã¿°üÊı¾İ×î¶à·¢ËÍ8¸ö×Ö½Ú
+		// å¤§äº8å­—èŠ‚å‘½ä»¤ï¼Œåˆ†åŒ…å‘é€ï¼Œæ¯åŒ…æ•°æ®æœ€å¤šå‘é€8ä¸ªå­—èŠ‚
 		else
 		{
 			for(l=0; l < 7; l++,i++) { can.txData[l + 1] = cmd[i + 2]; } can.CAN_TxMsg.DLC = 8;
 		}
 
-		// ·¢ËÍÊı¾İ
+		// å‘é€æ•°æ®
 		while(HAL_CAN_AddTxMessage((&hcan1), (CAN_TxHeaderTypeDef *)(&can.CAN_TxMsg), (uint8_t *)(&can.txData), (&TxMailbox)) != HAL_OK);
 
-		// ¼ÇÂ¼·¢ËÍµÄµÚ¼¸°üµÄÊı¾İ
+		// è®°å½•å‘é€çš„ç¬¬å‡ åŒ…çš„æ•°æ®
 		++packNum;
 	}
 }

@@ -13,7 +13,7 @@ typedef struct {
 extern Scan_information scan_information;
 extern int detected_colors[5];
 
-// 任务 1 二维码到移动方案映射
+// 浠诲姟 1 浜岀淮鐮佸埌绉诲姩鏂规鏄犲皠
 extern int task1_scheme[16][5];
 extern int task2_scheme[6][3];
 void Get_Materialcolor (uint8_t ch);

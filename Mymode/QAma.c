@@ -4,7 +4,7 @@ Scan_information scan_information;
 uint8_t QAtask_flag = 0;
 int detected_colors[5];
 int detected_championcup[3];
-//// ÈÎÎñ 1 ¶şÎ¬Âëµ½ÒÆ¶¯·½°¸Ó³Éä
+//// ä»»åŠ¡ 1 äºŒç»´ç åˆ°ç§»åŠ¨æ–¹æ¡ˆæ˜ å°„
 //char* task1_scheme[16][5] = {
 //    /* 1 */ {"Black", "White", "Red", "Green", "Blue"},
 //    /* 2 */ {"White", "Black", "Red", "Green", "Blue"},
@@ -24,7 +24,7 @@ int detected_championcup[3];
 //    /* 16 */ {"Green", "Blue", "Red", "White", "Black"}
 //};
 
-//// ÈÎÎñ 2 ¶şÎ¬Âëµ½ÒÆ¶¯·½°¸Ó³Éä
+//// ä»»åŠ¡ 2 äºŒç»´ç åˆ°ç§»åŠ¨æ–¹æ¡ˆæ˜ å°„
 //char* task2_scheme[6][3] = {
 //    /* 1 */ {"A", "B", "C"},
 //    /* 2 */ {"A", "C", "B"},
@@ -33,8 +33,8 @@ int detected_championcup[3];
 //    /* 5 */ {"C", "A", "B"},
 //    /* 6 */ {"C", "B", "A"}
 //};
-// ÑÕÉ«±àÂë¹æÔò£¨intĞÍÊı×é£©£º
-// Black ¡ú 5 | White ¡ú 4 | Red ¡ú 3 | Green ¡ú 2 | Blue ¡ú 1
+// é¢œè‰²ç¼–ç è§„åˆ™ï¼ˆintå‹æ•°ç»„ï¼‰ï¼š
+// Black â†’ 5 | White â†’ 4 | Red â†’ 3 | Green â†’ 2 | Blue â†’ 1
 int task1_scheme[16][5] = {
     /* 0 */ {5, 4, 3, 2, 1},
     /* 1 */ {4, 5, 3, 2, 1},
@@ -54,8 +54,8 @@ int task1_scheme[16][5] = {
     /* 15 */ {2, 1, 3, 4, 5}
 };     
 
-// ×ÖÄ¸±àÂë¹æÔò£¨intĞÍÊı×é£©£º
-// A ¡ú 1 | B ¡ú 2 | C ¡ú 3
+// å­—æ¯ç¼–ç è§„åˆ™ï¼ˆintå‹æ•°ç»„ï¼‰ï¼š
+// A â†’ 1 | B â†’ 2 | C â†’ 3
 int task2_scheme[6][3] = {
     /* 1 */ {1, 2, 3},
     /* 2 */ {1, 3, 2},
@@ -70,23 +70,23 @@ int task2_scheme[6][3] = {
 //{
 //	if(ch<4){
 //		if(scan_information.R<100&&scan_information.G<100&&scan_information.B<100){
-//			detected_colors[ch] = 5;//ºÚ
+//			detected_colors[ch] = 5;//é»‘
 //			scan_information.color = detected_colors[ch];
 //		}
 //		else if(scan_information.R>200&&scan_information.G>200&&scan_information.B>200){
-//			detected_colors[ch] = 4;//°×
+//			detected_colors[ch] = 4;//ç™½
 //			scan_information.color = detected_colors[ch];
 //		}
 //		else if(scan_information.R>130&&scan_information.G<100&&scan_information.B<100){
-//			detected_colors[ch] = 3;//ºì
+//			detected_colors[ch] = 3;//çº¢
 //			scan_information.color = detected_colors[ch];
 //		}
 //		else if(scan_information.R<100&&scan_information.G>130&&scan_information.B<130){
-//			detected_colors[ch] = 2;//ÂÌ
+//			detected_colors[ch] = 2;//ç»¿
 //			scan_information.color = detected_colors[ch];
 //		}
 //		else if(scan_information.R<100&&scan_information.G<150&&scan_information.B>150){
-//			detected_colors[ch] = 1;//À¶
+//			detected_colors[ch] = 1;//è“
 //			scan_information.color = detected_colors[ch];
 //		}
 //		else
@@ -101,23 +101,23 @@ void Get_Materialcolor (uint8_t ch)
 {
 	if(ch<4){
 		if(scan_information.R<100&&scan_information.G<100&&scan_information.B<100){
-			detected_colors[ch] = 5;//ºÚ
+			detected_colors[ch] = 5;//é»‘
 			scan_information.color = detected_colors[ch];
 		}
 		else if(scan_information.R>180&&scan_information.G>180&&scan_information.B>180){
-			detected_colors[ch] = 4;//°×
+			detected_colors[ch] = 4;//ç™½
 			scan_information.color = detected_colors[ch];
 		}
 		else if(scan_information.R>120&&scan_information.G<100&&scan_information.B<100){
-			detected_colors[ch] = 3;//ºì
+			detected_colors[ch] = 3;//çº¢
 			scan_information.color = detected_colors[ch];
 		}
 		else if(scan_information.R<110&&scan_information.G>120&&scan_information.B<140){
-			detected_colors[ch] = 2;//ÂÌ
+			detected_colors[ch] = 2;//ç»¿
 			scan_information.color = detected_colors[ch];
 		}
 		else if(scan_information.R<100&&scan_information.G<170&&scan_information.B>140){
-			detected_colors[ch] = 1;//À¶
+			detected_colors[ch] = 1;//è“
 			scan_information.color = detected_colors[ch];
 		}
 

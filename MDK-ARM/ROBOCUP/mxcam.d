@@ -41,10 +41,10 @@ robocup\mxcam.o: ..\Mymode\mxcam.h
 robocup\mxcam.o: ../Core/Inc/usart.h
 robocup\mxcam.o: ../Core/Inc/main.h
 robocup\mxcam.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\mxcam.o: ../UserDrivers/Emm_V5.h
-robocup\mxcam.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
-robocup\mxcam.o: ../Core/Inc/can.h
+robocup\mxcam.o: ../Mymode/ZDT_X42_V2.h
 robocup\mxcam.o: ../Core/Inc/main.h
+robocup\mxcam.o: ../Core/Inc/can.h
+robocup\mxcam.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
 robocup\mxcam.o: ../Core/Inc/tim.h
 robocup\mxcam.o: ../Core/Inc/adc.h
 robocup\mxcam.o: ../Mymode/useradc.h

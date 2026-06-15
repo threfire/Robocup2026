@@ -37,7 +37,7 @@
 #include "usart_manager.h"
 #include "userkey.h"
 #include "servo.h"
-#include "hwt101.h"
+#include "hwt_imu.h"
 #include "graysensor.h"
 #include "mxcam.h"
 #include "QAma.h" 
@@ -64,8 +64,7 @@
 extern TaskState_t task1_state; //声明任务一结构体
 uint8_t QAtx_buff[] = {0x7E, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, 0xAB, 0xCD};//二维码扫一次指令（没用到）
 uint8_t QArxbuff[100];//二维码接收buffer
-uint8_t HWT101rxbuff[100];//hwt101接收buffer（没用到）
-uint8_t uart5buff[100];//串口五接收buffer
+uint8_t uart5buff[100];//UART5接收buffer：HWT906
 uint8_t qanum = 0;//定义并初始化二维码接收变量
 uint8_t rx_data[2];//颜色传感器接收buffer
 uint32_t camtim = 0;//摄像头超时计时（好像没用到）
@@ -142,7 +141,7 @@ int main(void)
 	LCD_DisplayText(48, 0,"Initting...");
 /*************************************************************初 始 化 开 始*********************************************************************/
 /*************************************************************初 始 化 开 始*********************************************************************/
-/******************串口四dma空闲中断接收初始化********************/
+/******************UART4新OPS里程计DMA空闲中断接收初始化********************/
 	Usart4_DMA_IDLE_Init();
 	HAL_UART_Receive_DMA(&huart4, (uint8_t *)rxCmd, CMD_LEN); 
 /******************can初始化********************/
@@ -161,6 +160,7 @@ int main(void)
     };
     Mecanum_Init(config);
 //******************传感器和pid初始化********************//
+	hwt_imu_init();					// 初始化HWT906解析器
 	CamStabilization_Init();		// 初始化视觉pid控制器
 	PositionControl_Init(); 		// 初始化位置pid控制器
     AttitudeStabilization_Init();	//初始化角度pid控制器

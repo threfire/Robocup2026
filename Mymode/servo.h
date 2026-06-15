@@ -3,24 +3,24 @@
 
 #include "main.h"
 
-#define DJ_NUM 3 /* ¶æ»úÊıÁ¿ */
+#define DJ_NUM 3 /* èˆµæœºæ•°é‡ */
 extern uint8_t startServo;
 typedef struct
 {
-    // uint8_t valid; // ÓĞĞ§ TODO
-    uint16_t aim;  // Ö´ĞĞÄ¿±ê
-    uint16_t time; // Ö´ĞĞÊ±¼ä
-    float cur;     // µ±Ç°Öµ
-    float inc;     // ÔöÁ¿
+    // uint8_t valid; // æœ‰æ•ˆ TODO
+    uint16_t aim;  // æ‰§è¡Œç›®æ ‡
+    uint16_t time; // æ‰§è¡Œæ—¶é—´
+    float cur;     // å½“å‰å€¼
+    float inc;     // å¢é‡
 } servo_t;
 
 extern servo_t duoji_doing[DJ_NUM];
 
-//Ïà¹Øº¯ÊıÉùÃ÷*******//
+//ç›¸å…³å‡½æ•°å£°æ˜*******//
 void Servo_SetPulseWidth(uint16_t pulse_us);
 void servo_init(void);
-void duoji_doing_set(uint8_t index, int aim, int time); /* ÉèÖÃ¶æ»ú²ÎÊı */
-void servo_inc_offset(uint8_t index);                  /* ÉèÖÃ¶æ»úÃ¿´ÎÔö¼ÓµÄÆ«ÒÆÁ¿ */
+void duoji_doing_set(uint8_t index, int aim, int time); /* è®¾ç½®èˆµæœºå‚æ•° */
+void servo_inc_offset(uint8_t index);                  /* è®¾ç½®èˆµæœºæ¯æ¬¡å¢åŠ çš„åç§»é‡ */
 void servo_tick(void);
 void jiazhuadongzuo(void);
 void wuliaopanxuanzhuan(void);

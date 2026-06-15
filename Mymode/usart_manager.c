@@ -3,8 +3,8 @@
 #include "lcd_spi_154.h"
 #include "usart.h"
 #include "mxcam.h" 
-#include<string.h> 	// °üº¬¸÷´®¿Ú´¦ÀíÄ£¿é
-  // ÆäËû´®¿Ú
+#include<string.h> 	// åŒ…å«å„ä¸²å£å¤„ç†æ¨¡å—
+  // å…¶ä»–ä¸²å£
 
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
@@ -13,7 +13,7 @@ extern UART_HandleTypeDef huart1;
 
 //
 
-// ¸÷´®¿Ú½ÓÊÕÆ÷ÊµÀıÉùÃ÷
+// å„ä¸²å£æ¥æ”¶å™¨å®ä¾‹å£°æ˜
 static UART_Receiver usart3_receiver = {
     .state = UART_WAIT_HEAD1,
     .huart = &huart3,
@@ -27,38 +27,38 @@ static UART_Receiver usart1_receiver = {
 };
 
 /********************************************************
-* º¯ÊıÃû£ºUART_Manager_Init
-* ¹¦ÄÜ£º³õÊ¼»¯ËùÓĞ´®¿ÚµÄ½ÓÊÕÖĞ¶Ï
-* ²ÎÊı£ºÎŞ
-* ËµÃ÷£ºÔÚmainº¯Êı¿ªÊ¼´¦µ÷ÓÃ
+* å‡½æ•°åï¼šUART_Manager_Init
+* åŠŸèƒ½ï¼šåˆå§‹åŒ–æ‰€æœ‰ä¸²å£çš„æ¥æ”¶ä¸­æ–­
+* å‚æ•°ï¼šæ— 
+* è¯´æ˜ï¼šåœ¨mainå‡½æ•°å¼€å§‹å¤„è°ƒç”¨
 ********************************************************/
 void UART_Manager_Init(void) {
-    // ³õÊ¼»¯USART3
+    // åˆå§‹åŒ–USART3
     HAL_UART_Receive_IT(usart3_receiver.huart, &usart3_receiver.buffer[0], 1);
     
-    // ³õÊ¼»¯USART1£¨Ê¾Àı£©
+    // åˆå§‹åŒ–USART1ï¼ˆç¤ºä¾‹ï¼‰
     HAL_UART_Receive_IT(usart1_receiver.huart, &usart1_receiver.buffer[0], 1);
 }
 
 /********************************************************
-* º¯ÊıÃû£ºHAL_UART_RxCpltCallback
-* ¹¦ÄÜ£ºÍ³Ò»µÄÖĞ¶Ï»Øµ÷º¯Êı£¨¸²¸ÇÈõº¯Êı£©
-* ²ÎÊı£ºhuart-´¥·¢ÖĞ¶ÏµÄ´®¿Ú¾ä±ú
-* ËµÃ÷£º×Ô¶¯Â·ÓÉµ½¶ÔÓ¦´®¿ÚµÄ´¦Àíº¯Êı
+* å‡½æ•°åï¼šHAL_UART_RxCpltCallback
+* åŠŸèƒ½ï¼šç»Ÿä¸€çš„ä¸­æ–­å›è°ƒå‡½æ•°ï¼ˆè¦†ç›–å¼±å‡½æ•°ï¼‰
+* å‚æ•°ï¼šhuart-è§¦å‘ä¸­æ–­çš„ä¸²å£å¥æŸ„
+* è¯´æ˜ï¼šè‡ªåŠ¨è·¯ç”±åˆ°å¯¹åº”ä¸²å£çš„å¤„ç†å‡½æ•°
 ********************************************************/
 
 
 /*
 *********************************************************************************************************
-* º¯ Êı Ãû: DMA_Usart_Send
-* ¹¦ÄÜËµÃ÷: ´®¿Ú·¢ËÍ¹¦ÄÜº¯Êı
-* ĞÎ  ²Î: buf£¬len
-* ·µ »Ø Öµ: ÎŞ
+* å‡½ æ•° å: DMA_Usart_Send
+* åŠŸèƒ½è¯´æ˜: ä¸²å£å‘é€åŠŸèƒ½å‡½æ•°
+* å½¢  å‚: bufï¼Œlen
+* è¿” å› å€¼: æ— 
 *********************************************************************************************************
 */
-void DMA_Usart_Send(uint8_t *buf,uint8_t len)//´®¿Ú·¢ËÍ·â×°
+void DMA_Usart_Send(uint8_t *buf,uint8_t len)//ä¸²å£å‘é€å°è£…
 {
- if(HAL_UART_Transmit_DMA(&huart1, buf,len)!= HAL_OK)   //ÅĞ¶ÏÊÇ·ñ·¢ËÍÕı³££¬Èç¹û³öÏÖÒì³£Ôò½øÈëÒì³£ÖĞ¶Ïº¯Êı
+ if(HAL_UART_Transmit_DMA(&huart1, buf,len)!= HAL_OK)   //åˆ¤æ–­æ˜¯å¦å‘é€æ­£å¸¸ï¼Œå¦‚æœå‡ºç°å¼‚å¸¸åˆ™è¿›å…¥å¼‚å¸¸ä¸­æ–­å‡½æ•°
   {
    Error_Handler();
   }
@@ -69,44 +69,44 @@ void DMA_Usart_Send(uint8_t *buf,uint8_t len)//´®¿Ú·¢ËÍ·â×°
 
 /*
 *********************************************************************************************************
-* º¯ Êı Ãû: DMA_Usart1_Read
-* ¹¦ÄÜËµÃ÷: ´®¿Ú½ÓÊÕ¹¦ÄÜº¯Êı
-* ĞÎ  ²Î: Data,len
-* ·µ »Ø Öµ: ÎŞ
+* å‡½ æ•° å: DMA_Usart1_Read
+* åŠŸèƒ½è¯´æ˜: ä¸²å£æ¥æ”¶åŠŸèƒ½å‡½æ•°
+* å½¢  å‚: Data,len
+* è¿” å› å€¼: æ— 
 *********************************************************************************************************
 */
-void DMA_Usart1_Read(uint8_t *Data,uint8_t len)//´®¿Ú½ÓÊÕ·â×°
+void DMA_Usart1_Read(uint8_t *Data,uint8_t len)//ä¸²å£æ¥æ”¶å°è£…
 {
-	HAL_UART_Receive_DMA(&huart1,Data,len);//ÖØĞÂ´ò¿ªDMA½ÓÊÕ
+	HAL_UART_Receive_DMA(&huart1,Data,len);//é‡æ–°æ‰“å¼€DMAæ¥æ”¶
 }
 
 void DMA_resend(void)
 {
-	if(recv_end_flag == 1)  //½ÓÊÕÍê³É±êÖ¾
+	if(recv_end_flag == 1)  //æ¥æ”¶å®Œæˆæ ‡å¿—
 		{
 			
 			
 //			DMA_Usart_Send(rx_buffer, rx_len);
-			rx_len = 0;//Çå³ı¼ÆÊı
-			recv_end_flag = 0;//Çå³ı½ÓÊÕ½áÊø±êÖ¾Î»
+			rx_len = 0;//æ¸…é™¤è®¡æ•°
+			recv_end_flag = 0;//æ¸…é™¤æ¥æ”¶ç»“æŸæ ‡å¿—ä½
 //			for(uint8_t i=0;i<rx_len;i++)
 //				{
-//					rx_buffer[i]=0;//Çå½ÓÊÕ»º´æ
+//					rx_buffer[i]=0;//æ¸…æ¥æ”¶ç¼“å­˜
 //				}
 			memset(rx_buffer,0,rx_len);
   }
-		HAL_UART_Receive_DMA(&huart1,rx_buffer,BUFFER_SIZE);//ÖØĞÂ´ò¿ªDMA½ÓÊÕ
+		HAL_UART_Receive_DMA(&huart1,rx_buffer,BUFFER_SIZE);//é‡æ–°æ‰“å¼€DMAæ¥æ”¶
 }
 /*
 *********************************************************************************************************
-* º¯ Êı Ãû: DMA_Usart1_Read
-* ¹¦ÄÜËµÃ÷: ´®¿Ú½ÓÊÕ¹¦ÄÜº¯Êı
-* ĞÎ  ²Î: Data,len
-* ·µ »Ø Öµ: ÎŞ
+* å‡½ æ•° å: DMA_Usart1_Read
+* åŠŸèƒ½è¯´æ˜: ä¸²å£æ¥æ”¶åŠŸèƒ½å‡½æ•°
+* å½¢  å‚: Data,len
+* è¿” å› å€¼: æ— 
 *********************************************************************************************************
 */
 void Usart4_DMA_IDLE_Init(void)//DMA_IDLE_INIT
 {
-	__HAL_UART_CLEAR_IDLEFLAG(&huart4); 											// Çå³ıIDLE±êÖ¾
-	__HAL_UART_ENABLE_IT(&huart4, UART_IT_IDLE); 							// Ê¹ÄÜ´®UART1 IDLEÖĞ¶Ï
+	__HAL_UART_CLEAR_IDLEFLAG(&huart4); 											// æ¸…é™¤IDLEæ ‡å¿—
+	__HAL_UART_ENABLE_IT(&huart4, UART_IT_IDLE); 							// ä½¿èƒ½ä¸²UART1 IDLEä¸­æ–­
 }

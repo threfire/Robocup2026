@@ -4,20 +4,20 @@
 #include "main.h"
 
 
-#define	KEY_ON	 1		//按键按下
-#define	KEY_OFF	 0		//按键放开
+#define	KEY_ON	 1		//鎸夐敭鎸変笅
+#define	KEY_OFF	 0		//鎸夐敭鏀惧紑
 
-/*------------------------------------------ IO口配置宏 ----------------------------------*/
+/*------------------------------------------ IO鍙ｉ厤缃畯 ----------------------------------*/
 
 
-#define 	KEY_PIN           					GPIO_PIN_15        				 // KEY 引脚      
-#define	KEY_PORT          					GPIOA                 			 // KEY GPIO端口     
-#define 	__HAL_RCC_KEY_CLK_ENABLE         __HAL_RCC_GPIOA_CLK_ENABLE()	 // KEY GPIO端口时钟
+#define 	KEY_PIN           					GPIO_PIN_15        				 // KEY 寮曡剼      
+#define	KEY_PORT          					GPIOA                 			 // KEY GPIO绔彛     
+#define 	__HAL_RCC_KEY_CLK_ENABLE         __HAL_RCC_GPIOA_CLK_ENABLE()	 // KEY GPIO绔彛鏃堕挓
 
-/*------------------------------------------ 函数声明 ------------------------------------*/
+/*------------------------------------------ 鍑芥暟澹版槑 ------------------------------------*/
 
-void 		KEY_Init(void);	//按键IO口初始化函数
-uint8_t	KEY_Scan(void);   //按键扫描
+void 		KEY_Init(void);	//鎸夐敭IO鍙ｅ垵濮嬪寲鍑芥暟
+uint8_t	KEY_Scan(void);   //鎸夐敭鎵弿
 
 #endif //__KEY_H
 

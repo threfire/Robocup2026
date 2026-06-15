@@ -41,10 +41,10 @@ robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.
 robocup\usart_manager.o: ../UserDrivers/lcd_spi_154.h
 robocup\usart_manager.o: ../Core/Inc/main.h
 robocup\usart_manager.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\usart_manager.o: ../UserDrivers/Emm_V5.h
-robocup\usart_manager.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
-robocup\usart_manager.o: ../Core/Inc/can.h
+robocup\usart_manager.o: ../Mymode/ZDT_X42_V2.h
 robocup\usart_manager.o: ../Core/Inc/main.h
+robocup\usart_manager.o: ../Core/Inc/can.h
+robocup\usart_manager.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
 robocup\usart_manager.o: ../Core/Inc/tim.h
 robocup\usart_manager.o: ../Core/Inc/adc.h
 robocup\usart_manager.o: ../Mymode/useradc.h

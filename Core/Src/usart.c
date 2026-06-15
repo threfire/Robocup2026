@@ -90,7 +90,7 @@ void MX_UART5_Init(void)
 
   /* USER CODE END UART5_Init 1 */
   huart5.Instance = UART5;
-  huart5.Init.BaudRate = 115200;
+  huart5.Init.BaudRate = 921600;
   huart5.Init.WordLength = UART_WORDLENGTH_8B;
   huart5.Init.StopBits = UART_STOPBITS_1;
   huart5.Init.Parity = UART_PARITY_NONE;
@@ -164,8 +164,7 @@ void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-  HAL_UART_Receive_DMA(&huart2,HWT101rxbuff,100);
-  __HAL_UART_ENABLE_IT(&huart2,UART_IT_IDLE);
+
   /* USER CODE END USART2_Init 2 */
 
 }

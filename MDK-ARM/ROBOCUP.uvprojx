@@ -1093,14 +1093,14 @@
               <FilePath>..\Mymode\QAma.h</FilePath>
             </File>
             <File>
-              <FileName>hwt101.c</FileName>
+              <FileName>hwt_imu.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Mymode\hwt101.c</FilePath>
+              <FilePath>..\Mymode\hwt_imu.c</FilePath>
             </File>
             <File>
-              <FileName>hwt101.h</FileName>
+              <FileName>hwt_imu.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Mymode\hwt101.h</FilePath>
+              <FilePath>..\Mymode\hwt_imu.h</FilePath>
             </File>
             <File>
               <FileName>ZDT_X42_V2.c</FileName>

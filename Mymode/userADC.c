@@ -15,7 +15,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 		__HAL_ADC_CLEAR_FLAG(hadc, ADC_FLAG_EOC);
 		adc_value = HAL_ADC_GetValue(hadc);
 
-		// 重新开启ADC中断
+		// 閲嶆柊寮�鍚疉DC涓柇
 		HAL_ADC_Start_IT(&hadc1);
 	}
 }

@@ -61,7 +61,7 @@ typedef struct
 typedef struct
 {
     int16_t raw[3];
-    float g[3];
+    float accel_g[3];
     float mps2[3];
     int16_t temp_raw;
     float temp_c;
@@ -77,12 +77,32 @@ typedef struct
     uint32_t bad_frame_count;
 } hwt_imu_info_t;
 
+typedef struct
+{
+    float pos_x_mm;        /* 世界系X坐标，单位mm */
+    float pos_y_mm;        /* 世界系Y坐标，单位mm */
+    float yaw_deg;         /* HWT906连续偏航角，单位deg */
+    float roll_deg;        /* HWT906横滚角，单位deg */
+    float pitch_deg;       /* HWT906俯仰角，单位deg */
+    float gyro_dps[3];     /* HWT906角速度，单位deg/s，顺序roll/pitch/yaw */
+    float yaw_gyro_dps;    /* HWT906偏航角速度，单位deg/s */
+    uint8_t odom_updated;  /* OPS里程计数据更新标志 */
+    uint8_t imu_updated;   /* HWT906姿态数据更新标志 */
+} robot_pose_state_t;
+
+extern robot_pose_state_t robot_pose_state;
+
 /**
   * @brief          IMU 模块初始化
   * @param[in]      none
   * @retval         none
   */
 void hwt_imu_init(void);
+
+void HWT906_Update_Attitude(void);
+void OPS_Odometer_RxParse(const uint8_t *data, uint16_t len);
+float GetYaw(void);
+void Update_zero(void);
 
 /**
   * @brief          101 串口接收数据解包
