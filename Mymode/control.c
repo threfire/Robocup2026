@@ -133,10 +133,10 @@ uint8_t is_position_control_enabled = 0;
 // 位置控制初始化
 void PositionControl_Init(void) {
     // 初始化X轴位置PID - 参数需要根据实际调试
-    PID_Init(&position_control.pid_x, 7.0f, 0.00f, 0.0f, HIGHSPEED); // Kp, Ki, Kd, max_output
+    PID_Init(&position_control.pid_x, 6.0f, 0.00f, 0.005f, HIGHSPEED); // Kp, Ki, Kd, max_output
 
     // 初始化Y轴位置PID
-    PID_Init(&position_control.pid_y, 7.0f, 0.00f, 0.0f, HIGHSPEED);
+    PID_Init(&position_control.pid_y, 6.0f, 0.00f, 0.005f, HIGHSPEED);
 
     position_control.is_enabled = 0;
     position_control.target_x = 0.0f;
@@ -293,7 +293,7 @@ float GetAttitudeCorrection(void) {
 void AttitudeStabilization_Init(void) {
     // 初始化偏航角PID控制器
     // 参数需要根据实际机器人动态调整
-    PID_Init(&attitude_control.yaw_pid, 0.24f, 0.0f, 0.0f, 18.0f); // Kp, Ki, Kd, max_output
+    PID_Init(&attitude_control.yaw_pid, 0.24f, 0.0f, 0.0001f, 10.0f); // Kp, Ki, Kd, max_output
 
     isPosture_correction=0;//初始不开启姿态矫正，需要用时置1
 
