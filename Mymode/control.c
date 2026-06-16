@@ -132,6 +132,8 @@ void POS_move(void){
 PositionController_t position_control;
 uint8_t is_position_control_enabled = 0;
 PoseCoordination_t pose_coordination = {0};
+static float position_lpf_vx_local = 0.0f;
+static float position_lpf_vy_local = 0.0f;
 
 static float NormalizeYawError(float error)
 {
@@ -150,10 +152,10 @@ static float ClampFloat(float value, float min_value, float max_value)
 // 浣嶇疆鎺у埗鍒濆鍖?
 void PositionControl_Init(void) {
     // 鍒濆鍖朮杞翠綅缃甈ID - 鍙傛暟闇€瑕佹牴鎹疄闄呰皟璇?
-    PID_Init(&position_control.pid_x, 8.0f, 0.00f, 0.000f, HIGHSPEED); // Kp, Ki, Kd, max_output
+    PID_Init(&position_control.pid_x, POSITION_PID_DEFAULT_KP, 0.00f, 0.000f, HIGHSPEED); // Kp, Ki, Kd, max_output
 
     // 鍒濆鍖朰杞翠綅缃甈ID
-    PID_Init(&position_control.pid_y, 8.0f, 0.00f, 0.000f, HIGHSPEED);
+    PID_Init(&position_control.pid_y, POSITION_PID_DEFAULT_KP, 0.00f, 0.000f, HIGHSPEED);
 
     position_control.is_enabled = 0;
     position_control.target_x = 0.0f;
@@ -163,9 +165,11 @@ void PositionControl_Init(void) {
     is_position_control_enabled = 0;
 }
 
-void pospid_reinit(float remax_output){
+void pospid_reinit(float remax_output, float re_kp){
 	position_control.pid_x.max_output = remax_output;
 	position_control.pid_y.max_output = remax_output;
+	position_control.pid_x.Kp = re_kp;
+	position_control.pid_y.Kp = re_kp;
 }
 // 鍚敤/绂佺敤浣嶇疆鎺у埗
 void PositionControl_Enable(uint8_t enable) {
@@ -178,6 +182,8 @@ void PositionControl_Enable(uint8_t enable) {
         position_control.pid_x.prev_error = 0.0f;
         position_control.pid_y.integral = 0.0f;
         position_control.pid_y.prev_error = 0.0f;
+        position_lpf_vx_local = 0.0f;
+        position_lpf_vy_local = 0.0f;
 
         // 鍋滄灏忚溅
         stop();
@@ -199,6 +205,8 @@ void SetTargetPosition(float x, float y) {
     position_control.pid_x.prev_error = 0.0f;
     position_control.pid_y.integral = 0.0f;
     position_control.pid_y.prev_error = 0.0f;
+    position_lpf_vx_local = 0.0f;
+    position_lpf_vy_local = 0.0f;
 }
 
 // 妫€鏌ユ槸鍚﹀埌杈剧洰鏍囦綅缃紙鍙鏌,y浣嶇疆锛?
@@ -246,8 +254,13 @@ void UpdatePositionControl(float dt) {
     float error_y_local = -error_x_global * sinf(current_yaw_rad) + error_y_global * cosf(current_yaw_rad);
 
     // 浣跨敤灞€閮ㄥ潗鏍囩郴鐨勮宸繘琛孭ID鎺у埗
-	float vx_local = PID_Update(&position_control.pid_x, error_x_local, dt);
-	float vy_local = PID_Update(&position_control.pid_y, error_y_local, dt);
+    float vx_local = PID_Update(&position_control.pid_x, error_x_local, dt);
+    float vy_local = PID_Update(&position_control.pid_y, error_y_local, dt);
+    // 位置环通用速度低通滤波
+    position_lpf_vx_local += POSITION_SPEED_LPF_ALPHA * (vx_local - position_lpf_vx_local);
+    position_lpf_vy_local += POSITION_SPEED_LPF_ALPHA * (vy_local - position_lpf_vy_local);
+    vx_local = position_lpf_vx_local;
+    vy_local = position_lpf_vy_local;
 
     // 闄愬埗鏈€澶ч€熷害
     #define MAX_LINEAR_SPEED 7.0f
@@ -1152,7 +1165,7 @@ static uint8_t task1_relative_forward_back(void) {
     static uint8_t relative_stage = 0;
 
     if (relative_stage == 0) {
-				pospid_reinit(LOWESTSPEED);
+				pospid_reinit(LOWESTSPEED, POSITION_PID_TASK1_RELATIVE_KP);
         if (move_relative_x_once(TASK1_RELATIVE_X_MOVE_MM)) {
             relative_stage = 1;
         }
@@ -1162,7 +1175,7 @@ static uint8_t task1_relative_forward_back(void) {
     if (relative_stage == 1) {
         if (move_relative_x_once(-TASK1_RELATIVE_X_MOVE_MM)) {
             relative_stage = 0;
-						pospid_reinit(MIDSPEED);
+						pospid_reinit(MIDSPEED, POSITION_PID_DEFAULT_KP);
             return 1;
         }
         return 0;
@@ -1188,7 +1201,7 @@ void run_task1(void) {
     uint32_t current_time = HAL_GetTick();
     switch (task1_state.current_step) {
 //		case 0:	EnableAttitudeStabilization(1);SetTargetYaw(0.0f);
-//				Servo_Action_Group(1);pospid_reinit(LOWSPEED);
+//				Servo_Action_Group(1);pospid_reinit(LOWSPEED, POSITION_PID_DEFAULT_KP);
 //				if (move_to_target(task1_targets[20].x, task1_targets[20].y)/*鐐?*/) {task1_state.current_step++;}
 //				if(IsPositionReached(0.10f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);}
 ////				if(IsPositionReached(0.05f)){SetTargetPosition(task1_targets[0].x, task1_targets[0].y);task1_state.current_step++;}
@@ -1196,7 +1209,7 @@ void run_task1(void) {
         case 1:	EnableAttitudeStabilization(1);SetTargetYaw(0.0f);Move_to_turnplate(1);
 				Servo_Action_Group(1);
 				tasknum = 1;
-				pospid_reinit(LOWSPEED);
+				pospid_reinit(LOWSPEED, POSITION_PID_DEFAULT_KP);
 				if (move_to_pose_target(task1_targets[0].x, task1_targets[0].y, 0.0f)/*鐐逛簩缁寸爜*/) {Servo_Action_Group(2);task1_state.current_step++;}
 				if(IsPositionReached(0.50f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);}
 				if(IsPositionReached(0.45f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);}if(IsPositionReached(0.40f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);}
@@ -1229,14 +1242,14 @@ void run_task1(void) {
 
 
 		case 11:EnableAttitudeStabilization(1);
-				pospid_reinit(MIDSPEED);Get_Materialcolor(4);
+				pospid_reinit(MIDSPEED, POSITION_PID_DEFAULT_KP);Get_Materialcolor(4);
 				if (move_to_pose_target(task1_targets[6].x, task1_targets[6].y, -90.0f)/*绉诲埌鐐筧*/ ) {
 										Find_corresponding_material(1);
 										task1_state.current_step++;}break;
 		case 12:if(Wait_for_uart_with_search(6)) { task1_state.current_step++; }
 				else {task1_state.current_step++; /* 瓒呮椂澶勭悊锛屾瘮濡傞噸璇曟垨閿欒澶勭悊 */ } break;
 		case 13:if(task1_relative_forward_back()){task1_state.current_step++;}break;
-		case 14:pospid_reinit(HIGHSPEED);if (move_to_pose_target(task1_targets[7].x, task1_targets[7].y, -90.0f)/*绉诲埌鐐筨*/) {
+		case 14:pospid_reinit(HIGHSPEED, POSITION_PID_DEFAULT_KP);if (move_to_pose_target(task1_targets[7].x, task1_targets[7].y, -90.0f)/*绉诲埌鐐筨*/) {
 					Find_corresponding_material(2);
 					task1_state.current_step++;}break;
 		case 15:if(Wait_for_uart_with_search(7)) { task1_state.current_step++; }
@@ -1263,11 +1276,11 @@ void run_task1(void) {
 		case 26://Servo_Action_Group(2);EnableAttitudeStabilization(1);
 				tasknum = 2;if (move_to_pose_target(task1_targets[11].x, task1_targets[11].y, 0.0f)/*鐐逛簩缁寸爜2*/) {Move_to_turnplate(3);/*绉诲埌杞洏1*/task1_state.current_step++;}break;
 		case 27:if (move_to_pose_target(task1_targets[19].x, task1_targets[19].y, -90.0f)/*濂栨澂3涓嬮潰*/){task1_state.current_step++;}break;
-		case 28:pospid_reinit(LOWESTSPEED);if (move_to_pose_target(task1_targets[12].x, task1_targets[12].y, -90.0f)/*濂栨澂3*/){task1_state.current_step++;Move_to_turnplate(2);}break;
+		case 28:pospid_reinit(LOWESTSPEED, POSITION_PID_DEFAULT_KP);if (move_to_pose_target(task1_targets[12].x, task1_targets[12].y, -90.0f)/*濂栨澂3*/){task1_state.current_step++;Move_to_turnplate(2);}break;
 		case 29:if (move_to_pose_target(task1_targets[13].x, task1_targets[13].y, -90.0f)/*濂栨澂2*/) {task1_state.current_step++;Move_to_turnplate(1);}break;
 		case 30:if (move_to_pose_target(task1_targets[14].x, task1_targets[14].y, -90.0f)/*濂栨澂1*/) {__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1]+200);task1_state.current_step++;}	break;
 		case 31:
-				pospid_reinit(HIGHSPEED);
+				pospid_reinit(HIGHSPEED, POSITION_PID_DEFAULT_KP);
 				if (move_to_pose_target(task1_targets[15].x, task1_targets[15].y+15.0f, -90.0f)/*浜氬啗鍙?*/) {Servo_Action_Group(6);Find_corresponding_material(2);task1_state.current_step++;break;}
 				if(IsPositionReached(0.6f)){Servo_Action_Group(5);}break;
 		case 32:if(Wait_for_uart_with_search(15)) { task1_state.current_step++; }
@@ -1283,7 +1296,7 @@ void run_task1(void) {
 		case 38:if(Wait_for_uart_with_search(17)) { task1_state.current_step++; }
 				else {task1_state.current_step++; /* 瓒呮椂澶勭悊锛屾瘮濡傞噸璇曟垨閿欒澶勭悊 */ } break;
 		case 39:if(task1_relative_forward_back()){task1_state.current_step++;}break;
-		case 40:pospid_reinit(HIGHESTSPEED);raceh = 0.200f;
+		case 40:pospid_reinit(HIGHESTSPEED, POSITION_PID_DEFAULT_KP);raceh = 0.200f;
 				if (move_to_pose_target(task1_targets[20].x, task1_targets[20].y, -90.0f)/*鍥炲*/) {task1_state.current_step = 41;}break;
 		case 41:raceh = 0.002f;if (move_to_pose_target(task1_targets[18].x, task1_targets[18].y, -90.0f)/*鍥炲*/) {task1_state.current_step++;}break;
         default:

@@ -47,7 +47,10 @@ void Follow_line_task(void);
 #define HIGHSPEED 5.4f
 #define MIDSPEED 2.2f
 #define LOWSPEED  1.3f
-#define LOWESTSPEED  0.8f
+#define LOWESTSPEED  0.5f
+#define POSITION_PID_DEFAULT_KP 8.0f
+#define POSITION_PID_TASK1_RELATIVE_KP 4.0f
+#define POSITION_SPEED_LPF_ALPHA 0.1f
 #define POSE_SYNC_SLOW_DISTANCE_M 0.25f
 #define POSE_SYNC_SLOW_YAW_DEG    34.0f
 #define POSE_SYNC_MIN_SCALE       0.50f
