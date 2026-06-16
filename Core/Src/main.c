@@ -69,7 +69,7 @@ uint8_t qanum = 0;//定义并初始化二维码接收变量
 uint8_t rx_data[2];//颜色传感器接收buffer
 uint32_t camtim = 0;//摄像头超时计时（好像没用到）
 uint8_t camtim_button = 0;//摄像头超时计时开关
-uint8_t debug = 1;//调试
+uint8_t debug = 0;//调试
 uint8_t Start_flag = 0;//软件开始开关
 uint8_t IsLight = 0;//开灯（初始化为关灯）
 uint16_t led_count;//led翻转计时
@@ -166,6 +166,7 @@ int main(void)
         .max_rpm = 300.0f			// 电机最大转速（RPM）
     };
     Mecanum_Init(config);
+	HAL_Delay(2000);
 //******************传感器和pid初始化********************//
 	hwt_imu_init();					// 初始化HWT906解析器
 	CamStabilization_Init();		// 初始化视觉pid控制器
@@ -180,7 +181,7 @@ int main(void)
 /*************************************************************初 始 化 结 束*********************************************************************/
 /*************************************************************初 始 化 结 束*********************************************************************/
 	LCD_DisplayText(48, 0,"Init Success!");
-	HAL_Delay(2000);
+	HAL_Delay(100);
 	if(debug){		//调试标志
 	//	HAL_UART_Transmit_IT(&huart3,gy33sendbuffer1 ,sizeof (gy33sendbuffer1 ));
 	//	HAL_UART_Transmit_IT(&huart3,gy33sendbuffer1 ,sizeof (gy33sendbuffer2 ));
@@ -189,19 +190,14 @@ int main(void)
 		EnableAttitudeStabilization(1);
 		SetTargetYaw(0.0f);
 		pospid_reinit(LOWSPEED);
-		SetTargetPosition(ODOM_TEST_TARGET_X_MM, ODOM_TEST_TARGET_Y_MM);
-		PositionControl_Enable(1);
-		while (!IsPositionReached(ODOM_TEST_REACHED_M)) {
+		while (!move_to_target(300.0f, 300.0f)) {
 			HAL_Delay(5);
 		}
-		PositionControl_Enable(0);
 		HAL_Delay(3000);
-		SetTargetPosition(ODOM_TEST_HOME_X_MM, ODOM_TEST_HOME_Y_MM);
-		PositionControl_Enable(1);
-		while (!IsPositionReached(ODOM_TEST_REACHED_M)) {
-			HAL_Delay(5);
-		}
-		PositionControl_Enable(0);
+//		while (!move_to_target(ODOM_TEST_HOME_X_MM, ODOM_TEST_HOME_Y_MM)) {
+//			HAL_Delay(5);
+//		}
+		EnableAttitudeStabilization(0);
 		stop();
 		{
 		motor1.speed_rpm= 0;motor2.speed_rpm = 0;motor3.speed_rpm= 0;motor4.speed_rpm = 0;}

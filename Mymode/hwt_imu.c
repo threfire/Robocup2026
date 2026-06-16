@@ -23,6 +23,9 @@ robot_pose_state_t robot_pose_state;
 static float s_ops_last_body_x_mm;
 static float s_ops_last_body_y_mm;
 static uint8_t s_ops_body_inited;
+static float s_hwt906_yaw_zero_deg;
+static float s_hwt906_yaw_zero_rad;
+static uint8_t s_hwt906_yaw_zero_valid;
 
 typedef struct
 {
@@ -100,6 +103,26 @@ static void hwt_update_yaw_total(hwt_angle_info_t *angle)
     angle->last_yaw_rad = current_yaw_rad;
 }
 
+static float hwt906_apply_yaw_zero_deg(float yaw_deg)
+{
+    if (s_hwt906_yaw_zero_valid != 0u)
+    {
+        return yaw_deg - s_hwt906_yaw_zero_deg;
+    }
+
+    return yaw_deg;
+}
+
+static float hwt906_apply_yaw_zero_rad(float yaw_rad)
+{
+    if (s_hwt906_yaw_zero_valid != 0u)
+    {
+        return yaw_rad - s_hwt906_yaw_zero_rad;
+    }
+
+    return yaw_rad;
+}
+
 static void hwt_update_export_data(hwt_imu_info_t *imu, uint8_t is_hwt906)
 {
     if (is_hwt906 != 0u)
@@ -108,7 +131,7 @@ static void hwt_update_export_data(hwt_imu_info_t *imu, uint8_t is_hwt906)
          * [0] = 连续 yaw(rad)
          * [1] = pitch(rad)
          */
-        s_hwt906_gimbal_angle[HWT_GIMBAL_YAW_INDEX] = imu->angle.yaw_total_rad;
+        s_hwt906_gimbal_angle[HWT_GIMBAL_YAW_INDEX] = hwt906_apply_yaw_zero_rad(imu->angle.yaw_total_rad);
         s_hwt906_gimbal_angle[HWT_GIMBAL_PITCH_INDEX] = imu->angle.rad[HWT_AXIS_PITCH];
         s_hwt906_gimbal_angle[HWT_GIMBAL_ROLL_INDEX] = imu->angle.rad[HWT_AXIS_ROLL];
 
@@ -278,7 +301,7 @@ static void hwt906_sync_robot_pose_state(void)
 {
     const hwt_imu_info_t *imu = hwt906_get_info();
 
-    robot_pose_state.yaw_deg = imu->angle.yaw_total_deg;
+    robot_pose_state.yaw_deg = hwt906_apply_yaw_zero_deg(imu->angle.yaw_total_deg);
     robot_pose_state.roll_deg = imu->angle.deg[HWT_AXIS_ROLL];
     robot_pose_state.pitch_deg = imu->angle.deg[HWT_AXIS_PITCH];
     robot_pose_state.gyro_dps[HWT_AXIS_ROLL] = imu->gyro.dps[HWT_AXIS_ROLL];
@@ -290,6 +313,17 @@ static void hwt906_sync_robot_pose_state(void)
 
 void hwt_imu_init(void)
 {
+    float yaw_zero_deg = 0.0f;
+    float yaw_zero_rad = 0.0f;
+    uint8_t yaw_zero_valid = 0u;
+
+    if (hwt906_info.angle.yaw_init_flag != 0u)
+    {
+        yaw_zero_deg = hwt906_info.angle.yaw_total_deg;
+        yaw_zero_rad = hwt906_info.angle.yaw_total_rad;
+        yaw_zero_valid = 1u;
+    }
+
     memset(&s_hwt101_parser, 0, sizeof(s_hwt101_parser));
     memset(&s_hwt906_parser, 0, sizeof(s_hwt906_parser));
 
@@ -301,6 +335,10 @@ void hwt_imu_init(void)
     memset(s_hwt906_gimbal_angle, 0, sizeof(s_hwt906_gimbal_angle));
     memset(s_hwt906_gimbal_gyro, 0, sizeof(s_hwt906_gimbal_gyro));
     memset(s_hwt906_gimbal_accel, 0, sizeof(s_hwt906_gimbal_accel));
+
+    s_hwt906_yaw_zero_deg = yaw_zero_deg;
+    s_hwt906_yaw_zero_rad = yaw_zero_rad;
+    s_hwt906_yaw_zero_valid = yaw_zero_valid;
 }
 
 void hwt101_rx_parse(const uint8_t *data, uint16_t len)
@@ -414,12 +452,12 @@ float hwt906_get_yaw_rad(void)
 
 float hwt906_get_yaw_total_rad(void)
 {
-    return hwt906_info.angle.yaw_total_rad;
+    return hwt906_apply_yaw_zero_rad(hwt906_info.angle.yaw_total_rad);
 }
 
 float hwt906_get_yaw_total_deg(void)
 {
-    return hwt906_info.angle.yaw_total_deg;
+    return hwt906_apply_yaw_zero_deg(hwt906_info.angle.yaw_total_deg);
 }
 
 float hwt906_get_pitch_rad(void)

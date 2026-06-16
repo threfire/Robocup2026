@@ -12,7 +12,7 @@ extern uint16_t Material[5];
 void Setmaixcam_mode(uint8_t ch);
 
 //********************************角度pid部分************************************//
-#define DEAD_ZONE 0.5f  // 死区大小(度)
+#define DEAD_ZONE 0.1f  // 死区大小(度)
 float GetAttitudeCorrection(void);  // 获取姿态校正量
 extern float attitude_correction;   // 姿态校正量（外部可访问）
 extern uint8_t isPosture_correction;	// 开启姿态校正标志位（外部可访问）
@@ -66,6 +66,7 @@ void PositionControl_Enable(uint8_t enable);
 void SetTargetPosition(float x, float y);
 void UpdatePositionControl(float dt);
 uint8_t IsPositionReached(float tolerance_xy);
+uint8_t move_to_target(float x, float y);
 //********************************摄像头校正pid部分************************************//
 #define TOLERANCE 3
 #define max_min_error 3

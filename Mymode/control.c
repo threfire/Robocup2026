@@ -1,4 +1,5 @@
 #include "control.h"
+#include <math.h>
 #include <string.h>
 #include "lcd_spi_154.h"
 #include "my_delay.h"
@@ -10,7 +11,7 @@
 #include "mxcam.h"
 
 
-float raceh = 0.003f;
+float raceh = 0.002f;  // 位置环默认容差，单位：m，2mm
 uint16_t Material[5] = {575,970,1365,1785,2165};//转盘坐标
 // 任务1的目标点坐标数组
 static const Point2D_t task1_targets[] = {
@@ -76,26 +77,26 @@ void Pos_moveconctrl(uint8_t dir, uint16_t vel, uint16_t clk){
 	float position_deg = (float)clk * ZDT_X42_POS_DEG_PER_CLK;
 
 	if(dir == 1){
-		ZDT_X42_V2_Traj_Position_Control(1,1,100,100,(float)vel,position_deg,0,1);
+		ZDT_X42_V2_Traj_Position_Control(1,1,2,2,(float)vel,position_deg,0,1);
 
-		ZDT_X42_V2_Traj_Position_Control(2,1,100,100,(float)vel,position_deg,0,1);
+		ZDT_X42_V2_Traj_Position_Control(2,1,2,2,(float)vel,position_deg,0,1);
 
-		ZDT_X42_V2_Traj_Position_Control(3,0,100,100,(float)vel,position_deg,0,1);
+		ZDT_X42_V2_Traj_Position_Control(3,0,2,2,(float)vel,position_deg,0,1);
 
-		ZDT_X42_V2_Traj_Position_Control(4,0,100,100,(float)vel,position_deg,0,1);
-		HAL_Delay(10);
+		ZDT_X42_V2_Traj_Position_Control(4,0,2,2,(float)vel,position_deg,0,1);
+		HAL_Delay(5);
 		ZDT_X42_V2_Synchronous_motion(0); 								 // 广播地址0触发
 
 	}
 	if(dir == 0){
-		ZDT_X42_V2_Traj_Position_Control(1,0,10,10,(float)vel,position_deg,0,1);
+		ZDT_X42_V2_Traj_Position_Control(1,0,1,1,(float)vel,position_deg,0,1);
 
-		ZDT_X42_V2_Traj_Position_Control(2,0,10,10,(float)vel,position_deg,0,1);
+		ZDT_X42_V2_Traj_Position_Control(2,0,1,1,(float)vel,position_deg,0,1);
 
-		ZDT_X42_V2_Traj_Position_Control(3,1,10,10,(float)vel,position_deg,0,1);
+		ZDT_X42_V2_Traj_Position_Control(3,1,1,1,(float)vel,position_deg,0,1);
 
-		ZDT_X42_V2_Traj_Position_Control(4,1,10,10,(float)vel,position_deg,0,1);
-		HAL_Delay(10);
+		ZDT_X42_V2_Traj_Position_Control(4,1,1,1,(float)vel,position_deg,0,1);
+		HAL_Delay(5);
 		ZDT_X42_V2_Synchronous_motion(0); 								 // 广播地址0触发
 
 	}
@@ -103,9 +104,9 @@ void Pos_moveconctrl(uint8_t dir, uint16_t vel, uint16_t clk){
 void POS_move(void){
 	Is_vel_mode = 0;//关闭速度模式
 	Pos_moveconctrl(1,200,1058);
-	HAL_Delay(800);
+	HAL_Delay(1800);
 	Pos_moveconctrl(0,200,1442);
-	HAL_Delay(800);
+	HAL_Delay(1800);
 	Is_vel_mode = 1;//打开速度模式
 }
 //void POS_move2(void){
@@ -365,7 +366,6 @@ void UpdateAttitudeStabilization(float dt) {
 
     // 使用PID计算旋转速度控制量
     attitude_correction = PID_Update_angle(&attitude_control.yaw_pid, error, dt);
-
 
 //	if (IsYawReached(attitude_control.target_yaw,0.5f)) { // 检查是否到达目标角度
 //        attitude_correction = 0.0f;
