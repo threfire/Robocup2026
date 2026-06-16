@@ -193,7 +193,7 @@ int main(void)
 		while (!move_to_target(300.0f, 300.0f)) {
 			HAL_Delay(5);
 		}
-		HAL_Delay(3000);
+//		HAL_Delay(3000);
 //		while (!move_to_target(ODOM_TEST_HOME_X_MM, ODOM_TEST_HOME_Y_MM)) {
 //			HAL_Delay(5);
 //		}
