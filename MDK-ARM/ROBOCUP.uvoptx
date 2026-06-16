@@ -260,6 +260,16 @@
           <WinNumber>1</WinNumber>
           <ItemText>robot_pose_state</ItemText>
         </Ww>
+        <Ww>
+          <count>21</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>task1_state,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>22</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\ROBOCUP\../Mymode/hwt_imu.c\robot_pose_state</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>

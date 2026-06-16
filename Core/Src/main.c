@@ -61,22 +61,22 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-extern TaskState_t task1_state; //声明任务一结构体
-uint8_t QAtx_buff[] = {0x7E, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, 0xAB, 0xCD};//二维码扫一次指令（没用到）
-uint8_t QArxbuff[100];//二维码接收buffer
-uint8_t uart5buff[100];//UART5接收buffer：HWT906
-uint8_t qanum = 0;//定义并初始化二维码接收变量
-uint8_t rx_data[2];//颜色传感器接收buffer
-uint32_t camtim = 0;//摄像头超时计时（好像没用到）
-uint8_t camtim_button = 0;//摄像头超时计时开关
-uint8_t debug = 1;//调试
-uint8_t Start_flag = 0;//软件开始开关
-uint8_t IsLight = 0;//开灯（初始化为关灯）
-uint16_t led_count;//led翻转计时
-uint32_t timcount;//系统运行计时
-uint8_t gy33sendbuffer1[] = {0xA5,0xbb,0x60};//白平衡校准
-uint8_t gy33sendbuffer2[] = {0xA5,0xCC,0x71};//gy33亮度调节指令
-uint8_t Is_vel_mode = 1;//是否速度模式（初始化为速度模式）
+extern TaskState_t task1_state; //澹版槑浠诲姟涓€缁撴瀯浣?
+uint8_t QAtx_buff[] = {0x7E, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, 0xAB, 0xCD};//浜岀淮鐮佹壂涓€娆℃寚浠わ紙娌＄敤鍒帮級
+uint8_t QArxbuff[100];//浜岀淮鐮佹帴鏀禸uffer
+uint8_t uart5buff[100];//UART5鎺ユ敹buffer锛欻WT906
+uint8_t qanum = 0;//瀹氫箟骞跺垵濮嬪寲浜岀淮鐮佹帴鏀跺彉閲?
+uint8_t rx_data[2];//棰滆壊浼犳劅鍣ㄦ帴鏀禸uffer
+uint32_t camtim = 0;//鎽勫儚澶磋秴鏃惰鏃讹紙濂藉儚娌＄敤鍒帮級
+uint8_t camtim_button = 0;//鎽勫儚澶磋秴鏃惰鏃跺紑鍏?
+uint8_t debug = 0;//璋冭瘯
+uint8_t Start_flag = 0;//杞欢寮€濮嬪紑鍏?
+uint8_t IsLight = 0;//寮€鐏紙鍒濆鍖栦负鍏崇伅锛?
+uint16_t led_count;//led缈昏浆璁℃椂
+uint32_t timcount;//绯荤粺杩愯璁℃椂
+uint8_t gy33sendbuffer1[] = {0xA5,0xbb,0x60};//鐧藉钩琛℃牎鍑?
+uint8_t gy33sendbuffer2[] = {0xA5,0xCC,0x71};//gy33浜害璋冭妭鎸囦护
+uint8_t Is_vel_mode = 1;//鏄惁閫熷害妯″紡锛堝垵濮嬪寲涓洪€熷害妯″紡锛?
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -150,59 +150,50 @@ int main(void)
 	SPI_LCD_Init();
 	LCD_Clear();
 	LCD_DisplayText(48, 0,"Initting...");
-/*************************************************************初 始 化 开 始*********************************************************************/
-/*************************************************************初 始 化 开 始*********************************************************************/
-/******************UART4新OPS里程计DMA空闲中断接收初始化********************/
+/*************************************************************鍒?濮?鍖?寮€ 濮?********************************************************************/
+/*************************************************************鍒?濮?鍖?寮€ 濮?********************************************************************/
+/******************UART4鏂癘PS閲岀▼璁MA绌洪棽涓柇鎺ユ敹鍒濆鍖?*******************/
 	Usart4_DMA_IDLE_Init();
 	HAL_UART_Receive_DMA(&huart4, (uint8_t *)rxCmd, CMD_LEN); 
-/******************can初始化********************/
-	USER_CAN1_Filter_Init();												// 初始化CAN滤波器
-	if(HAL_CAN_Start(&hcan1) != HAL_OK) { Error_Handler(); }				// 启动CAN控制器
-	if(HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK) { Error_Handler(); }	// 使能CAN控制器接收中断
-//******************任务初始化********************//
+/******************can鍒濆鍖?*******************/
+	USER_CAN1_Filter_Init();												// 鍒濆鍖朇AN婊ゆ尝鍣?
+	if(HAL_CAN_Start(&hcan1) != HAL_OK) { Error_Handler(); }				// 鍚姩CAN鎺у埗鍣?
+	if(HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK) { Error_Handler(); }	// 浣胯兘CAN鎺у埗鍣ㄦ帴鏀朵腑鏂?
+//******************浠诲姟鍒濆鍖?*******************//
 	task1_state.active = 0; 
 	task1_state.completed = 0;
-//******************运动解析参数配置********************//	
+//******************杩愬姩瑙ｆ瀽鍙傛暟閰嶇疆********************//	
 	ChassisConfig_t config = {
-        .wheel_radius = 0.077f,		// 轮子半径（米）
-        .wheel_dist_x = 0.0759f,	// X轴轮距（米）
-        .wheel_dist_y = 0.085f,		// Y轴轮距（米）
-        .max_rpm = 300.0f			// 电机最大转速（RPM）
+        .wheel_radius = 0.077f,		// 杞瓙鍗婂緞锛堢背锛?
+        .wheel_dist_x = 0.0759f,	// X杞磋疆璺濓紙绫筹級
+        .wheel_dist_y = 0.085f,		// Y杞磋疆璺濓紙绫筹級
+        .max_rpm = 300.0f			// 鐢垫満鏈€澶ц浆閫燂紙RPM锛?
     };
     Mecanum_Init(config);
 	HAL_Delay(2000);
-//******************传感器和pid初始化********************//
-	hwt_imu_init();					// 初始化HWT906解析器
-	CamStabilization_Init();		// 初始化视觉pid控制器
-	PositionControl_Init(); 		// 初始化位置pid控制器
-    PoseCoordination_Init();        // 位姿协调初始化
-    AttitudeStabilization_Init();	//初始化角度pid控制器
-//	servo_init();					//舵机初始化
-	AdcGet_Init();					//红外读取初始化		
-	memset(rx_data, 0, sizeof(rx_data));		//初始化颜色传感器接收变量内存
-	HAL_UART_Receive_IT(&huart3, rx_data, 1);	//开启颜色传感器参数接收
-	CamStabilization_Enable(0);					//摄像头矫正关
-	EnableAttitudeStabilization(0);				//姿态矫正关
-/*************************************************************初 始 化 结 束*********************************************************************/
-/*************************************************************初 始 化 结 束*********************************************************************/
+//******************浼犳劅鍣ㄥ拰pid鍒濆鍖?*******************//
+	hwt_imu_init();					// 鍒濆鍖朒WT906瑙ｆ瀽鍣?
+	CamStabilization_Init();		// 鍒濆鍖栬瑙塸id鎺у埗鍣?
+	PositionControl_Init(); 		// 鍒濆鍖栦綅缃畃id鎺у埗鍣?
+    PoseCoordination_Init();
+    AttitudeStabilization_Init();
+	memset(rx_data, 0, sizeof(rx_data));		//鍒濆鍖栭鑹蹭紶鎰熷櫒鎺ユ敹鍙橀噺鍐呭瓨
+	HAL_UART_Receive_IT(&huart3, rx_data, 1);	//寮€鍚鑹蹭紶鎰熷櫒鍙傛暟鎺ユ敹
+	CamStabilization_Enable(0);					//鎽勫儚澶寸煫姝ｅ叧
+/*************************************************************鍒?濮?鍖?缁?鏉?********************************************************************/
+/*************************************************************鍒?濮?鍖?缁?鏉?********************************************************************/
 	LCD_DisplayText(48, 0,"Init Success!");
 	HAL_Delay(100);
-	if(debug){		//调试标志
+	if(debug){		//璋冭瘯鏍囧織
 	//	HAL_UART_Transmit_IT(&huart3,gy33sendbuffer1 ,sizeof (gy33sendbuffer1 ));
 	//	HAL_UART_Transmit_IT(&huart3,gy33sendbuffer1 ,sizeof (gy33sendbuffer2 ));
 		HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);
 		Start_flag = 1;
-		EnableAttitudeStabilization(1);
-		SetTargetYaw(-90.0f);
-		pospid_reinit(LOWSPEED);
-		while (!move_to_target(300.0f, 300.0f)) {
-			HAL_Delay(5);
-		}
+		POS_move();
 //		HAL_Delay(3000);
 //		while (!move_to_target(ODOM_TEST_HOME_X_MM, ODOM_TEST_HOME_Y_MM)) {
 //			HAL_Delay(5);
 //		}
-		EnableAttitudeStabilization(0);
 		stop();
 		{
 		motor1.speed_rpm= 0;motor2.speed_rpm = 0;motor3.speed_rpm= 0;motor4.speed_rpm = 0;}
@@ -216,19 +207,19 @@ int main(void)
 //		PositionControl_Enable(0);
 //		CamStabilization_Enable(1);	
 	}
-//******************等待按钮按下启动********************//
+//******************绛夊緟鎸夐挳鎸変笅鍚姩********************//
 	while(1){
-//		Get_Materialcolor(1);		//测试颜色阈值，平时注释
+//		Get_Materialcolor(1);		//娴嬭瘯棰滆壊闃堝€硷紝骞虫椂娉ㄩ噴
 		Key_Tick();
 		if (Key_Num == 1) {
 			Start_flag = 1;
 			Key_Num = 0;
-			Update_zero();					//初始清零ops9（不能放前面因为第一次启动ops9自己没初始化完成）
-			HAL_Delay(100);					//等待100msops9数据清零稳定
+			Update_zero();					//鍒濆娓呴浂ops9锛堜笉鑳芥斁鍓嶉潰鍥犱负绗竴娆″惎鍔╫ps9鑷繁娌″垵濮嬪寲瀹屾垚锛?
+			HAL_Delay(100);					//绛夊緟100msops9鏁版嵁娓呴浂绋冲畾
 		}
 		if(Start_flag){
 			servo_init();
-			if(!debug && !is_task1_active()){			//启动任务1
+			if(!debug && !is_task1_active()){			//鍚姩浠诲姟1
 			start_task1();}
 			break ;
 		}
@@ -239,7 +230,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  Main_Tasktick();		//主循环任务（在下面定义）
+	  Main_Tasktick();		//涓诲惊鐜换鍔★紙鍦ㄤ笅闈㈠畾涔夛級
 
     /* USER CODE END WHILE */
 
@@ -294,36 +285,36 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-//****************************************中断回调服务函数*****************************//
+//****************************************涓柇鍥炶皟鏈嶅姟鍑芥暟*****************************//
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim->Instance == TIM6) // 检查是否是 TIM6 触发中断
+	if (htim->Instance == TIM6) // 妫€鏌ユ槸鍚︽槸 TIM6 瑙﹀彂涓柇
     {
 		led_count++;
 		timcount ++;
-		if(camtim_button){camtim += TIM6_TICK_MS;}//摄像头超时计时，移动精度高用不到
+		if(camtim_button){camtim += TIM6_TICK_MS;}//鎽勫儚澶磋秴鏃惰鏃讹紝绉诲姩绮惧害楂樼敤涓嶅埌
+        UpdatePoseCoordination(CONTROL_DT_S);//鏇存柊浣嶅Э鍗忚皟锛?kHz
 		if (is_position_control_enabled) {
-			UpdatePositionControl(CONTROL_DT_S);//更新位置环，1kHz
+			UpdatePositionControl(CONTROL_DT_S);//鏇存柊浣嶇疆鐜紝1kHz
 		}
-		Process_usart1_packet();//解析maxcam数据，1kHz调用
+		UpdateAttitudeStabilization(CONTROL_DT_S);
+		Process_usart1_packet();//瑙ｆ瀽maxcam鏁版嵁锛?kHz璋冪敤
 		if (cam_stabilization.is_enabled) {
 			
-            UpdateCamStabilization(Camera_err.x, Camera_err.y, CONTROL_DT_S);//更新视觉环，1kHz
+            UpdateCamStabilization(Camera_err.x, Camera_err.y, CONTROL_DT_S);//鏇存柊瑙嗚鐜紝1kHz
         }
-		UpdateAttitudeStabilization(CONTROL_DT_S);//更新角度环，1kHz
-        UpdatePoseCoordination(CONTROL_DT_S);//更新位姿协调
-		// 添加临界区保护
+		// 娣诲姞涓寸晫鍖轰繚鎶?
         __disable_irq();
         TargetVelocity_t current_target = target_velocity;
         __enable_irq();
         
-        // 实时执行运动学解算
+        // 瀹炴椂鎵ц杩愬姩瀛﹁В绠?
         Mecanum_Kinematics(
             current_target.vx,
             current_target.vy,
             current_target.omega
         );
-		if(Is_vel_mode){//发送运动指令，200Hz
+		if(Is_vel_mode){//鍙戦€佽繍鍔ㄦ寚浠わ紝200Hz
 			if((led_count % MOTOR_CMD_DIVIDER) == 0U){
 				if(Start_flag){
 					ZDT_X42_V2_Velocity_Control(1, motor1.direction, 230, (float)abs_int(motor1.speed_rpm), 0);
@@ -333,30 +324,30 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				}
 			}	
 		}
-		if(led_count >= STATUS_TICK_DIVIDER)//系统正常运行提示灯
+		if(led_count >= STATUS_TICK_DIVIDER)//绯荤粺姝ｅ父杩愯鎻愮ず鐏?
 		{
 			HAL_UART_Transmit_IT(&huart1,&cammode,sizeof (cammode));
 			HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 			led_count = 0;
 		}
-		// 其他任务
-		DMA_resend();//串口1dma重新开启的调用
-		if(IsLight)__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1,200);else __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1,0);//牢灯
+		// 鍏朵粬浠诲姟
+		DMA_resend();//涓插彛1dma閲嶆柊寮€鍚殑璋冪敤
+		if(IsLight)__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1,200);else __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1,0);//鐗㈢伅
     }
 }
-//*************************主循环中执行函数************************************************//
+//*************************涓诲惊鐜腑鎵ц鍑芥暟************************************************//
 void Main_Tasktick(void)
 {
-	LCD_DisplayNumber(0,20,timcount,6);//显示系统计时
+	LCD_DisplayNumber(0,20,timcount,6);//鏄剧ず绯荤粺璁℃椂
 
     run_task1();
 
-    __WFI(); // 进入低功耗模式等待中断
+    __WFI(); // 杩涘叆浣庡姛鑰楁ā寮忕瓑寰呬腑鏂?
 }
 
 
-//*************************************取绝对值函数******************************//
-// int型 取绝对值函数
+//*************************************鍙栫粷瀵瑰€煎嚱鏁?*****************************//
+// int鍨?鍙栫粷瀵瑰€煎嚱鏁?
 int abs_int(int int1)
 {
     if (int1 > 0)

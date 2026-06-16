@@ -1,0 +1,1089 @@
+﻿#include "control.h"
+#include <math.h>
+#include <string.h>
+#include "lcd_spi_154.h"
+#include "my_delay.h"
+#include "hwt_imu.h"
+#include "servo.h"
+#include "graysensor.h"
+#include "userkey.h"
+#include "QAma.h"
+#include "mxcam.h"
+
+
+float raceh = 0.005f;  // 浣嶇疆鐜粯璁ゅ宸紝鍗曚綅锛歮锟?0mm
+uint16_t Material[5] = {575,970,1365,1785,2165};//杞洏鍧愭爣
+// 浠诲姟1鐨勭洰鏍囩偣鍧愭爣鏁扮粍
+static const Point2D_t task1_targets[] = {
+    {250.25f, 650.0f},     // 绱㈠紩0		锟?鎵簩缁寸爜1
+    {258.25f, 1058.24f},   // 绱㈠紩1		锟?鐗╁潡1
+    {604.89f, 1399.38f},   // 绱㈠紩2		锟?鐗╁潡2
+    {1075.0f, 1524.0f},    // 绱㈠紩3		锟?鐗╁潡3
+    {1545.10f, 1399.38f},  // 绱㈠紩4		锟?鐗╁潡4
+    {1891.74f, 1058.24f},  // 绱㈠紩5		锟?鐗╁潡5
+	{835.14f, 631.60f},     // 绱㈠紩6		锟?  a
+	{553.90f, 425.91f},	   // 绱㈠紩7		锟?  b
+	{836.02f, -220.80f},   // 绱㈠紩8		锟?  c
+	{554.98f, -334.63f},   // 绱㈠紩9		锟?0 d
+	{623.60f, -837.96f},    // 绱㈠紩10	锟?1 e
+	{345.80f, -646.16f},   // 绱㈠紩11	锟?2鎵簩缁寸爜2
+	{409.58f, -1467.21f},  // 绱㈠紩12	锟?3 濂栨澂3
+	{860.0f, -1564.0f},    // 绱㈠紩13	锟?2 濂栨澂2
+	{1315.42f, -1442.21f}, // 绱㈠紩14	锟?2 濂栨澂1
+	{1710.0f, -270.0f},    // 绱㈠紩15	锟?6 浜氬啗濂栧彴
+	{1695.0f, 0.0f},       // 绱㈠紩16	锟?7 鍐犲啗濂栧彴
+	{1715.0f, 270.0f},     // 绱㈠紩17	锟?8 瀛ｅ啗濂栧彴
+	{0.0f, 0.0f},          // 绱㈠紩18	锟?9 璧峰锟?	{150.00f, -1467.21f},	// 绱㈠紩19	锟?0 濂栨澂3鍓嶉潰杩囧害锟?	{1000.f, 0.0f},		// 绱㈠紩20	锟?1 鍥炲鍓嶈繃搴︾偣
+	{156.27f, 682.54f}		// 绱㈠紩21
+
+};
+// X42浣嶇疆鎺ュ彛浣跨敤瑙掑害鍗曚綅锛屽師浣嶇疆鍏ュ彛鍙傛暟锟?200鑴夊啿/鍦堟崲绠楋拷?#define ZDT_X42_POS_DEG_PER_CLK (360.0f / 3200.0f)
+// 浠诲姟鐘舵€佸彉锟?TaskState_t task1_state = {0};
+
+uint8_t tasknum = 1;
+uint8_t cammode = 2;
+uint8_t lookmode_centrl = 1;
+void Setmaixcam_mode(uint8_t ch)
+{
+	cammode = ch;
+}
+void Move_to_turnplate(uint8_t num){
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[num-1]);
+}
+void Find_corresponding_material(uint8_t index)
+{
+	uint8_t i;
+	if(tasknum == 1){
+		for(i= 0;i<5;i++){
+			if (task1_scheme[qanum-1][index-1] == detected_colors[i]){
+//				duoji_doing_set(1,Material[i],2000);
+				Move_to_turnplate(i+1);}
+		}
+	}
+	if(tasknum == 2){
+		for(i= 0;i<3;i++){
+			if (index == task2_scheme[qanum-1][i]){
+//				duoji_doing_set(1,Material[i],2000);
+				Move_to_turnplate(i+1);}
+		}
+	}
+}
+
+void Pos_moveconctrl(uint8_t dir, uint16_t vel, uint16_t clk){
+	float position_deg = (float)clk * ZDT_X42_POS_DEG_PER_CLK;
+	if(dir == 1){
+		ZDT_X42_V2_Traj_Position_Control(1,1,2,2,(float)vel,position_deg,0,1);
+
+		ZDT_X42_V2_Traj_Position_Control(2,1,2,2,(float)vel,position_deg,0,1);
+
+		ZDT_X42_V2_Traj_Position_Control(3,0,2,2,(float)vel,position_deg,0,1);
+
+		ZDT_X42_V2_Traj_Position_Control(4,0,2,2,(float)vel,position_deg,0,1);
+		HAL_Delay(5);
+		ZDT_X42_V2_Synchronous_motion(0); 								 // 骞挎挱鍦板潃0瑙﹀彂
+
+	}
+	if(dir == 0){
+		ZDT_X42_V2_Traj_Position_Control(1,0,1,1,(float)vel,position_deg,0,1);
+
+		ZDT_X42_V2_Traj_Position_Control(2,0,1,1,(float)vel,position_deg,0,1);
+
+		ZDT_X42_V2_Traj_Position_Control(3,1,1,1,(float)vel,position_deg,0,1);
+
+		ZDT_X42_V2_Traj_Position_Control(4,1,1,1,(float)vel,position_deg,0,1);
+		HAL_Delay(5);
+		ZDT_X42_V2_Synchronous_motion(0); 								 // 骞挎挱鍦板潃0瑙﹀彂
+
+	}
+}
+void POS_move(void){
+	Is_vel_mode = 0;//关闭速度模式
+	Pos_moveconctrl(1,200,1058);
+	HAL_Delay(1800);
+	Pos_moveconctrl(0,200,1442);
+	HAL_Delay(1800);
+	Is_vel_mode = 1;//打开速度模式
+}
+//void POS_move2(void){
+//	Is_vel_mode = 0;//鍏抽棴閫熷害妯″紡
+//	Pos_moveconctrl(1,200,457);
+//	HAL_Delay(2000);
+//	Pos_moveconctrl(0,200,457);
+//	HAL_Delay(2000);
+//	Is_vel_mode = 1;//鎵撳紑閫熷害妯″紡
+//}
+//void POS_move3(void){
+//	Is_vel_mode = 0;//鍏抽棴閫熷害妯″紡
+//	Pos_moveconctrl(1,200,457);
+//	HAL_Delay(2000);
+//	Pos_moveconctrl(0,200,457);
+//	HAL_Delay(2000);
+//	Is_vel_mode = 1;//鎵撳紑閫熷害妯″紡
+//}
+	//********************************浣嶇疆鎺у埗pid****************************************//
+// 鍏ㄥ眬浣嶇疆鎺у埗瀹炰緥
+PositionController_t position_control;
+uint8_t is_position_control_enabled = 0;
+PoseCoordination_t pose_coordination = {0};
+static uint8_t pose_coordination_saved_enable = 1;
+static float position_max_linear_speed = HIGHSPEED;
+
+static float NormalizeYawError(float error)
+{
+    while (error > 180.0f) error -= 360.0f;
+    while (error < -180.0f) error += 360.0f;
+    return error;
+}
+
+static float ClampFloat(float value, float min_value, float max_value)
+{
+    if (value < min_value) return min_value;
+    if (value > max_value) return max_value;
+    return value;
+}
+
+// 浣嶇疆鎺у埗鍒濆锟?void PositionControl_Init(void) {
+    // 鍒濆鍖朮杞翠綅缃甈ID - 鍙傛暟闇€瑕佹牴鎹疄闄呰皟锟?    PID_Init(&position_control.pid_x, 5.8f, 0.00f, 0.02f, HIGHESTSPEED); // Kp, Ki, Kd, max_output
+
+    // 鍒濆鍖朰杞翠綅缃甈ID
+    PID_Init(&position_control.pid_y, 5.8f, 0.00f, 0.02f, HIGHESTSPEED);
+
+    position_control.is_enabled = 0;
+    position_control.target_x = 0.0f;
+    position_control.target_y = 0.0f;
+    position_control.last_update_time = HAL_GetTick();
+
+    is_position_control_enabled = 0;
+}
+
+void pospid_reinit(float remax_output){
+	position_max_linear_speed = remax_output;
+	position_control.pid_x.max_output = HIGHESTSPEED;
+	position_control.pid_y.max_output = HIGHESTSPEED;
+}
+// 鍚敤/绂佺敤浣嶇疆鎺у埗
+void PositionControl_Enable(uint8_t enable) {
+    position_control.is_enabled = enable;
+    is_position_control_enabled = enable;
+
+    if (!enable) {
+        // 绂佺敤鏃堕噸缃甈ID鐘讹拷?        position_control.pid_x.integral = 0.0f;
+        position_control.pid_x.prev_error = 0.0f;
+        position_control.pid_y.integral = 0.0f;
+        position_control.pid_y.prev_error = 0.0f;
+
+        // 鍋滄灏忚溅
+        stop();
+    } else {
+        // 鍚敤鏃惰褰曞綋鍓嶆椂锟?        position_control.last_update_time = HAL_GetTick();
+    }
+}
+
+// 璁剧疆鐩爣浣嶇疆锛堝彧鎺у埗x,y浣嶇疆锟?void SetTargetPosition(float x, float y) {
+    Is_vel_mode = 1;
+	position_control.target_x = x;
+    position_control.target_y = y;
+
+    // 閲嶇疆PID绉垎椤癸紝閬垮厤绐佸彉甯︽潵鐨勭Н鍒嗛ケ锟?    position_control.pid_x.integral = 0.0f;
+    position_control.pid_x.prev_error = 0.0f;
+    position_control.pid_y.integral = 0.0f;
+    position_control.pid_y.prev_error = 0.0f;
+}
+
+// 妫€鏌ユ槸鍚﹀埌杈剧洰鏍囦綅缃紙鍙鏌,y浣嶇疆锟?uint8_t IsPositionReached(float tolerance_xy) {
+    if (!position_control.is_enabled) {
+        return 0;
+    }
+
+    // 鍗曚綅杞崲
+    float current_x_m = robot_pose_state.pos_x_mm * 0.001f;
+    float current_y_m = robot_pose_state.pos_y_mm * 0.001f;
+
+    // 璁＄畻浣嶇疆璇樊锛堢背锟?    float error_x = position_control.target_x * 0.001f - current_x_m;
+    float error_y = position_control.target_y * 0.001f - current_y_m;
+
+    // 璁＄畻璺濈璇樊锛堢背锟?    float distance_error = sqrtf(error_x * error_x + error_y * error_y);
+
+    // 妫€鏌ユ槸鍚﹀湪瀹瑰樊鑼冨洿锟?    if (distance_error <= tolerance_xy) {
+        return 1;
+    }
+
+    return 0;
+}
+uint8_t testflag = 0;
+// 鏇存柊浣嶇疆鎺у埗锛屽悓涓€鎺у埗鍛ㄦ湡鍐呰緭鍑哄钩绉婚€熷害鍜屾棆杞€熷害
+void UpdatePositionControl(float dt) {
+    float omega_cmd = 0.0f;
+    uint8_t position_reached;
+    uint8_t yaw_reached = 0;
+
+    if (!position_control.is_enabled || dt <= 0) {
+        return;
+    }
+
+    // 鑾峰彇褰撳墠鍋忚埅瑙掞紙寮у害锟?    float current_yaw_rad = GetYaw() * 3.1415926f / 180.0f;
+
+    // 鑾峰彇褰撳墠浣嶇疆锛堝叏灞€鍧愭爣绯伙級
+    float current_x_global = robot_pose_state.pos_x_mm * 0.001f;
+    float current_y_global = robot_pose_state.pos_y_mm * 0.001f;
+    float target_x_global = position_control.target_x * 0.001f;
+    float target_y_global = position_control.target_y * 0.001f;
+
+    // 璁＄畻鍏ㄥ眬鍧愭爣绯讳笅鐨勮锟?    float error_x_global = target_x_global - current_x_global;
+    float error_y_global = target_y_global - current_y_global;
+
+    // 灏嗚宸粠鍏ㄥ眬鍧愭爣绯昏浆鎹㈠埌灏忚溅灞€閮ㄥ潗鏍囩郴
+    float error_x_local = error_x_global * cosf(current_yaw_rad) + error_y_global * sinf(current_yaw_rad);
+    float error_y_local = -error_x_global * sinf(current_yaw_rad) + error_y_global * cosf(current_yaw_rad);
+
+    // 浣跨敤灞€閮ㄥ潗鏍囩郴鐨勮宸繘琛孭ID鎺у埗
+	float vx_local = PID_Update(&position_control.pid_x, error_x_local, dt);
+	float vy_local = PID_Update(&position_control.pid_y, error_y_local, dt);
+    position_reached = IsPositionReached(raceh);
+
+    // 闄愬埗鏈€澶ч€熷害
+    #define MAX_LINEAR_SPEED 7.0f
+    float linear_speed = sqrtf(vx_local * vx_local + vy_local * vy_local);
+    if (linear_speed > position_max_linear_speed) {
+        float ratio = position_max_linear_speed / linear_speed;
+        vx_local *= ratio;
+        vy_local *= ratio;
+    }
+
+    // 璁剧疆鐩爣閫熷害锛堜娇鐢ㄥ眬閮ㄥ潗鏍囩郴鐨勯€熷害锟?    vx_local *= pose_coordination.sync_scale;
+    vy_local *= pose_coordination.sync_scale;
+
+    if (pose_coordination.has_yaw_target && pose_coordination.is_enabled) {
+        float yaw_error = NormalizeYawError(pose_coordination.target_yaw - GetYaw());
+        yaw_reached = (fabsf(yaw_error) <= POSE_YAW_TOLERANCE_DEG);
+
+        if (abs_float(yaw_error) < POSE_YAW_DEAD_ZONE_DEG) {
+            yaw_error = 0.0f;
+            pose_coordination.yaw_pid.integral = 0.0f;
+        }
+
+        omega_cmd = PID_Update_angle(&pose_coordination.yaw_pid, yaw_error, dt);
+        omega_cmd *= pose_coordination.sync_scale;
+    }
+
+    if (position_reached) {
+        vx_local = 0.0f;
+        vy_local = 0.0f;
+        testflag = 1;
+    }
+
+    SetTargetVelocity(vy_local, vx_local, omega_cmd);  // 浣嶇疆鐜疿杞存柟鍚戜笌搴曠洏妯悜閫熷害鏂瑰悜涓€锟?
+    if (position_reached && (!pose_coordination.has_yaw_target || yaw_reached)) {
+        stop();
+    }
+}
+
+void Example_PositionControl(void) {
+    // 璁剧疆鐩爣浣嶇疆锛歺=1.0m, y=0.5m
+    SetTargetPosition(1.0f, 0.5f);
+
+    // 鍚敤浣嶇疆鎺у埗
+    PositionControl_Enable(1);
+
+    // 绛夊緟鍒拌揪鐩爣浣嶇疆
+    while (!IsPositionReached(0.02f)) {
+        HAL_Delay(10);
+    }
+
+    // 鍒拌揪鍚庢墽琛屽叾浠栦换锟?..
+}
+
+//********************************浣嶇疆鎺у埗pid****************************************//
+//********************************浣嶅Э鍗忚皟pid****************************************//
+
+void PoseCoordination_Init(void)
+{
+    pose_coordination.is_enabled = 1;
+    pose_coordination.sync_scale = 1.0f;
+    pose_coordination.slow_distance_m = POSE_SYNC_SLOW_DISTANCE_M;
+    pose_coordination.slow_yaw_deg = POSE_SYNC_SLOW_YAW_DEG;
+    pose_coordination.min_scale = POSE_SYNC_MIN_SCALE;
+    pose_coordination.target_yaw = 0.0f;
+    pose_coordination.has_yaw_target = 0;
+    PID_Init(&pose_coordination.yaw_pid, 0.24f, 0.0f, 0.0001f, 10.0f);
+}
+
+void PoseCoordination_Enable(uint8_t enable)
+{
+    pose_coordination.is_enabled = enable;
+    pose_coordination.sync_scale = 1.0f;
+
+    if (!enable) {
+        pose_coordination.yaw_pid.integral = 0.0f;
+        pose_coordination.yaw_pid.prev_error = 0.0f;
+    }
+}
+
+// 璁剧疆浣嶅Э鎺у埗鐩爣yaw瑙掞紝鍗曚綅deg
+void SetTargetYaw(float target)
+{
+    if (pose_coordination.has_yaw_target &&
+        fabsf(NormalizeYawError(pose_coordination.target_yaw - target)) < 0.001f) {
+        return;
+    }
+
+    pose_coordination.target_yaw = target;
+    pose_coordination.has_yaw_target = 1;
+    pose_coordination.yaw_pid.integral = 0.0f;
+    pose_coordination.yaw_pid.prev_error = 0.0f;
+}
+
+void SetTargetPose(float x, float y, float yaw)
+{
+    SetTargetPosition(x, y);
+    SetTargetYaw(yaw);
+    PoseCoordination_Enable(1);
+    PositionControl_Enable(1);
+}
+
+uint8_t IsPoseReached(float tolerance_xy, float tolerance_yaw_degrees)
+{
+    float yaw_error_deg = NormalizeYawError(pose_coordination.target_yaw - GetYaw());
+
+    if (!pose_coordination.has_yaw_target) {
+        return IsPositionReached(tolerance_xy);
+    }
+
+    return IsPositionReached(tolerance_xy) && (fabsf(yaw_error_deg) <= tolerance_yaw_degrees);
+}
+
+void UpdatePoseCoordination(float dt)
+{
+    float distance_error_m;
+    float yaw_error_deg;
+    float pos_scale;
+    float yaw_scale;
+
+    if (!pose_coordination.is_enabled || dt <= 0.0f) {
+        pose_coordination.sync_scale = 1.0f;
+        return;
+    }
+
+    distance_error_m = sqrtf(
+        powf(position_control.target_x * 0.001f - robot_pose_state.pos_x_mm * 0.001f, 2.0f) +
+        powf(position_control.target_y * 0.001f - robot_pose_state.pos_y_mm * 0.001f, 2.0f));
+    yaw_error_deg = pose_coordination.has_yaw_target ?
+        NormalizeYawError(pose_coordination.target_yaw - GetYaw()) : 0.0f;
+
+    pos_scale = sqrtf(distance_error_m / pose_coordination.slow_distance_m);
+    pos_scale = ClampFloat(pos_scale, pose_coordination.min_scale, 1.0f);
+    yaw_scale = 1.0f;
+    if (pose_coordination.has_yaw_target && fabsf(yaw_error_deg) > POSE_YAW_TOLERANCE_DEG) {
+        yaw_scale = fabsf(yaw_error_deg) / pose_coordination.slow_yaw_deg;
+        yaw_scale = ClampFloat(yaw_scale, pose_coordination.min_scale, 1.0f);
+    }
+    pose_coordination.sync_scale = ClampFloat((pos_scale < yaw_scale) ? pos_scale : yaw_scale, pose_coordination.min_scale, 1.0f);
+}
+
+uint8_t move_to_pose_target(float x, float y, float yaw)
+{
+    static uint8_t pose_target_set = 0;
+
+    if (!pose_target_set) {
+        SetTargetPose(x, y, yaw);
+        pose_target_set = 1;
+        return 0;
+    }
+
+    if (IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG)) {
+        stop();
+        pose_target_set = 0;
+        return 1;
+    }
+
+    return 0;
+}
+//*******************************浣嶅Э鍗忚皟pid***************************************//
+//********************************鎽勫儚澶存牎姝id************************************//
+// 鍏ㄥ眬鎽勫儚澶存牎姝ｅ彉锟?CamStabilization_t cam_stabilization = {0};
+float cam_correction_x = 0.0f;
+float cam_correction_y = 0.0f;
+uint8_t is_cam_stabilizing = 0;
+int Is_coordgot =0;
+// 鍒濆鍖栨憚鍍忓ごPID
+void CamStabilization_Init(void) {
+    // 鍒濆鍖朮杞碢ID: kp=0.8, ki=0.05, kd=0.2, 杈撳嚭闄愬箙卤100
+    PID_Init_cam(&cam_stabilization.pid_x, 0.26f,0.0000f, 0.0f, 0.002f, 20.0f);
+
+    // 鍒濆鍖朰杞碢ID: kp=0.7, ki=0.03, kd=0.15, 杈撳嚭闄愬箙卤100,
+    PID_Init_cam(&cam_stabilization.pid_y, 0.26f,0.0000f,0.0f, 0.002f, 20.0f);
+
+    cam_stabilization.is_enabled = 0;
+    cam_correction_x = 0.0f;
+    cam_correction_y = 0.0f;
+	lookmode_centrl = 0;
+	is_cam_stabilizing = 0;
+	Is_coordgot =0;
+}
+
+// 鍚敤/绂佺敤鎽勫儚澶存牎锟?void CamStabilization_Enable(uint8_t enable) {
+    cam_stabilization.is_enabled = enable;
+    if (enable) {
+        pose_coordination_saved_enable = pose_coordination.is_enabled;
+        PoseCoordination_Enable(0);
+    } else {
+        PoseCoordination_Enable(pose_coordination_saved_enable);
+    }
+
+    IsLight = 1;
+    if (!enable) {
+        // 绂佺敤鏃堕噸缃姸锟?        cam_stabilization.pid_x.integral = 0.0f;
+        cam_stabilization.pid_x.prev_error = 0.0f;
+        cam_stabilization.pid_y.integral = 0.0f;
+        cam_stabilization.pid_y.prev_error = 0.0f;
+        cam_correction_x = 0.0f;
+        cam_correction_y = 0.0f;
+		IsLight = 0;
+    }
+}
+
+// 鏇存柊鎽勫儚澶存牎锟?void UpdateCamStabilization(float x_err, float y_err, float dt) {
+    if (!cam_stabilization.is_enabled || dt <= 0) {
+        cam_correction_x = 0.0f;
+        cam_correction_y = 0.0f;
+        return;
+    }
+
+    // 瀹氫箟姝诲尯闃堝€硷紙2鍍忕礌锟?    #define CAM_DEAD_ZONE 0.0f
+
+    // X杞存鍖哄锟?    float actual_x_err = (abs_float (x_err) > CAM_DEAD_ZONE) ? x_err : 0.0f;
+
+    // Y杞存鍖哄锟?    float actual_y_err = (abs_float(y_err) > CAM_DEAD_ZONE) ? y_err : 0.0f;
+
+    // 璁＄畻X杞存牎锟?    cam_correction_x = PID_Update_cam(&cam_stabilization.pid_x, actual_x_err, dt);
+
+    // 璁＄畻Y杞存牎锟?    cam_correction_y = PID_Update_cam(&cam_stabilization.pid_y, actual_y_err, dt);
+}
+
+static ErrorQueue_t error_queue = {0};
+
+// 鍒濆鍖栬宸槦锟?void ErrorQueue_Init(void) {
+    error_queue.index = 0;
+    error_queue.count = 0;
+    error_queue.is_full = 0;
+    memset(error_queue.errors_x, 0, sizeof(error_queue.errors_x));
+    memset(error_queue.errors_y, 0, sizeof(error_queue.errors_y));
+}
+
+// 鍚戣宸槦鍒楁坊鍔犳暟锟?void ErrorQueue_Push(int error_x, int error_y) {
+    error_queue.errors_x[error_queue.index] = error_x;
+    error_queue.errors_y[error_queue.index] = error_y;
+
+    error_queue.index = (error_queue.index + 1) % ERROR_QUEUE_SIZE;
+
+    if (!error_queue.is_full) {
+        error_queue.count++;
+        if (error_queue.count >= ERROR_QUEUE_SIZE) {
+            error_queue.is_full = 1;
+        }
+    }
+}
+
+// 璁＄畻璇樊闃熷垪鐨勫潎锟?void ErrorQueue_GetAverage(float *avg_x, float *avg_y) {
+    int sum_x = 0, sum_y = 0;
+    uint8_t valid_count = error_queue.is_full ? ERROR_QUEUE_SIZE : error_queue.count;
+
+    if (valid_count == 0) {
+        *avg_x = 0;
+        *avg_y = 0;
+        return;
+    }
+
+    for (int i = 0; i < valid_count; i++) {
+        sum_x += abs_int(error_queue.errors_x[i]);
+        sum_y += abs_int(error_queue.errors_y[i]);
+    }
+
+    *avg_x = (float)sum_x / valid_count;
+    *avg_y = (float)sum_y / valid_count;
+}
+#define INT_MAX 480       // 鏈€澶у亸宸粷瀵癸拷?
+// 璁＄畻璇樊闃熷垪涓瓁/y鏂瑰悜鐨勬渶澶ф尝鍔ㄥ箙搴︼紝鍗曚綅锛氬儚锟?void ErrorQueue_GetFluctuate(int *fluct_x, int *fluct_y) {
+    int max_x = -INT_MAX, min_x = INT_MAX;
+    int max_y = -INT_MAX, min_y = INT_MAX;
+    uint8_t valid_count = error_queue.is_full ? ERROR_QUEUE_SIZE : error_queue.count;
+
+    // 鑻ラ槦鍒楃┖锛屾尝鍔ㄥ箙搴︿负0
+    if (valid_count == 0) {
+        *fluct_x = 0;
+        *fluct_y = 0;
+        return;
+    }
+
+    // 閬嶅巻鏈夋晥鏁版嵁锛屾壘max鍜宮in
+    for (int i = 0; i < valid_count; i++) {
+        // x鏂瑰悜
+        if (error_queue.errors_x[i] > max_x) max_x = error_queue.errors_x[i];
+        if (error_queue.errors_x[i] < min_x) min_x = error_queue.errors_x[i];
+        // y鏂瑰悜
+        if (error_queue.errors_y[i] > max_y) max_y = error_queue.errors_y[i];
+        if (error_queue.errors_y[i] < min_y) min_y = error_queue.errors_y[i];
+    }
+
+    // 娉㈠姩骞呭害 = 鏈€澶э拷?- 鏈€灏忥拷?    *fluct_x = max_x - min_x;
+    *fluct_y = max_y - min_y;
+}
+
+uint8_t IsCamReached(int tolerance_x, int tolerance_y,int MAX_Fluctuate_error) {
+    int error_x = Camera_err.x;
+    int error_y = Camera_err.y;
+    float avg_error_x, avg_error_y;
+    int F_x, F_y;
+
+    // 灏嗗綋鍓嶈宸姞鍏ラ槦锟?    ErrorQueue_Push(error_x, error_y);
+
+    // 璁＄畻闃熷垪涓墍鏈夎宸殑鍧囧€煎拰娉㈠姩骞呭害
+    ErrorQueue_GetAverage(&avg_error_x, &avg_error_y);
+    ErrorQueue_GetFluctuate(&F_x, &F_y);
+
+    // 闃熷垪婊′笖骞冲潎璇樊銆佹尝鍔ㄥ箙搴﹀潎鍦ㄩ槇鍊煎唴锛屽垽瀹氭憚鍍忓ご鍒颁綅
+    if (error_queue.is_full &&
+        avg_error_x <= tolerance_x &&
+        avg_error_y <= tolerance_y &&
+        F_x <= MAX_Fluctuate_error &&
+        F_y <= MAX_Fluctuate_error) {
+        return 1;
+    }
+
+    return 0;
+}
+
+#define UART_SEARCH_RESULT_FAIL     0U
+#define UART_SEARCH_RESULT_OK       1U
+#define UART_SEARCH_RESULT_RUNNING  2U
+typedef enum {
+    UART_SEARCH_IDLE = 0,
+    UART_SEARCH_WAIT,
+} uart_search_state_e;
+
+// 闈為樆濉炵瓑寰呰瑙夋暟鎹細姣忎釜浠诲姟鍛ㄦ湡妫€鏌ヤ竴娆★紝瓒呮椂鍚庣洿鎺ユ斁锟?uint8_t Wait_for_uart_with_search(uint8_t point_index) {
+    static uart_search_state_e search_state = UART_SEARCH_IDLE;
+    static uint8_t active_point_index = 0;
+    static uint32_t state_start_time = 0;
+    uint32_t now = HAL_GetTick();
+
+    if (search_state == UART_SEARCH_IDLE || active_point_index != point_index) {
+        active_point_index = point_index;
+        Is_coordgot = 0;
+        state_start_time = now;
+        search_state = UART_SEARCH_WAIT;
+        return UART_SEARCH_RESULT_RUNNING;
+    }
+
+    if (Is_coordgot) {
+        PositionControl_Enable(0);
+        search_state = UART_SEARCH_IDLE;
+        return UART_SEARCH_RESULT_OK;
+    }
+
+    if (now - state_start_time >= UART_WAIT_TIMEOUT_MS) {
+        PositionControl_Enable(0);
+        search_state = UART_SEARCH_IDLE;
+        return UART_SEARCH_RESULT_FAIL;
+    }
+
+    return UART_SEARCH_RESULT_RUNNING;
+}
+extern uint32_t camtim;
+extern uint8_t camtim_button;
+uint8_t iscamreached_safecount = 0;
+static uint32_t cam_stabilize_start_time = 0;
+// 鎽勫儚澶存牎姝ｅ埌涓績锛堥潪闃诲锟?uint8_t CamStabilizationToCenter(int tolerance_x, int tolerance_y,int MAX_Fluctuate_error) {
+
+    if (!is_cam_stabilizing) {
+        // 寮€濮嬫牎锟?        ErrorQueue_Init();				// 寮€濮嬫牎姝ｆ椂娓呯┖闃熷垪
+        PositionControl_Enable(0);		//鍏堝叧闂潗鏍囨牎姝ｏ紝纭繚鍧愭爣鏍℃鍜屾憚鍍忓ご鏍℃浜掓枼
+		CamStabilization_Enable(1);
+        is_cam_stabilizing = 1;
+        cam_stabilize_start_time = HAL_GetTick();
+		IsLight = 1;
+        iscamreached_safecount = 0;
+        return 0;
+    }
+
+    // 妫€鏌ユ槸鍚﹀埌杈剧洰锟?    if (IsCamReached(tolerance_x, tolerance_y,MAX_Fluctuate_error)) {
+		iscamreached_safecount ++;
+		if(iscamreached_safecount>10){
+			CamStabilization_Enable(0);
+			is_cam_stabilizing = 0;
+			IsLight = 0;
+			return 1; // 鏍℃瀹屾垚
+		}
+    }
+
+    if (HAL_GetTick() - cam_stabilize_start_time > CAM_STABILIZE_TIMEOUT_MS) {
+        CamStabilization_Enable(0);
+        is_cam_stabilizing = 0;
+        IsLight = 0;
+        return 1;
+    }
+
+    return 0; // 鏍℃锟?}
+
+//********************************鎽勫儚澶存牎姝id************************************//
+// 鍏ㄥ眬鐩爣閫熷害鍙橀噺
+TargetVelocity_t target_velocity = {0};
+
+// 瀹氫箟4涓數鏈虹殑鍏ㄥ眬鍙橀噺
+Motor_t motor1 = {0, 0};
+Motor_t motor2 = {0, 0};
+Motor_t motor3 = {0, 0};
+Motor_t motor4 = {0, 0};
+Motor_t motor5 = {0, 0};
+// 搴曠洏鍙傛暟
+static ChassisConfig_t chassis_config;
+static float k_omega;  // 鏃嬭浆绯绘暟 k = (Lx + Ly)/2
+
+void SetTargetVelocity(float vx, float vy, float omega) {
+    target_velocity.vx = vx;
+    target_velocity.vy = vy;
+    target_velocity.omega = omega;
+}
+
+void SetTargetLinearVelocity(float vx, float vy) {
+    target_velocity.vx = vx;
+    target_velocity.vy = vy;
+    target_velocity.omega = 0.0f;
+}
+// 鍒濆鍖栧簳鐩樺弬锟?void Mecanum_Init(ChassisConfig_t config) {
+    chassis_config = config;
+    k_omega = (config.wheel_dist_x + config.wheel_dist_y) / 2.0f;
+}
+
+// 杩愬姩瑙ｇ畻鏍稿績鍑芥暟锛堜笉甯﹁搴﹁ˉ鍋匡級
+void Mecanum_Kinematics(float vx, float vy, float omega)
+{
+	// 濡傛灉闇€瑕佷娇鐢ㄦ憚鍍忓ご鏍℃
+    if (cam_stabilization.is_enabled) {
+        vy += cam_correction_x * 0.01f;
+		vx += cam_correction_y * 0.01f;
+	}
+
+    // 1. 璁＄畻鍚勮疆鐨勭洰鏍囩嚎閫熷害锛坢/s锟?    // 杞瓙椤哄簭锛氬乏锟?4) 鍙冲墠(2) 宸﹀悗(3) 鍙冲悗(1)
+    float v4 =  vx - vy - k_omega * omega;  // 宸﹀墠 (4)
+    float v2 =  vx + vy + k_omega * omega;  // 鍙冲墠 (2)
+    float v3 =  vx + vy - k_omega * omega;  // 宸﹀悗 (3)
+    float v1 =  vx - vy + k_omega * omega;  // 鍙冲悗 (1)
+
+    // 2. 杞崲锟?RPM锛圧PM = (绾块€熷害 / (2蟺 * 杞崐锟?) * 60锟?    const float linear_to_rpm = 60.0f / (2 * 3.1415926f * chassis_config.wheel_radius);
+    float rpm4 = v4 * linear_to_rpm;
+    float rpm2 = v2 * linear_to_rpm;
+    float rpm3 = v3 * linear_to_rpm;
+    float rpm1 = v1 * linear_to_rpm;
+
+    // 3. 鎸夋渶澶ц疆閫熺粺涓€姣斾緥缂╂斁锛屼繚鎸佸洓杞€熷害姣斾緥
+    float max_abs_rpm = fabsf(rpm4);
+    float scale = 1.0f;
+
+    if (fabsf(rpm2) > max_abs_rpm) max_abs_rpm = fabsf(rpm2);
+    if (fabsf(rpm3) > max_abs_rpm) max_abs_rpm = fabsf(rpm3);
+    if (fabsf(rpm1) > max_abs_rpm) max_abs_rpm = fabsf(rpm1);
+
+    if (max_abs_rpm > chassis_config.max_rpm) {
+        scale = chassis_config.max_rpm / max_abs_rpm;
+        rpm4 *= scale;
+        rpm2 *= scale;
+        rpm3 *= scale;
+        rpm1 *= scale;
+    }
+
+    motor4.speed_rpm = (int16_t)rpm4;
+    motor2.speed_rpm = (int16_t)rpm2;
+    motor3.speed_rpm = (int16_t)rpm3;
+    motor1.speed_rpm = (int16_t)rpm1;
+
+    // 4. 璁剧疆鐢垫満鏂瑰悜
+    motor4.direction = (motor4.speed_rpm >= 0) ? 0 : 1;  // 宸﹀墠 (4)
+    motor2.direction = (motor2.speed_rpm >= 0) ? 1 : 0;  // 鍙冲墠 (2)
+    motor3.direction = (motor3.speed_rpm >= 0) ? 0 : 1;  // 宸﹀悗 (3)
+    motor1.direction = (motor1.speed_rpm >= 0) ? 1 : 0;  // 鍙冲悗 (1)
+}
+
+// 浠ヤ笅鏄師鏈夌殑杩愬姩鎺у埗鍑芥暟
+void stop(void) {
+    SetTargetVelocity(0.0f, 0.0f, 0.0f);
+}
+
+void go(void) {
+    SetTargetVelocity(0.5f, 0.0f, 0.0f);
+}
+
+void back(void) {
+    SetTargetVelocity(-0.5f, 0.0f, 0.0f);
+}
+
+void left(void) {
+    SetTargetVelocity(0.0f, - 0.5f, 0.0f);
+}
+
+void right(void) {
+    SetTargetVelocity(0.0f, 0.5f, 0.0f);
+}
+void right_back(void){
+	SetTargetVelocity(-0.5f, -0.5f, 0.0f);
+}
+
+void turn_left(void) {
+    SetTargetVelocity(0.0f, 0.0f, 4.5f);
+}
+
+void turn_right(void) {
+    SetTargetVelocity(0.0f, 0.0f, -4.5f);
+}
+
+//********************************寰抗pid閮ㄥ垎锛堟病鐢ㄥ埌锟?***********************************//
+uint8_t IsRun = 0;
+// PID鎺у埗鍣ㄥ垵濮嬪寲
+void PID_Init(PID_Controller* pid, float Kp, float Ki, float Kd, float max_output) {
+    pid->Kp = Kp;
+    pid->Ki = Ki;
+    pid->Kd = Kd;
+    pid->integral = 0.0f;
+    pid->prev_error = 0.0f;
+    pid->max_output = max_output;
+}
+void PID_Init_cam(PID_Controller* pid, float Kp,float Kp2, float Ki, float Kd, float max_output) {
+    pid->Kp = Kp;
+	pid->Kp2 = Kp2;
+    pid->Ki = Ki;
+    pid->Kd = Kd;
+    pid->integral = 0.0f;
+    pid->prev_error = 0.0f;
+    pid->max_output = max_output;
+}
+
+
+// PID鏇存柊璁＄畻
+float PID_Update(PID_Controller* pid, float error, float dt) {
+    // 姣斾緥锟?    float proportional = pid->Kp * error;
+
+    // 绉垎椤癸紙甯︽姉楗卞拰锟?    pid->integral += error * dt;
+    float integral = pid->Ki * pid->integral;
+
+    // 寰垎锟?    float derivative = pid->Kd * (error - pid->prev_error) / dt;
+    pid->prev_error = error;
+
+    // 璁＄畻鎬昏緭锟?    float output = proportional + integral + derivative;
+
+    // 闄愬埗杈撳嚭鑼冨洿
+    if (output > pid->max_output) {
+        output = pid->max_output;
+        pid->integral -= error * dt; // 鎶楅ケ鍜屽锟?    } else if (output < -pid->max_output) {
+        output = -pid->max_output;
+        pid->integral -= error * dt; // 鎶楅ケ鍜屽锟?    }
+
+    return output;
+}
+float PID_Update_cam(PID_Controller* pid, float error, float dt) {
+    // 姣斾緥锟?    float proportional = pid->Kp * error;
+	float proportional2 =pid->Kp2*error*fabsf(error);
+
+    // 绉垎椤癸紙甯︽姉楗卞拰锟?    pid->integral += error * dt;
+    float integral = pid->Ki * pid->integral;
+
+    // 寰垎锟?    float derivative = pid->Kd * (error - pid->prev_error) / dt;
+    pid->prev_error = error;
+
+    // 璁＄畻鎬昏緭锟?
+    float output = proportional +proportional2 + integral + derivative;
+
+//	if(output>0){output +=0.4f;}
+//	else if(output<0){output -=0.4f;}
+//	else output =0;
+
+    // 闄愬埗杈撳嚭鑼冨洿
+    if (output > pid->max_output) {
+        output = pid->max_output;
+        pid->integral -= error * dt; // 鎶楅ケ鍜屽锟?    } else if (output < -pid->max_output) {
+        output = -pid->max_output;
+        pid->integral -= error * dt; // 鎶楅ケ鍜屽锟?    }
+
+    return output;
+}
+// PID鏇存柊璁＄畻
+float PID_Update_angle(PID_Controller* pid, float error, float dt) {
+    // 姣斾緥锟?    float proportional = pid->Kp * error;
+
+    // 绉垎椤癸紙甯︽姉楗卞拰锟?    pid->integral += error * dt;
+    float integral = pid->Ki * pid->integral;
+
+    // 寰垎锟?    float derivative = pid->Kd * (error - pid->prev_error) / dt;
+    pid->prev_error = error;
+
+	float G = robot_pose_state.yaw_gyro_dps*g;
+    // 璁＄畻鎬昏緭锟?    float output = proportional + integral + derivative;
+
+    // 闄愬埗杈撳嚭鑼冨洿
+    if (output > pid->max_output) {
+        output = pid->max_output;
+        pid->integral -= error * dt; // 鎶楅ケ鍜屽锟?    } else if (output < -pid->max_output) {
+        output = -pid->max_output;
+        pid->integral -= error * dt; // 鎶楅ケ鍜屽锟?    }
+
+    return output;
+}
+// 鍏ㄥ眬PID鎺у埗鍣ㄥ疄锟?static PID_Controller line_follow_pid;
+uint8_t is_line_follow_enabled = 0; // 鏂板锛氬惊杩逛娇鑳芥爣锟?// 寰抗鍒濆鍖栧嚱锟?void Line_Follow_Init(void) {
+    // 鍒濆鍖朠ID鍙傛暟锛岃繖浜涘弬鏁板彲鑳介渶瑕佹牴鎹疄闄呰皟璇曡皟锟?    PID_Init(&line_follow_pid, 0.9f, 0.02f, 200.0f, 0.48f);  // Kp, Ki, Kd, max_output
+	is_line_follow_enabled = 0; // 鍒濆鐘舵€佷负绂佺敤
+	IsRun = 0;
+}
+// 鏂板锛氬惊杩逛娇锟?绂佺敤鍑芥暟
+void Line_Follow_Enable(uint8_t enable) {
+    is_line_follow_enabled = enable;
+
+    if (!enable) {
+        // 绂佺敤鏃堕噸缃甈ID鐘讹拷?        line_follow_pid.integral = 0.0f;
+        line_follow_pid.prev_error = 0.0f;
+		stop();
+    }
+}
+// 寰抗鎺у埗鍑芥暟
+void Line_Follow_Control(uint8_t* sensor_values, float base_speed, float dt) {
+	// 濡傛灉寰抗绂佺敤锛岄噸缃姸鎬佸苟杩斿洖
+    if (!is_line_follow_enabled) {
+        line_follow_pid.integral = 0.0f;
+        line_follow_pid.prev_error = 0.0f;
+
+		return;
+    }
+	// 鏂扮殑璇樊璁＄畻鏂瑰紡 - 鏇村己璋冧腑蹇冧紶鎰熷櫒
+    float error = 0.0f;
+
+    // 涓績浼犳劅鍣ㄤ紭锟?    if(is_task1_active()){
+		if( sensor_values[2] == 0 ||sensor_values[3] == 0) {
+			// 褰撲腑蹇冧紶鎰熷櫒妫€娴嬪埌榛戠嚎鏃讹紝寮哄埗璇樊褰掗浂
+			error = 0.0f;
+			// 鍚屾椂閲嶇疆PID绉垎椤癸紝閬垮厤鍘嗗彶璇樊褰卞搷
+			line_follow_pid.integral = 0.0f;
+			line_follow_pid.prev_error = 0.0f;
+		}
+		else {
+			// 鍙湁褰撲腑蹇冩病鏈夋娴嬪埌鏃讹紝鎵嶈绠楀姞鏉冭锟?
+			float total_weight = 0.0f;
+			const float weights[8] = {-6.f, -3.0f, -1.0f, 1.0f, 1.0f, 2.0f, 4.0f, 6.0f};
+
+			for (int i = 0; i < 8; i++) {
+				if (sensor_values[i] == 0) {
+					error += weights[i];
+					total_weight += abs_float(weights[i]);
+				}
+			}
+
+			if (total_weight > 0) {
+				error /= total_weight;
+			} else {
+				stop();
+				return;
+			}
+		}
+	}
+	else{
+			if( sensor_values[2] == 0 || sensor_values[3] == 0) {
+				// 褰撲腑蹇冧紶鎰熷櫒妫€娴嬪埌榛戠嚎鏃讹紝寮哄埗璇樊褰掗浂
+				error = 0.0f;
+				// 鍚屾椂閲嶇疆PID绉垎椤癸紝閬垮厤鍘嗗彶璇樊褰卞搷
+				line_follow_pid.integral = 0.0f;
+			}
+			else {
+				float total_weight = 0.0f;
+				const float weights[8] = {-4.f, -1.0f, -1.0f, 1.0f, 10.0f, 10.0f, 11.0f, 12.0f};
+
+				for (int i = 0; i < 8; i++) {
+					if (sensor_values[i] == 0) {
+						error += weights[i];
+						total_weight += abs_float(weights[i]);
+					}
+				}
+
+				if (total_weight > 0) {
+					error /= total_weight;
+				} else {
+					stop();
+					return;
+				}
+			}
+	}
+
+    // 鏇存柊PID鎺у埗锟?    float omega = PID_Update(&line_follow_pid, error, dt);
+
+    // 浣跨敤杩愬姩瀛︽帶锟?    if(task1_state.active){
+		if(!IsRun)SetTargetVelocity(0, 0.0f, -omega);
+		else SetTargetVelocity(base_speed, 0.0f, -0.68f - omega);}
+	else{
+		if(!IsRun)SetTargetVelocity(0, 0.0f, -omega);
+		else SetTargetVelocity(base_speed, 0.0f, 0.695f - omega);}
+}
+void Follow_line_task(void) {
+    static uint32_t last_time = 0;
+    uint32_t current_time = HAL_GetTick();
+    float dt = (current_time - last_time) / 1000.0f;
+    last_time = current_time;
+
+    if (dt <= 0) dt = 0.01f; // 鏈€灏忔椂闂撮棿锟?    if(is_task1_active()){
+		Line_Follow_Control(Anolog, 0.2376f, dt);}
+	else{
+		Line_Follow_Control(Anolog, 0.229f, dt);
+	}
+}
+
+//********************************寰抗pid閮ㄥ垎************************************//
+
+//**************************** 浠诲姟璋冨害瀹炵幇 ****************************//
+
+
+//==================================================================
+//锟?锟?鍚嶏細鍓嶅線鐩爣锟?//锟?   鑳斤細璁剧疆鐩爣鐐瑰苟浣胯兘杩愬姩锛岀劧鍚庡垽鏂槸鍚︾Щ鍔ㄥ畬锟?//杈撳叆鍙傛暟锛氱洰鏍噚锛寉鍧愭爣
+//锟?锟?uint8_t target_set = 0;
+uint8_t move_to_target(float x, float y) {
+
+
+    if (!target_set) {
+        SetTargetPosition(x, y);
+        PositionControl_Enable(1);
+        target_set = 1;
+        return 0;
+    }
+
+    if (IsPositionReached(raceh)) {
+        // 绉诲姩瀹屾垚
+        stop();
+        target_set = 0;
+        return 1; // 绉诲姩瀹屾垚
+    }
+
+    return 0; // 绉诲姩锟?}
+/***********Task1***************/
+
+// 鍚姩浠诲姟1
+void start_task1(void) {
+    task1_state.active = 1;
+    task1_state.current_step = 1;
+    task1_state.completed = 0;
+    task1_state.step_start = HAL_GetTick();
+}
+
+uint8_t is_hasgetcolor = 0;
+// 闈為樆濉炰换鍔℃墽锟?void run_task1(void) {
+    if (!task1_state.active) return;//鏈娇鑳戒换鍔″垯杩斿洖
+    uint32_t current_time = HAL_GetTick();
+    switch (task1_state.current_step) {
+//		case 0:	SetTargetYaw(0.0f);
+//				Servo_Action_Group(1);pospid_reinit(LOWSPEED);
+//				if (move_to_target(task1_targets[20].x, task1_targets[20].y)/*锟?*/) {task1_state.current_step++;}
+//				if(IsPositionReached(0.10f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);}
+////				if(IsPositionReached(0.05f)){SetTargetPosition(task1_targets[0].x, task1_targets[0].y);task1_state.current_step++;}
+//				break;
+        case 1:	SetTargetYaw(0.0f);Move_to_turnplate(1);
+				Servo_Action_Group(1);
+				tasknum = 1;
+				pospid_reinit(LOWSPEED);
+				if (move_to_pose_target(task1_targets[0].x, task1_targets[0].y, 0.0f)/*鐐逛簩缁寸爜*/) {Servo_Action_Group(2);task1_state.current_step++;}
+				if(IsPositionReached(0.50f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);}
+				if(IsPositionReached(0.45f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);}if(IsPositionReached(0.40f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);}
+				if(IsPositionReached(0.35f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1900);}if(IsPositionReached(0.30f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);}
+				if(IsPositionReached(0.25f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);}if(IsPositionReached(0.20f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);}
+				if(IsPositionReached(0.15f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1820);}if(IsPositionReached(0.10f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1810);}
+				if(IsPositionReached(0.04f)){__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);}
+				break;
+        case 2:Servo_Action_Group(2);PositionControl_Enable(0);
+				SetTargetVelocity(1.0f, 0.0f, -2.47f);
+				HAL_Delay(500);
+				Move_to_turnplate(2);
+				HAL_Delay(1000);
+				Get_Materialcolor(0);
+				Move_to_turnplate(3);
+				HAL_Delay(450);
+				SetTargetVelocity(1.0f, 0.0f, -2.08f);
+				HAL_Delay(500);
+				Get_Materialcolor(1);
+				Move_to_turnplate(4);
+				HAL_Delay(500);
+				SetTargetVelocity(1.0f, 0.0f, -2.14f);
+				HAL_Delay(550);
+				Get_Materialcolor(2);
+				Move_to_turnplate(5);
+				HAL_Delay(1000);Get_Materialcolor(3);__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[3]+200);
+				stop();
+				task1_state.current_step =11;
+				break;
+
+
+		case 11:pospid_reinit(MIDSPEED);SetTargetYaw(-90.0f);Get_Materialcolor(4);
+				if (move_to_pose_target(task1_targets[6].x, task1_targets[6].y, -90.0f)/*绉诲埌鐐筧*/ ) {
+										Find_corresponding_material(1);
+										task1_state.current_step++;}break;
+		case 12:if(Wait_for_uart_with_search(6) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 13:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){POS_move();task1_state.current_step++;}break;
+		case 14:pospid_reinit(HIGHSPEED);if (move_to_pose_target(task1_targets[7].x, task1_targets[7].y, -90.0f)/*绉诲埌鐐筨*/) {
+					Find_corresponding_material(2);
+					task1_state.current_step++;}break;
+		case 15:if(Wait_for_uart_with_search(7) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 16:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+						POS_move();task1_state.current_step++;}break;
+		case 17:if (move_to_pose_target(task1_targets[8].x, task1_targets[8].y, -90.0f)) {
+					Find_corresponding_material(3);
+					task1_state.current_step++;}break;
+		case 18:if(Wait_for_uart_with_search(8) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 19:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+						POS_move();task1_state.current_step++;}break;
+		case 20:if (move_to_pose_target(task1_targets[9].x, task1_targets[9].y, -90.0f)) {
+					Find_corresponding_material(4);
+					task1_state.current_step++;}break;
+		case 21:if(Wait_for_uart_with_search(9) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 22:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+						POS_move();task1_state.current_step++;}break;
+		case 23:if (move_to_pose_target(task1_targets[10].x, task1_targets[10].y, -90.0f)) {
+					Find_corresponding_material(5);
+					task1_state.current_step++;}break;
+		case 24:if(Wait_for_uart_with_search(10) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 25:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+						POS_move();task1_state.current_step++;}break;
+		case 26://Servo_Action_Group(2);SetTargetYaw(0.0f);
+				tasknum = 2;if (move_to_pose_target(task1_targets[11].x, task1_targets[11].y, 0.0f)/*鐐逛簩缁寸爜2*/) {Move_to_turnplate(3);/*绉诲埌杞洏1*/task1_state.current_step++;}break;
+		case 27:if (move_to_pose_target(task1_targets[19].x, task1_targets[19].y, -90.0f)/*濂栨澂3涓嬮潰*/){task1_state.current_step++;}break;
+		case 28:pospid_reinit(LOWESTSPEED);if (move_to_pose_target(task1_targets[12].x, task1_targets[12].y, -90.0f)/*濂栨澂3*/){task1_state.current_step++;Move_to_turnplate(2);}break;
+		case 29:if (move_to_pose_target(task1_targets[13].x, task1_targets[13].y, -90.0f)/*濂栨澂2*/) {task1_state.current_step++;Move_to_turnplate(1);}break;
+		case 30:if (move_to_pose_target(task1_targets[14].x, task1_targets[14].y, -90.0f)/*濂栨澂1*/) {__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1]+200);task1_state.current_step++;}	break;
+		case 31:
+				pospid_reinit(HIGHSPEED);
+				if (move_to_pose_target(task1_targets[15].x, task1_targets[15].y+15.0f, -90.0f)/*浜氬啗锟?/) {Servo_Action_Group(6);Find_corresponding_material(2);task1_state.current_step++;break;}
+				if(IsPositionReached(0.6f)){Servo_Action_Group(5);}break;
+		case 32:if(Wait_for_uart_with_search(15) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 33:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+						POS_move();Servo_Action_Group(3);HAL_Delay(100);
+						task1_state.current_step++;}break;
+		case 34:if (move_to_pose_target(task1_targets[16].x, task1_targets[16].y+15.0f, -90.0f)/*鍐犲啗锟?/) {Servo_Action_Group(4);Find_corresponding_material(1);task1_state.current_step++;}break;
+		case 35:if(Wait_for_uart_with_search(16) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 36:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+						POS_move();Servo_Action_Group(3);
+						task1_state.current_step++;}break;
+		case 37:if (move_to_pose_target(task1_targets[17].x, task1_targets[17].y+25.0f, -90.0f)) {Servo_Action_Group(7);Find_corresponding_material(3);task1_state.current_step++;}break;
+		case 38:if(Wait_for_uart_with_search(17) != UART_SEARCH_RESULT_RUNNING) { task1_state.current_step++; } break;
+		case 39:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
+						POS_move();task1_state.current_step++;}break;
+		case 40:pospid_reinit(HIGHESTSPEED);raceh = 0.200f;
+				if (move_to_pose_target(task1_targets[20].x, task1_targets[20].y, 0.0f)/*鍥炲*/) {task1_state.current_step = 41;}break;
+		case 41:raceh = 0.020f;if (move_to_pose_target(task1_targets[18].x, task1_targets[18].y, 0.0f)/*鍥炲*/) {task1_state.current_step++;}break;
+        default:
+            task1_state.active = 0;
+            task1_state.completed = 1;
+            break;
+    }
+}
+//闈為樆濉炲啓锟?//case 6:SetTargetYaw(-90.0f);if (move_to_target(task1_targets[6].x, task1_targets[6].y)/*鐐筧*/) {
+//										Pos_moveconctrl(1,100,6400);task1_state.step_start = current_time; task1_state.current_step++;}break;
+//		case 7:if (current_time - task1_state.step_start >= 1000) {//寤舵椂涓€锟?//					Pos_moveconctrl(0,100,6400);task1_state.step_start = current_time;task1_state.current_step++;
+//					}break;
+//		case 8:if (current_time - task1_state.step_start >= 1000) {//寤舵椂涓€锟?//					if (move_to_target(task1_targets[7].x, task1_targets[7].y)/*鐐筨*/) {task1_state.current_step++;}
+//					}break;
+// 妫€鏌ヤ换鍔℃槸鍚︽縺锟?uint8_t is_task1_active(void) {
+    return task1_state.active;
+}
+/***********Task1***************/
+
