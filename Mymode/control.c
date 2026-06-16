@@ -129,6 +129,21 @@ void POS_move(void){
 // 全局位置控制实例
 static PositionController_t position_control;
 uint8_t is_position_control_enabled = 0;
+PoseCoordination_t pose_coordination = {0};
+
+static float NormalizeYawError(float error)
+{
+    while (error > 180.0f) error -= 360.0f;
+    while (error < -180.0f) error += 360.0f;
+    return error;
+}
+
+static float ClampFloat(float value, float min_value, float max_value)
+{
+    if (value < min_value) return min_value;
+    if (value > max_value) return max_value;
+    return value;
+}
 
 // 位置控制初始化
 void PositionControl_Init(void) {
@@ -175,6 +190,7 @@ void SetTargetPosition(float x, float y) {
     Is_vel_mode = 1;
 	position_control.target_x = x;
     position_control.target_y = y;
+    target_velocity.omega = 0.0f;
 
     // 重置PID积分项，避免突变带来的积分饱和
     position_control.pid_x.integral = 0.0f;
@@ -245,6 +261,8 @@ void UpdatePositionControl(float dt) {
     }
 
     // 设置目标速度（使用局部坐标系的速度）
+    vx_local *= pose_coordination.sync_scale;
+    vy_local *= pose_coordination.sync_scale;
     SetTargetLinearVelocity(vy_local, vx_local);  // 位置环X轴方向与底盘横向速度方向一致
 
     // 检查是否到达目标位置（使用全局坐标系）
@@ -304,6 +322,9 @@ void AttitudeStabilization_Init(void) {
 
 // 设置目标偏航角
 void SetTargetYaw(float target) {
+    if (fabsf(NormalizeYawError(attitude_control.target_yaw - target)) < 0.001f) {
+        return;
+    }
      // 确保目标角度在[0, 360)范围内
     attitude_control.target_yaw = target;
 
@@ -325,6 +346,9 @@ uint8_t IsYawReached(float target_yaw, float tolerance_degrees) {
 }
 // 启用/禁用姿态稳定
 void EnableAttitudeStabilization(uint8_t enable) {
+    if (attitude_control.is_enabled == enable) {
+        return;
+    }
     attitude_control.is_enabled = enable;
 
     if (enable) {
@@ -366,10 +390,86 @@ void UpdateAttitudeStabilization(float dt) {
 
     // 使用PID计算旋转速度控制量
     attitude_correction = PID_Update_angle(&attitude_control.yaw_pid, error, dt);
+    attitude_correction *= pose_coordination.sync_scale;
 
 //	if (IsYawReached(attitude_control.target_yaw,0.5f)) { // 检查是否到达目标角度
 //        attitude_correction = 0.0f;
 //    }
+}
+
+void PoseCoordination_Init(void)
+{
+    pose_coordination.is_enabled = 0;
+    pose_coordination.sync_scale = 1.0f;
+    pose_coordination.slow_distance_m = POSE_SYNC_SLOW_DISTANCE_M;
+    pose_coordination.slow_yaw_deg = POSE_SYNC_SLOW_YAW_DEG;
+    pose_coordination.min_scale = POSE_SYNC_MIN_SCALE;
+}
+
+void PoseCoordination_Enable(uint8_t enable)
+{
+    pose_coordination.is_enabled = enable;
+    pose_coordination.sync_scale = 1.0f;
+}
+
+void SetTargetPose(float x, float y, float yaw)
+{
+    SetTargetPosition(x, y);
+    SetTargetYaw(yaw);
+    PoseCoordination_Enable(1);
+    PositionControl_Enable(1);
+    EnableAttitudeStabilization(1);
+}
+
+uint8_t IsPoseReached(float tolerance_xy, float tolerance_yaw_degrees)
+{
+    return IsPositionReached(tolerance_xy) && IsYawReached(attitude_control.target_yaw, tolerance_yaw_degrees);
+}
+
+void UpdatePoseCoordination(float dt)
+{
+    float distance_error_m;
+    float yaw_error_deg;
+    float pos_scale;
+    float yaw_scale;
+
+    if (!pose_coordination.is_enabled || dt <= 0.0f) {
+        pose_coordination.sync_scale = 1.0f;
+        return;
+    }
+
+    distance_error_m = sqrtf(
+        powf(position_control.target_x * 0.001f - robot_pose_state.pos_x_mm * 0.001f, 2.0f) +
+        powf(position_control.target_y * 0.001f - robot_pose_state.pos_y_mm * 0.001f, 2.0f));
+    yaw_error_deg = NormalizeYawError(attitude_control.target_yaw - GetYaw());
+
+    pos_scale = distance_error_m / pose_coordination.slow_distance_m;
+    yaw_scale = fabsf(yaw_error_deg) / pose_coordination.slow_yaw_deg;
+    pos_scale = ClampFloat(pos_scale, pose_coordination.min_scale, 1.0f);
+    yaw_scale = ClampFloat(yaw_scale, pose_coordination.min_scale, 1.0f);
+    pose_coordination.sync_scale = ClampFloat((pos_scale < yaw_scale) ? pos_scale : yaw_scale, pose_coordination.min_scale, 1.0f);
+}
+
+uint8_t move_to_pose_target(float x, float y, float yaw)
+{
+    static uint8_t pose_target_set = 0;
+
+    if (!pose_target_set) {
+        SetTargetPose(x, y, yaw);
+        pose_target_set = 1;
+        return 0;
+    }
+
+    if (IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG)) {
+        stop();
+        PoseCoordination_Enable(0);
+        PositionControl_Enable(0);
+        EnableAttitudeStabilization(0);
+        pose_target_set = 0;
+        return 1;
+    }
+
+    return 0;
 }
 uint8_t is_rotating = 0;
 // 旋转到指定角度（非阻塞）
@@ -673,6 +773,7 @@ void SetTargetVelocity(float vx, float vy, float omega) {
 void SetTargetLinearVelocity(float vx, float vy) {
     target_velocity.vx = vx;
     target_velocity.vy = vy;
+    target_velocity.omega = 0.0f;
 }
 // 初始化底盘参数
 void Mecanum_Init(ChassisConfig_t config) {
@@ -709,17 +810,31 @@ void Mecanum_Kinematics(float vx, float vy, float omega)
 
     // 2. 转换为 RPM（RPM = (线速度 / (2π * 轮半径)) * 60）
     const float linear_to_rpm = 60.0f / (2 * 3.1415926f * chassis_config.wheel_radius);
-    motor4.speed_rpm = v4 * linear_to_rpm;
-    motor2.speed_rpm = v2 * linear_to_rpm;
-    motor3.speed_rpm = v3 * linear_to_rpm;
-    motor1.speed_rpm = v1 * linear_to_rpm;
+    float rpm4 = v4 * linear_to_rpm;
+    float rpm2 = v2 * linear_to_rpm;
+    float rpm3 = v3 * linear_to_rpm;
+    float rpm1 = v1 * linear_to_rpm;
 
-    // 3. 限制转速范围
-    #define CONSTRAIN(value, min, max) ((value) < (min) ? (min) : ((value) > (max) ? (max) : (value)))
-    motor4.speed_rpm = CONSTRAIN(motor4.speed_rpm, -chassis_config.max_rpm, chassis_config.max_rpm);
-    motor2.speed_rpm = CONSTRAIN(motor2.speed_rpm, -chassis_config.max_rpm, chassis_config.max_rpm);
-    motor3.speed_rpm = CONSTRAIN(motor3.speed_rpm, -chassis_config.max_rpm, chassis_config.max_rpm);
-    motor1.speed_rpm = CONSTRAIN(motor1.speed_rpm, -chassis_config.max_rpm, chassis_config.max_rpm);
+    // 3. 按最大轮速统一比例缩放，保持四轮速度比例
+    float max_abs_rpm = fabsf(rpm4);
+    float scale = 1.0f;
+
+    if (fabsf(rpm2) > max_abs_rpm) max_abs_rpm = fabsf(rpm2);
+    if (fabsf(rpm3) > max_abs_rpm) max_abs_rpm = fabsf(rpm3);
+    if (fabsf(rpm1) > max_abs_rpm) max_abs_rpm = fabsf(rpm1);
+
+    if (max_abs_rpm > chassis_config.max_rpm) {
+        scale = chassis_config.max_rpm / max_abs_rpm;
+        rpm4 *= scale;
+        rpm2 *= scale;
+        rpm3 *= scale;
+        rpm1 *= scale;
+    }
+
+    motor4.speed_rpm = (int16_t)rpm4;
+    motor2.speed_rpm = (int16_t)rpm2;
+    motor3.speed_rpm = (int16_t)rpm3;
+    motor1.speed_rpm = (int16_t)rpm1;
 
     // 4. 设置电机方向
     motor4.direction = (motor4.speed_rpm >= 0) ? 0 : 1;  // 左前 (4)
@@ -999,11 +1114,10 @@ uint8_t move_to_target(float x, float y) {
 
 
     if (!is_position_control_enabled && !target_set) {
-        // 设置新目标
         SetTargetPosition(x, y);
         PositionControl_Enable(1);
         target_set = 1;
-        return 0; // 移动刚开始
+        return 0;
     }
 
     if (!is_position_control_enabled && target_set) {
@@ -1073,7 +1187,7 @@ void run_task1(void) {
 
 		case 11:EnableAttitudeStabilization(1);
 				pospid_reinit(MIDSPEED);SetTargetYaw(-90.0f);Get_Materialcolor(4);
-				if (move_to_target(task1_targets[6].x, task1_targets[6].y)/*移到点a*/) {
+				if (move_to_pose_target(task1_targets[6].x, task1_targets[6].y, -90.0f)/*移到点a*/ ) {
 										Find_corresponding_material(1);
 										task1_state.current_step++;}break;
 		case 12:if(Wait_for_uart_with_search(6)) { task1_state.current_step++; }
@@ -1108,11 +1222,11 @@ void run_task1(void) {
 		case 25:if(CamStabilizationToCenter(TOLERANCE,TOLERANCE,max_min_error)){
 						POS_move();task1_state.current_step++;}break;
 		case 26://Servo_Action_Group(2);EnableAttitudeStabilization(1);
-				tasknum = 2;SetTargetYaw(0.0f);if (move_to_target(task1_targets[11].x, task1_targets[11].y)/*点二维码2*/) {Move_to_turnplate(3);/*移到转盘1*/task1_state.current_step++;}break;
-		case 27:SetTargetYaw(-90.0f);if (move_to_target(task1_targets[19].x, task1_targets[19].y)/*奖杯3下面*/){task1_state.current_step++;}break;
-		case 28:pospid_reinit(LOWESTSPEED);SetTargetYaw(-90.0f);if (move_to_target(task1_targets[12].x, task1_targets[12].y)/*奖杯3*/){task1_state.current_step++;Move_to_turnplate(2);}break;
+				tasknum = 2;if (move_to_pose_target(task1_targets[11].x, task1_targets[11].y, 0.0f)/*点二维码2*/) {Move_to_turnplate(3);/*移到转盘1*/task1_state.current_step++;}break;
+		case 27:if (move_to_pose_target(task1_targets[19].x, task1_targets[19].y, -90.0f)/*奖杯3下面*/){task1_state.current_step++;}break;
+		case 28:pospid_reinit(LOWESTSPEED);if (move_to_pose_target(task1_targets[12].x, task1_targets[12].y, -90.0f)/*奖杯3*/){task1_state.current_step++;Move_to_turnplate(2);}break;
 		case 29:if (move_to_target(task1_targets[13].x, task1_targets[13].y)/*奖杯2*/) {task1_state.current_step++;Move_to_turnplate(1);}break;
-		case 30:if (move_to_target(task1_targets[14].x, task1_targets[14].y)/*奖杯1*/) {__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1]+200);SetTargetYaw(-90.0f);task1_state.current_step++;}	break;
+		case 30:if (move_to_pose_target(task1_targets[14].x, task1_targets[14].y, -90.0f)/*奖杯1*/) {__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1]+200);task1_state.current_step++;}	break;
 		case 31:
 				pospid_reinit(HIGHSPEED);
 				if (move_to_target(task1_targets[15].x, task1_targets[15].y+15.0f)/*亚军台*/) {Servo_Action_Group(6);Find_corresponding_material(2);task1_state.current_step++;break;}

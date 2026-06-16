@@ -23,9 +23,9 @@
 /* USER CODE BEGIN 0 */
 #include "stdio.h"
 
-volatile uint8_t rx_len = 0;  //����һ֡���ݵĳ���
-volatile uint8_t recv_end_flag = 0; //һ֡���ݽ�����ɱ�־
-uint8_t rx_buffer[100]={0};  //�������ݻ�������
+volatile uint8_t rx_len = 0;  // 一帧数据的长度
+volatile uint8_t recv_end_flag = 0; // 一帧数据接收完成标志
+uint8_t rx_buffer[100]={0};  // 串口接收缓冲区
 
 __IO bool rxFrameFlag = false;
 __IO uint8_t rxCmd[CMD_LEN] = {0};
@@ -55,7 +55,7 @@ void MX_UART4_Init(void)
 {
 
   /* USER CODE BEGIN UART4_Init 0 */
-		//PC10PC11��������·�ź���
+		// PC10、PC11 为串口4信号线
   /* USER CODE END UART4_Init 0 */
 
   /* USER CODE BEGIN UART4_Init 1 */
@@ -83,7 +83,7 @@ void MX_UART5_Init(void)
 {
 
   /* USER CODE BEGIN UART5_Init 0 */
-		//PC12PD2��������·�ź���
+		// PC12、PD2 为串口5信号线
   /* USER CODE END UART5_Init 0 */
 
   /* USER CODE BEGIN UART5_Init 1 */
@@ -113,7 +113,7 @@ void MX_USART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART1_Init 0 */
-	//PA9PA10���ߴ���
+		// PA9、PA10 为串口1信号线
   /* USER CODE END USART1_Init 0 */
 
   /* USER CODE BEGIN USART1_Init 1 */
@@ -132,9 +132,9 @@ void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-	__HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); //ʹ��IDLE�ж�
+	__HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); // 使能IDLE中断
 
-	//DMA���պ������˾�һ��Ҫ�ӣ����ӽ��ղ�����һ�δ�������ʵ���ݣ��ǿյģ��Ҵ�ʱ���յ������ݳ���Ϊ�����������ݳ���
+	// DMA接收需要先挂起再开启，第一次数据可能是空帧，当前长度按完整包处理
 	HAL_UART_Receive_DMA(&huart1,rx_buffer,BUFFER_SIZE);
   /* USER CODE END USART1_Init 2 */
 
@@ -145,7 +145,7 @@ void MX_USART2_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART2_Init 0 */
-		//PD5PD6�������ź���
+		// PD5、PD6 为串口2信号线
   /* USER CODE END USART2_Init 0 */
 
   /* USER CODE BEGIN USART2_Init 1 */
@@ -174,7 +174,7 @@ void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
-		//PB10PB11��maixcamͨ��
+		// PB10、PB11 为 maixcam 通信口
   /* USER CODE END USART3_Init 0 */
 
   /* USER CODE BEGIN USART3_Init 1 */
@@ -203,7 +203,7 @@ void MX_USART6_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART6_Init 0 */
-		//PC6PC7��ά��ɨ��ģ���ź���
+		// PC6、PC7 为二维码扫描模块信号线
   /* USER CODE END USART6_Init 0 */
 
   /* USER CODE BEGIN USART6_Init 1 */
@@ -738,16 +738,16 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 /* USER CODE BEGIN 1 */
 /*************************************************************************************************
-*	�� �� ��:	fputc
-*	��ڲ���:	ch - Ҫ������ַ� ��  f - �ļ�ָ�루�����ò�����
-*	�� �� ֵ:����ʱ�����ַ�������ʱ���� EOF��-1��
-*	��������:	�ض��� fputc ������Ŀ����ʹ�� printf ����
-*	˵    ��:��		
+*	函数名:	fputc
+*	入口参数:	ch - 要输出的字符, f - 文件指针
+*	返回值:	成功时返回字符值，失败时返回 EOF(-1)
+*	功能:		重定向 fputc 以便使用 printf
+*	说明:		
 *************************************************************************************************/
 
 int fputc(int ch, FILE *f)
 {
-	HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 100);	// ���͵��ֽ�����
+	HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 100);	// 发送单字节
 	return (ch);
 }
 

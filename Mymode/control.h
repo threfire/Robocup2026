@@ -45,6 +45,10 @@ void Follow_line_task(void);
 #define MIDSPEED 3.0f
 #define LOWSPEED  1.2f
 #define LOWESTSPEED  1.0f
+#define POSE_SYNC_SLOW_DISTANCE_M 0.35f
+#define POSE_SYNC_SLOW_YAW_DEG    35.0f
+#define POSE_SYNC_MIN_SCALE       0.15f
+#define POSE_YAW_TOLERANCE_DEG    2.0f
 
 #define MAKEUP_FOR_ANGLE 2.0f
 // 位置控制PID结构体
@@ -56,9 +60,17 @@ typedef struct {
     float target_y;            // 目标Y坐标
     uint32_t last_update_time; // 最后更新时间
 } PositionController_t;
+typedef struct {
+    uint8_t is_enabled;       // 位姿协调使能
+    float sync_scale;         // 平移和旋转共用减速比例
+    float slow_distance_m;    // 平移减速距离，单位m
+    float slow_yaw_deg;       // 旋转减速角度，单位deg
+    float min_scale;          // 最小输出比例
+} PoseCoordination_t;
 // 声明全局位置控制变量
 extern PositionController_t position_control;
 extern uint8_t is_position_control_enabled;
+extern PoseCoordination_t pose_coordination;
 
 // 位置控制函数声明
 void PositionControl_Init(void);
@@ -66,6 +78,12 @@ void PositionControl_Enable(uint8_t enable);
 void SetTargetPosition(float x, float y);
 void UpdatePositionControl(float dt);
 uint8_t IsPositionReached(float tolerance_xy);
+void PoseCoordination_Init(void);
+void PoseCoordination_Enable(uint8_t enable);
+void SetTargetPose(float x, float y, float yaw);
+void UpdatePoseCoordination(float dt);
+uint8_t IsPoseReached(float tolerance_xy, float tolerance_yaw_degrees);
+uint8_t move_to_pose_target(float x, float y, float yaw);
 uint8_t move_to_target(float x, float y);
 //********************************摄像头校正pid部分************************************//
 #define TOLERANCE 3

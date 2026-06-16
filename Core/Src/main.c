@@ -69,7 +69,7 @@ uint8_t qanum = 0;//定义并初始化二维码接收变量
 uint8_t rx_data[2];//颜色传感器接收buffer
 uint32_t camtim = 0;//摄像头超时计时（好像没用到）
 uint8_t camtim_button = 0;//摄像头超时计时开关
-uint8_t debug = 0;//调试
+uint8_t debug = 1;//调试
 uint8_t Start_flag = 0;//软件开始开关
 uint8_t IsLight = 0;//开灯（初始化为关灯）
 uint16_t led_count;//led翻转计时
@@ -94,6 +94,10 @@ void Main_Tasktick(void);
 #define ODOM_TEST_REACHED_M   0.003f
 #define OPEN_LOOP_TEST_TIME_MS 500U
 #define OPEN_LOOP_STOP_TIME_MS 200U
+#define CONTROL_DT_S          0.001f
+#define TIM6_TICK_MS          1U
+#define MOTOR_CMD_DIVIDER     2U
+#define STATUS_TICK_DIVIDER   1000U
 
 /* USER CODE END 0 */
 
@@ -171,6 +175,7 @@ int main(void)
 	hwt_imu_init();					// 初始化HWT906解析器
 	CamStabilization_Init();		// 初始化视觉pid控制器
 	PositionControl_Init(); 		// 初始化位置pid控制器
+    PoseCoordination_Init();        // 位姿协调初始化
     AttitudeStabilization_Init();	//初始化角度pid控制器
 //	servo_init();					//舵机初始化
 	AdcGet_Init();					//红外读取初始化		
@@ -188,7 +193,7 @@ int main(void)
 		HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);
 		Start_flag = 1;
 		EnableAttitudeStabilization(1);
-		SetTargetYaw(0.0f);
+		SetTargetYaw(-90.0f);
 		pospid_reinit(LOWSPEED);
 		while (!move_to_target(300.0f, 300.0f)) {
 			HAL_Delay(5);
@@ -296,16 +301,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
 		led_count++;
 		timcount ++;
-		if(camtim_button){camtim +=5;}//摄像头超时计时，移动精度高用不到
+		if(camtim_button){camtim += TIM6_TICK_MS;}//摄像头超时计时，移动精度高用不到
 		if (is_position_control_enabled) {
-			UpdatePositionControl(0.005f);//更新位置环（200hz）
+			UpdatePositionControl(CONTROL_DT_S);//更新位置环，1kHz
 		}
-		Process_usart1_packet();//解析maxcam数据200hz
+		Process_usart1_packet();//解析maxcam数据，1kHz调用
 		if (cam_stabilization.is_enabled) {
 			
-            UpdateCamStabilization(Camera_err.x, Camera_err.y, 0.005f);//更新视觉环
+            UpdateCamStabilization(Camera_err.x, Camera_err.y, CONTROL_DT_S);//更新视觉环，1kHz
         }
-		UpdateAttitudeStabilization(0.005f);//更新角度环
+		UpdateAttitudeStabilization(CONTROL_DT_S);//更新角度环，1kHz
+        UpdatePoseCoordination(CONTROL_DT_S);//更新位姿协调
 		// 添加临界区保护
         __disable_irq();
         TargetVelocity_t current_target = target_velocity;
@@ -317,8 +323,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             current_target.vy,
             current_target.omega
         );
-		if(Is_vel_mode){//发送运动指令100hz
-			if(led_count %2 ==0){
+		if(Is_vel_mode){//发送运动指令，200Hz
+			if((led_count % MOTOR_CMD_DIVIDER) == 0U){
 				if(Start_flag){
 					ZDT_X42_V2_Velocity_Control(1, motor1.direction, 230, (float)abs_int(motor1.speed_rpm), 0);
 					ZDT_X42_V2_Velocity_Control(2, motor2.direction, 230, (float)abs_int(motor2.speed_rpm), 0);
@@ -327,7 +333,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				}
 			}	
 		}
-		if(led_count == 100)//系统正常运行提示灯
+		if(led_count >= STATUS_TICK_DIVIDER)//系统正常运行提示灯
 		{
 			HAL_UART_Transmit_IT(&huart1,&cammode,sizeof (cammode));
 			HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);

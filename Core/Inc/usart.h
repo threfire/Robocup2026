@@ -46,9 +46,9 @@ extern UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN Private defines */
 #define BUFFER_SIZE  100  
-extern  volatile uint8_t rx_len ;  //����һ֡���ݵĳ���
-extern volatile uint8_t recv_end_flag; //һ֡���ݽ�����ɱ�־
-extern uint8_t rx_buffer[100];  //�������ݻ�������
+extern  volatile uint8_t rx_len ;  // 一帧数据的长度
+extern volatile uint8_t recv_end_flag; // 一帧数据接收完成标志
+extern uint8_t rx_buffer[100];  // 串口接收缓冲区
 
 #define		CMD_LEN		28
 
