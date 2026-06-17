@@ -57,7 +57,7 @@ I (../UserDrivers/key.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_spi_154.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_fonts.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_image.h)(0x6A2FCA62)
-I (../Mymode/control.h)(0x6A31F591)
+I (../Mymode/control.h)(0x6A3222FB)
 I (../Mymode/woniudonghua.h)(0x67E82D2E)
 I (../Mymode/usart_manager.h)(0x6A2FCA62)
 I (../Mymode/userkey.h)(0x67E93B4A)
@@ -1621,8 +1621,8 @@ I (../UserDrivers/lcd_fonts.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_image.h)(0x6A2FCA62)
 I (..\Mymode\mxcam.h)(0x6A2FCA62)
 I (D:\Keil5\ARM\ARMCC\include\string.h)(0x588B8344)
-F (..\Mymode\control.c)(0x6A31F738)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\control.o --omf_browse robocup\control.crf --depend robocup\control.d)
-I (..\Mymode\control.h)(0x6A31F591)
+F (..\Mymode\control.c)(0x6A322371)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\control.o --omf_browse robocup\control.crf --depend robocup\control.d)
+I (..\Mymode\control.h)(0x6A3222FB)
 I (../Core/Inc/main.h)(0x6A2FFD79)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x67CFC4DC)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x6A3156DE)
@@ -1680,7 +1680,7 @@ I (..\Mymode\graysensor.h)(0x6885E90C)
 I (..\Mymode\userkey.h)(0x67E93B4A)
 I (..\Mymode\QAma.h)(0x6A2FCA62)
 I (..\Mymode\mxcam.h)(0x6A2FCA62)
-F (..\Mymode\control.h)(0x6A31F591)()
+F (..\Mymode\control.h)(0x6A3222FB)()
 F (..\Mymode\woniudonghua.c)(0x67E9398C)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\woniudonghua.o --omf_browse robocup\woniudonghua.crf --depend robocup\woniudonghua.d)
 I (..\Mymode\woniudonghua.h)(0x67E82D2E)
 I (../Core/Inc/main.h)(0x6A2FFD79)

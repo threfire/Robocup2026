@@ -44,27 +44,32 @@ void Follow_line_task(void);
 //********************************循迹pid部分************************************//
 
 //********************************位置控制pid部分************************************//
-#define HIGHESTSPEED 6.3f
-#define HIGHSPEED 5.0f
-#define MIDSPEED 2.0f
-#define LOWSPEED  1.15f
-#define LOWESTSPEED  0.55f
-#define TASK1_RELATIVE_SPEED 0.24f
-#define TASK1_RELATIVE_SWITCH_PAUSE_MS 20U
-#define POSITION_PID_DEFAULT_KP 8.0f
-#define POSITION_PID_TASK1_RELATIVE_KP 1.4f
-#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 0.90f
-#define POSITION_PLANNER_MAX_ACCEL_MPS2 5.0f
-#define POSITION_PLANNER_MAX_DECEL_MPS2 11.0f
-#define POSITION_PLANNER_MAX_JERK_MPS3 18.0f
-#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.35f
-#define POSE_SYNC_SLOW_DISTANCE_M 0.25f
-#define POSE_SYNC_SLOW_YAW_DEG    34.0f
-#define POSE_SYNC_MIN_SCALE       0.60f
-#define POSE_YAW_TOLERANCE_DEG    2.0f
-#define POSE_YAW_DEAD_ZONE_DEG    0.1f
+#define HIGHESTSPEED 6.3f                           // 最高位置控制速度，单位m/s
+#define HIGHSPEED 3.80f                             // 高速位置控制速度，单位m/s
+#define MIDSPEED 2.0f                               // 中速位置控制速度，单位m/s
+#define LOWSPEED  1.5f                              // 低速位置控制速度，单位m/s
+#define LOWESTSPEED  0.55f                          // 最低位置控制速度，单位m/s
+#define TASK1_RELATIVE_SPEED 0.75f                  // Task1相对位移动作速度，单位m/s
+#define TASK1_RELATIVE_SWITCH_PAUSE_MS 20U          // Task1相对位移切换停顿时间，单位ms
+#define POSITION_PID_DEFAULT_KP 7.0f                // 位置PID默认比例系数
+#define POSITION_PID_DEFAULT_KD 0.05f               // 位置PID默认微分系数
+#define POSITION_PID_TASK1_RELATIVE_KP 7.0f         // Task1相对位移使用的位置PID比例系数
+#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f        // 位置规划最小速度，单位m/s
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 0.90f     // 位置规划巡航速度，单位m/s
+#define POSITION_PLANNER_MAX_ACCEL_MPS2 5.0f        // 位置规划最大加速度，单位m/s^2
+#define POSITION_PLANNER_MAX_DECEL_MPS2 11.0f       // 位置规划最大减速度，单位m/s^2
+#define POSITION_PLANNER_MAX_JERK_MPS3 18.0f        // 位置规划最大加加速度，单位m/s^3
+#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f       // 位置规划停止速度阈值，单位m/s
+#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.04f // 位置规划近目标距离阈值，单位m
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.35f       // 位置反馈速度上限，单位m/s
+#define POSITION_REACHED_TOLERANCE_M 0.003f         // 默认位置到位容差，单位m
+#define POSITION_FINE_REACHED_TOLERANCE_M 0.002f    // 精定位位置到位容差，单位m
+#define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f  // 回家段粗定位位置到位容差，单位m
+#define POSE_SYNC_SLOW_DISTANCE_M 0.25f             // 姿态协同减速距离，单位m
+#define POSE_SYNC_SLOW_YAW_DEG    34.0f             // 姿态协同减速角度，单位deg
+#define POSE_SYNC_MIN_SCALE       0.60f             // 姿态协同最小缩放比例
+#define POSE_YAW_TOLERANCE_DEG    2.0f              // 姿态到位角度容差，单位deg
+#define POSE_YAW_DEAD_ZONE_DEG    0.1f              // 姿态死区，单位deg
 
 #define MAKEUP_FOR_ANGLE 2.0f
 
