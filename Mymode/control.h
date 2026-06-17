@@ -18,6 +18,7 @@ extern float attitude_correction;   // 姿态校正量（外部可访问）
 extern uint8_t isPosture_correction;	// 开启姿态校正标志位（外部可访问）
 void AttitudeStabilization_Init(void);
 void SetTargetYaw(float target);
+uint8_t IsYawReached(float target_yaw, float tolerance_degrees);
 void UpdateAttitudeStabilization(float dt);
 void EnableAttitudeStabilization(uint8_t enable);
 //********************************角度pid部分************************************//
@@ -43,17 +44,25 @@ void Follow_line_task(void);
 //********************************循迹pid部分************************************//
 
 //********************************位置控制pid部分************************************//
-#define HIGHESTSPEED 7.0f
-#define HIGHSPEED 5.4f
-#define MIDSPEED 2.2f
-#define LOWSPEED  1.3f
-#define LOWESTSPEED  0.5f
+#define HIGHESTSPEED 6.3f
+#define HIGHSPEED 5.0f
+#define MIDSPEED 2.0f
+#define LOWSPEED  1.15f
+#define LOWESTSPEED  0.55f
+#define TASK1_RELATIVE_SPEED 0.24f
+#define TASK1_RELATIVE_SWITCH_PAUSE_MS 20U
 #define POSITION_PID_DEFAULT_KP 8.0f
-#define POSITION_PID_TASK1_RELATIVE_KP 4.0f
-#define POSITION_SPEED_LPF_ALPHA 0.1f
+#define POSITION_PID_TASK1_RELATIVE_KP 1.4f
+#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 0.90f
+#define POSITION_PLANNER_MAX_ACCEL_MPS2 5.0f
+#define POSITION_PLANNER_MAX_DECEL_MPS2 11.0f
+#define POSITION_PLANNER_MAX_JERK_MPS3 18.0f
+#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.35f
 #define POSE_SYNC_SLOW_DISTANCE_M 0.25f
 #define POSE_SYNC_SLOW_YAW_DEG    34.0f
-#define POSE_SYNC_MIN_SCALE       0.50f
+#define POSE_SYNC_MIN_SCALE       0.60f
 #define POSE_YAW_TOLERANCE_DEG    2.0f
 #define POSE_YAW_DEAD_ZONE_DEG    0.1f
 
@@ -211,6 +220,7 @@ void shengjiang(void);
 void fangzhi(void);
 void jiaozhun(void);
 void POS_move(void);
+uint8_t task1_relative_forward_back(void);
 
 void task1(void);
 void Motor_tick(void);

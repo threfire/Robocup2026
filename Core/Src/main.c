@@ -189,7 +189,9 @@ int main(void)
 	//	HAL_UART_Transmit_IT(&huart3,gy33sendbuffer1 ,sizeof (gy33sendbuffer2 ));
 		HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);
 		Start_flag = 1;
-		POS_move();
+		while (!task1_relative_forward_back()) {
+			HAL_Delay(5);
+		}
 //		HAL_Delay(3000);
 //		while (!move_to_target(ODOM_TEST_HOME_X_MM, ODOM_TEST_HOME_Y_MM)) {
 //			HAL_Delay(5);

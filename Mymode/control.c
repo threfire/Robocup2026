@@ -41,7 +41,7 @@ static const Point2D_t task1_targets[] = {
 };
 // X42浣嶇疆鎺ュ彛浣跨敤瑙掑害鍗曚綅锛屽師浣嶇疆鍏ュ彛鍙傛暟鎸?200鑴夊啿/鍦堟崲绠椼€?
 #define ZDT_X42_POS_DEG_PER_CLK (360.0f / 3200.0f)
-#define TASK1_RELATIVE_X_MOVE_MM 60.0f
+#define TASK1_RELATIVE_X_MOVE_MM 100.0f
 // 浠诲姟鐘舵€佸彉閲?
 TaskState_t task1_state = {0};
 
@@ -132,8 +132,8 @@ void POS_move(void){
 PositionController_t position_control;
 uint8_t is_position_control_enabled = 0;
 PoseCoordination_t pose_coordination = {0};
-static float position_lpf_vx_local = 0.0f;
-static float position_lpf_vy_local = 0.0f;
+static float position_plan_speed_mps = 0.0f;
+static float position_plan_accel_mps2 = 0.0f;
 
 static float NormalizeYawError(float error)
 {
@@ -147,6 +147,51 @@ static float ClampFloat(float value, float min_value, float max_value)
     if (value < min_value) return min_value;
     if (value > max_value) return max_value;
     return value;
+}
+
+static void PositionPlanner_Reset(void)
+{
+    position_plan_speed_mps = 0.0f;
+    position_plan_accel_mps2 = 0.0f;
+}
+
+static float PositionSpeedPlan_Update(float distance_error_m, float dt)
+{
+    float cruise_speed = ClampFloat(POSITION_PLANNER_CRUISE_SPEED_MPS, 0.0f, position_control.pid_x.max_output);
+    float brake_speed = sqrtf(2.0f * POSITION_PLANNER_MAX_DECEL_MPS2 * distance_error_m);
+    float target_speed = ClampFloat(cruise_speed, 0.0f, brake_speed);
+    float target_accel = 0.0f;
+    float accel_delta;
+
+    if (distance_error_m <= raceh) {
+        PositionPlanner_Reset();
+        return 0.0f;
+    }
+
+    if (position_plan_speed_mps > target_speed) {
+        target_accel = -POSITION_PLANNER_MAX_DECEL_MPS2;
+    } else if (position_plan_speed_mps < target_speed) {
+        target_accel = POSITION_PLANNER_MAX_ACCEL_MPS2;
+    }
+
+    accel_delta = target_accel - position_plan_accel_mps2;
+    accel_delta = ClampFloat(accel_delta, -POSITION_PLANNER_MAX_JERK_MPS3 * dt, POSITION_PLANNER_MAX_JERK_MPS3 * dt);
+    position_plan_accel_mps2 += accel_delta;
+    position_plan_accel_mps2 = ClampFloat(position_plan_accel_mps2, -POSITION_PLANNER_MAX_DECEL_MPS2, POSITION_PLANNER_MAX_ACCEL_MPS2);
+
+    position_plan_speed_mps += position_plan_accel_mps2 * dt;
+    position_plan_speed_mps = ClampFloat(position_plan_speed_mps, 0.0f, cruise_speed);
+
+    if (position_plan_speed_mps > target_speed && position_plan_accel_mps2 > 0.0f) {
+        position_plan_speed_mps = target_speed;
+        position_plan_accel_mps2 = 0.0f;
+    }
+
+    if (position_plan_speed_mps < POSITION_PLANNER_MIN_SPEED_MPS && target_speed > POSITION_PLANNER_MIN_SPEED_MPS) {
+        position_plan_speed_mps = POSITION_PLANNER_MIN_SPEED_MPS;
+    }
+
+    return position_plan_speed_mps;
 }
 
 // 浣嶇疆鎺у埗鍒濆鍖?
@@ -182,8 +227,7 @@ void PositionControl_Enable(uint8_t enable) {
         position_control.pid_x.prev_error = 0.0f;
         position_control.pid_y.integral = 0.0f;
         position_control.pid_y.prev_error = 0.0f;
-        position_lpf_vx_local = 0.0f;
-        position_lpf_vy_local = 0.0f;
+        PositionPlanner_Reset();
 
         // 鍋滄灏忚溅
         stop();
@@ -199,14 +243,12 @@ void SetTargetPosition(float x, float y) {
 	position_control.target_x = x;
     position_control.target_y = y;
     target_velocity.omega = 0.0f;
-
     // 閲嶇疆PID绉垎椤癸紝閬垮厤绐佸彉甯︽潵鐨勭Н鍒嗛ケ鍜?
     position_control.pid_x.integral = 0.0f;
     position_control.pid_x.prev_error = 0.0f;
     position_control.pid_y.integral = 0.0f;
     position_control.pid_y.prev_error = 0.0f;
-    position_lpf_vx_local = 0.0f;
-    position_lpf_vy_local = 0.0f;
+    PositionPlanner_Reset();
 }
 
 // 妫€鏌ユ槸鍚﹀埌杈剧洰鏍囦綅缃紙鍙鏌,y浣嶇疆锛?
@@ -229,6 +271,12 @@ uint8_t IsPositionReached(float tolerance_xy) {
 
     return 0;
 }
+
+static uint8_t IsPositionControlFinished(float tolerance_xy)
+{
+    return IsPositionReached(tolerance_xy) && (position_plan_speed_mps <= POSITION_PLANNER_STOP_SPEED_MPS);
+}
+
 uint8_t testflag = 0;
 // 鏇存柊浣嶇疆鎺у埗锛堝彧鎺у埗x,y浣嶇疆锛?
 void UpdatePositionControl(float dt) {
@@ -248,20 +296,38 @@ void UpdatePositionControl(float dt) {
     // 璁＄畻鍏ㄥ眬鍧愭爣绯讳笅鐨勮宸?
     float error_x_global = target_x_global - current_x_global;
     float error_y_global = target_y_global - current_y_global;
+    float distance_error = sqrtf(error_x_global * error_x_global + error_y_global * error_y_global);
 
     // 灏嗚宸粠鍏ㄥ眬鍧愭爣绯昏浆鎹㈠埌灏忚溅灞€閮ㄥ潗鏍囩郴
     float error_x_local = error_x_global * cosf(current_yaw_rad) + error_y_global * sinf(current_yaw_rad);
     float error_y_local = -error_x_global * sinf(current_yaw_rad) + error_y_global * cosf(current_yaw_rad);
 
     // 浣跨敤灞€閮ㄥ潗鏍囩郴鐨勮宸繘琛孭ID鎺у埗
-    float vx_local = PID_Update(&position_control.pid_x, error_x_local, dt);
-    float vy_local = PID_Update(&position_control.pid_y, error_y_local, dt);
-    // 位置环通用速度低通滤波
-    position_lpf_vx_local += POSITION_SPEED_LPF_ALPHA * (vx_local - position_lpf_vx_local);
-    position_lpf_vy_local += POSITION_SPEED_LPF_ALPHA * (vy_local - position_lpf_vy_local);
-    vx_local = position_lpf_vx_local;
-    vy_local = position_lpf_vy_local;
+    // 规划前馈控制速度形状，位置反馈修正实际偏差
+    float direction_x = 0.0f;
+    float direction_y = 0.0f;
+    float error_norm = sqrtf(error_x_local * error_x_local + error_y_local * error_y_local);
+    float planned_speed = PositionSpeedPlan_Update(distance_error, dt);
 
+    if (error_norm > 0.001f) {
+        direction_x = error_x_local / error_norm;
+        direction_y = error_y_local / error_norm;
+    }
+
+    float feedforward_vx = direction_x * planned_speed;
+    float feedforward_vy = direction_y * planned_speed;
+    float feedback_vx = PID_Update(&position_control.pid_x, error_x_local, dt);
+    float feedback_vy = PID_Update(&position_control.pid_y, error_y_local, dt);
+    float feedback_speed = sqrtf(feedback_vx * feedback_vx + feedback_vy * feedback_vy);
+
+    if (feedback_speed > POSITION_FEEDBACK_MAX_SPEED_MPS) {
+        float feedback_ratio = POSITION_FEEDBACK_MAX_SPEED_MPS / feedback_speed;
+        feedback_vx *= feedback_ratio;
+        feedback_vy *= feedback_ratio;
+    }
+
+    float vx_local = feedforward_vx + feedback_vx;
+    float vy_local = feedforward_vy + feedback_vy;
     // 闄愬埗鏈€澶ч€熷害
     #define MAX_LINEAR_SPEED 7.0f
     float linear_speed = sqrtf(vx_local * vx_local + vy_local * vy_local);
@@ -277,9 +343,10 @@ void UpdatePositionControl(float dt) {
     SetTargetLinearVelocity(vy_local, vx_local);  // 浣嶇疆鐜疿杞存柟鍚戜笌搴曠洏妯悜閫熷害鏂瑰悜涓€鑷?
 
     // 妫€鏌ユ槸鍚﹀埌杈剧洰鏍囦綅缃紙浣跨敤鍏ㄥ眬鍧愭爣绯伙級
-    if (IsPositionReached(raceh)) {
+    if (IsPositionControlFinished(raceh)) {
         stop();
         testflag = 1;
+        PositionPlanner_Reset();
         PositionControl_Enable(0);
     }
 }
@@ -322,7 +389,7 @@ float GetAttitudeCorrection(void) {
 void AttitudeStabilization_Init(void) {
     // 鍒濆鍖栧亸鑸PID鎺у埗鍣?
     // 鍙傛暟闇€瑕佹牴鎹疄闄呮満鍣ㄤ汉鍔ㄦ€佽皟鏁?
-    PID_Init(&attitude_control.yaw_pid, 0.24f, 0.0f, 0.0001f, 10.0f); // Kp, Ki, Kd, max_output
+    PID_Init(&attitude_control.yaw_pid, 0.19f, 0.0f, 0.0011f, 16.0f); // Kp, Ki, Kd, max_output
 
     isPosture_correction=0;//鍒濆涓嶅紑鍚Э鎬佺煫姝ｏ紝闇€瑕佺敤鏃剁疆1
 
@@ -1139,42 +1206,55 @@ uint8_t move_to_target(float x, float y) {
 
     return 0; // 绉诲姩涓?
 }
-static uint8_t move_relative_x_once(float delta_x_mm) {
-    static uint8_t relative_target_set = 0;
-    float target_x;
-    float target_y;
-
-    if (!is_position_control_enabled && !relative_target_set) {
-        target_x = robot_pose_state.pos_x_mm + delta_x_mm;
-        target_y = robot_pose_state.pos_y_mm;
-        SetTargetPosition(target_x, target_y);
-        PositionControl_Enable(1);
-        relative_target_set = 1;
-        return 0;
-    }
-
-    if (!is_position_control_enabled && relative_target_set) {
-        relative_target_set = 0;
-        return 1;
-    }
-
-    return 0;
-}
-
-static uint8_t task1_relative_forward_back(void) {
+uint8_t task1_relative_forward_back(void) {
     static uint8_t relative_stage = 0;
+    static uint8_t yaw_hold_set = 0;
+    static uint32_t switch_pause_start = 0;
+    static float base_x_mm = 0.0f;
+    static float base_y_mm = 0.0f;
 
     if (relative_stage == 0) {
-				pospid_reinit(LOWESTSPEED, POSITION_PID_TASK1_RELATIVE_KP);
-        if (move_relative_x_once(TASK1_RELATIVE_X_MOVE_MM)) {
+        if (!yaw_hold_set) {
+            PoseCoordination_Enable(0);
+            stop();
+            attitude_correction = 0.0f;
+            attitude_control.yaw_pid.integral = 0.0f;
+            attitude_control.yaw_pid.prev_error = 0.0f;
+            EnableAttitudeStabilization(1);
+            SetTargetYaw(-90.0f);
+            base_x_mm = robot_pose_state.pos_x_mm;
+            base_y_mm = robot_pose_state.pos_y_mm;
+            yaw_hold_set = 1;
+        }
+				pospid_reinit(TASK1_RELATIVE_SPEED, POSITION_PID_TASK1_RELATIVE_KP);
+        if (move_to_pose_target(base_x_mm + TASK1_RELATIVE_X_MOVE_MM, base_y_mm, -90.0f)) {
             relative_stage = 1;
+            switch_pause_start = HAL_GetTick();
+            stop();
+            PositionPlanner_Reset();
         }
         return 0;
     }
 
     if (relative_stage == 1) {
-        if (move_relative_x_once(-TASK1_RELATIVE_X_MOVE_MM)) {
+        stop();
+        if ((HAL_GetTick() - switch_pause_start) < TASK1_RELATIVE_SWITCH_PAUSE_MS) {
+            PositionPlanner_Reset();
+            return 0;
+        }
+        relative_stage = 2;
+        PositionPlanner_Reset();
+        return 0;
+    }
+
+    if (relative_stage == 2) {
+        if (move_to_pose_target(base_x_mm, base_y_mm, -90.0f)) {
             relative_stage = 0;
+            yaw_hold_set = 0;
+            switch_pause_start = 0;
+            base_x_mm = 0.0f;
+            base_y_mm = 0.0f;
+            PositionPlanner_Reset();
 						pospid_reinit(MIDSPEED, POSITION_PID_DEFAULT_KP);
             return 1;
         }
@@ -1182,6 +1262,10 @@ static uint8_t task1_relative_forward_back(void) {
     }
 
     relative_stage = 0;
+    yaw_hold_set = 0;
+    switch_pause_start = 0;
+    base_x_mm = 0.0f;
+    base_y_mm = 0.0f;
     return 0;
 }
 /***********Task1***************/
