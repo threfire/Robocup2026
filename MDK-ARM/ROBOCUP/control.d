@@ -52,8 +52,7 @@ robocup\control.o: ../UserDrivers/lcd_spi_154.h
 robocup\control.o: ../Core/Inc/usart.h
 robocup\control.o: ../UserDrivers/lcd_fonts.h
 robocup\control.o: ../UserDrivers/lcd_image.h
-robocup\control.o: ..\Mymode\my_delay.h
-robocup\control.o: ..\Mymode\hwt_imu.h
+robocup\control.o: ..\Mymode\odometer.h
 robocup\control.o: ..\Mymode\servo.h
 robocup\control.o: ..\Mymode\graysensor.h
 robocup\control.o: ..\Mymode\userkey.h

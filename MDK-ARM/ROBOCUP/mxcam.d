@@ -48,3 +48,4 @@ robocup\mxcam.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
 robocup\mxcam.o: ../Core/Inc/tim.h
 robocup\mxcam.o: ../Core/Inc/adc.h
 robocup\mxcam.o: ../Mymode/useradc.h
+robocup\mxcam.o: ..\Mymode\control.h

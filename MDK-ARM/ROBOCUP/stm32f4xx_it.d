@@ -49,4 +49,5 @@ robocup\stm32f4xx_it.o: ../Mymode/useradc.h
 robocup\stm32f4xx_it.o: ../Core/Inc/stm32f4xx_it.h
 robocup\stm32f4xx_it.o: ../Core/Inc/usart.h
 robocup\stm32f4xx_it.o: ../Mymode/QAma.h
-robocup\stm32f4xx_it.o: ../Mymode/hwt_imu.h
+robocup\stm32f4xx_it.o: ../Mymode/odometer.h
+robocup\stm32f4xx_it.o: ../Mymode/control.h

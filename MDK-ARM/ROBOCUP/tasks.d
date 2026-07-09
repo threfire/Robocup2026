@@ -1,0 +1,16 @@
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/tasks.c
+robocup\tasks.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdlib.h
+robocup\tasks.o: D:\Keil5\ARM\ARMCC\Bin\..\include\string.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+robocup\tasks.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stddef.h
+robocup\tasks.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdint.h
+robocup\tasks.o: ../Core/Inc/FreeRTOSConfig.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h
+robocup\tasks.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/stack_macros.h

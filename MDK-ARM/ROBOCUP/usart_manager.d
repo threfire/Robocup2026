@@ -1,5 +1,10 @@
 robocup\usart_manager.o: ..\Mymode\usart_manager.c
 robocup\usart_manager.o: ..\Mymode\usart_manager.h
+robocup\usart_manager.o: ../Core/Inc/main.h
+robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
+robocup\usart_manager.o: ../Core/Inc/stm32f4xx_hal_conf.h
+robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
+robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
 robocup\usart_manager.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
 robocup\usart_manager.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
 robocup\usart_manager.o: ../Drivers/CMSIS/Include/core_cm4.h
@@ -10,10 +15,6 @@ robocup\usart_manager.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 robocup\usart_manager.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 robocup\usart_manager.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h
 robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
-robocup\usart_manager.o: ../Core/Inc/stm32f4xx_hal_conf.h
-robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
-robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
-robocup\usart_manager.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
 robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
 robocup\usart_manager.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stddef.h
 robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h
@@ -38,8 +39,6 @@ robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 robocup\usart_manager.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-robocup\usart_manager.o: ../UserDrivers/lcd_spi_154.h
-robocup\usart_manager.o: ../Core/Inc/main.h
 robocup\usart_manager.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
 robocup\usart_manager.o: ../Mymode/ZDT_X42_V2.h
 robocup\usart_manager.o: ../Core/Inc/main.h
@@ -48,6 +47,7 @@ robocup\usart_manager.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
 robocup\usart_manager.o: ../Core/Inc/tim.h
 robocup\usart_manager.o: ../Core/Inc/adc.h
 robocup\usart_manager.o: ../Mymode/useradc.h
+robocup\usart_manager.o: ../UserDrivers/lcd_spi_154.h
 robocup\usart_manager.o: ../Core/Inc/usart.h
 robocup\usart_manager.o: ../UserDrivers/lcd_fonts.h
 robocup\usart_manager.o: ../UserDrivers/lcd_image.h

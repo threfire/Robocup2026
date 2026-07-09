@@ -1138,6 +1138,30 @@ uint8_t task1_relative_forward_back(void) {
 }
 /***********Task1***************/
 
+static void task1_next_step(void);
+static void task1_finish(void);
+static uint8_t task1_move_target(
+        uint8_t target_index, float y_offset_mm, float yaw_deg);
+static void task1_go_first_qrcode(void);
+static void task1_scan_material_colors(void);
+static void task1_go_first_material_point(void);
+static void task1_go_material_point(
+        uint8_t target_index, uint8_t material_index, float speed_mps);
+static void task1_wait_vision(uint8_t point_index);
+static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms);
+static void task1_go_second_qrcode(void);
+static void task1_go_trophy_point(uint8_t target_index, uint8_t turnplate_num);
+static void task1_go_third_trophy(void);
+static void task1_go_first_trophy(void);
+static void task1_go_second_podium(void);
+static void task1_go_champion_podium(void);
+static void task1_go_third_podium(void);
+static void task1_go_podium_point(uint8_t target_index, float y_offset_mm,
+        uint8_t arrive_servo, uint8_t material_index, uint8_t prepare_servo,
+        float prepare_tolerance_m);
+static void task1_go_return_transition(void);
+static void task1_go_home(void);
+
 void start_task1(void) {
 	/* 任务状态机从步骤 1 开始，step_start 记录当前步骤进入时间。 */
 	task1_state.active = 1;
@@ -1147,321 +1171,345 @@ void start_task1(void) {
 }
 
 void run_task1(void) {
-	if (!task1_state.active)
+	if (!task1_state.active) {
 		return;
-	uint32_t current_time = HAL_GetTick();
-	switch (task1_state.current_step) {
-	case 1:
-		/* 起步到二维码点：保持 yaw 为 0，转盘先转到第一个物料位。 */
-		EnableAttitudeStabilization(1);
-		SetTargetYaw(0.0f);
-		Move_to_turnplate(1);
-		Servo_Action_Group(1);
-		tasknum = 1;
-		pospid_reinit(LOWSPEED, POSITION_PID_DEFAULT_KP);
-		if (move_to_pose_target(
-		            task1_targets[0].x, task1_targets[0].y, 0.0f)) {
-			Servo_Action_Group(2);
-			task1_state.current_step++;
-		}
-		if (IsPositionReached(0.50f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);
-		}
-		if (IsPositionReached(0.45f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);
-		}
-		if (IsPositionReached(0.40f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);
-		}
-		if (IsPositionReached(0.35f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1900);
-		}
-		if (IsPositionReached(0.30f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);
-		}
-		if (IsPositionReached(0.25f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);
-		}
-		if (IsPositionReached(0.20f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);
-		}
-		if (IsPositionReached(0.15f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1820);
-		}
-		if (IsPositionReached(0.10f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1810);
-		}
-		if (IsPositionReached(0.04f)) {
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);
-		}
-		break;
-	case 2:
-		/* 转盘依次采集物料颜色，扫描结束后进入中间点搬运阶段。 */
-		Servo_Action_Group(2);
-		PositionControl_Enable(0);
-		EnableAttitudeStabilization(0);
-		SetTargetVelocity(1.0f, 0.0f, -2.57f);
-		HAL_Delay(500);
-		Move_to_turnplate(2);
-		HAL_Delay(1000);
-		Get_Materialcolor(0);
-		Move_to_turnplate(3);
-		HAL_Delay(450);
-		SetTargetVelocity(1.0f, 0.0f, -2.38f);
-		HAL_Delay(500);
-		Get_Materialcolor(1);
-		Move_to_turnplate(4);
-		HAL_Delay(500);
-		SetTargetVelocity(1.0f, 0.0f, -2.24f);
-		HAL_Delay(550);
-		Get_Materialcolor(2);
-		Move_to_turnplate(5);
-		HAL_Delay(1000);
-		Get_Materialcolor(3);
-		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[3] + 200);
-		MotionState_Reset();
-		HAL_Delay(300);
-		task1_state.current_step = 11;
-		break;
+	}
 
-	case 11:
-		/* 进入物块搬运序列：到达第一个取放点并转到对应物料位。 */
-		EnableAttitudeStabilization(1);
-		pospid_reinit(LOWSPEED, POSITION_PID_DEFAULT_KP);
-		Get_Materialcolor(4);
-		if (move_to_pose_target(task1_targets[6].x, task1_targets[6].y,
-		            -90.0f) /* 到达 a 点 */) {
-			Find_corresponding_material(1);
-			task1_state.current_step++;
-		}
-		break;
-	case 12:
-		/* 等待视觉串口搜索结果，当前策略允许超时后继续执行下一步。 */
-		if (Wait_for_uart_with_search(6)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 13:
-		/* 在 a 点执行一次相对前后动作完成取放。 */
-		if (task1_relative_forward_back()) {
-			task1_state.current_step++;
-		}
-		break;
-	case 14:
-		/* 到达 b 点并切换到第二个物料位。 */
-		pospid_reinit(MIDSPEED, POSITION_PID_DEFAULT_KP);
-		if (move_to_pose_target(
-		            task1_targets[7].x, task1_targets[7].y, -90.0f)) {
-			Find_corresponding_material(2);
-			task1_state.current_step++;
-		}
-		break;
-	case 15:
-		if (Wait_for_uart_with_search(7)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 16:
-		if (task1_relative_forward_back()) {
-			task1_state.current_step++;
-		}
-		break;
-	case 17:
-		/* c 点、d 点、e 点沿用到点、视觉确认、相对取放流程。 */
-		if (move_to_pose_target(
-		            task1_targets[8].x, task1_targets[8].y, -90.0f)) {
-			Find_corresponding_material(3);
-			task1_state.current_step++;
-		}
-		break;
-	case 18:
-		if (Wait_for_uart_with_search(8)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 19:
-		if (task1_relative_forward_back()) {
-			task1_state.current_step++;
-		}
-		break;
-	case 20:
-		if (move_to_pose_target(
-		            task1_targets[9].x, task1_targets[9].y, -90.0f)) {
-			Find_corresponding_material(4);
-			task1_state.current_step++;
-		}
-		break;
-	case 21:
-		if (Wait_for_uart_with_search(9)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 22:
-		if (task1_relative_forward_back()) {
-			task1_state.current_step++;
-		}
-		break;
-	case 23:
-		if (move_to_pose_target(
-		            task1_targets[10].x, task1_targets[10].y, -90.0f)) {
-			Find_corresponding_material(5);
-			task1_state.current_step++;
-		}
-		break;
-	case 24:
-		if (Wait_for_uart_with_search(10)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 25:
-		if (task1_relative_forward_back()) {
-			task1_state.current_step++;
-		}
-		break;
-	case 26:
-		/* 第一段取放结束后切换任务编号，前往第二个二维码点。 */
-		tasknum = 2;
-		if (move_to_pose_target(
-		            task1_targets[11].x, task1_targets[11].y, 0.0f)) {
-			Move_to_turnplate(3);
-			task1_state.current_step++;
-		}
-		break;
-	case 27:
-		if (move_to_pose_target(
-		            task1_targets[19].x, task1_targets[19].y, -90.0f)) {
-			task1_state.current_step++;
-		}
-		break;
-	case 28:
-		/* 低速进入奖杯区，按三个奖杯点依次靠近并切换转盘位置。 */
-		pospid_reinit(LOWESTSPEED, POSITION_PID_DEFAULT_KP);
-		if (move_to_pose_target(
-		            task1_targets[12].x, task1_targets[12].y, -90.0f)) {
-			task1_state.current_step++;
-			Move_to_turnplate(2);
-		}
-		break;
-	case 29:
-		if (move_to_pose_target(
-		            task1_targets[13].x, task1_targets[13].y, -90.0f)) {
-			task1_state.current_step++;
-			Move_to_turnplate(1);
-		}
-		break;
-	case 30:
-		if (move_to_pose_target(
-		            task1_targets[14].x, task1_targets[14].y, -90.0f)) {
-			__HAL_TIM_SetCompare(
-			        &htim11, TIM_CHANNEL_1, Material[1] + 200);
-			task1_state.current_step++;
-		}
-		break;
-	case 31:
-		/* 进入奖台区，接近目标时提前展开舵机动作。 */
-		pospid_reinit(HIGHSPEED, POSITION_PID_DEFAULT_KP);
-		if (move_to_pose_target(task1_targets[15].x,
-		            task1_targets[15].y + 15.0f, -90.0f)) {
-			Servo_Action_Group(6);
-			Find_corresponding_material(2);
-			task1_state.current_step++;
-			break;
-		}
-		if (IsPositionReached(0.6f)) {
-			Servo_Action_Group(5);
-		}
-		break;
-	case 32:
-		if (Wait_for_uart_with_search(15)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 33:
-		/* 奖台放置动作：完成视觉确认后执行相对前后取放和舵机复位。 */
-		if (task1_relative_forward_back()) {
-			Servo_Action_Group(3);
-			HAL_Delay(100);
-			task1_state.current_step++;
-		}
-		break;
-	case 34:
-		if (move_to_pose_target(task1_targets[16].x,
-		            task1_targets[16].y + 15.0f, -90.0f)) {
-			Servo_Action_Group(4);
-			Find_corresponding_material(1);
-			task1_state.current_step++;
-		}
-		break;
-	case 35:
-		if (Wait_for_uart_with_search(16)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 36:
-		if (task1_relative_forward_back()) {
-			Servo_Action_Group(3);
-			task1_state.current_step++;
-		}
-		break;
-	case 37:
-		if (move_to_pose_target(task1_targets[17].x,
-		            task1_targets[17].y + 25.0f, -90.0f)) {
-			Servo_Action_Group(7);
-			Find_corresponding_material(3);
-			task1_state.current_step++;
-		}
-		break;
-	case 38:
-		if (Wait_for_uart_with_search(17)) {
-			task1_state.current_step++;
-		} else {
-			task1_state.current_step++;
-		}
-		break;
-	case 39:
-		if (task1_relative_forward_back()) {
-			task1_state.current_step++;
-		}
-		break;
-	case 40:
-		/* 回家前先经过过渡点，使用较大到达容差提高返航通过性。 */
-		pospid_reinit(HIGHESTSPEED, POSITION_PID_DEFAULT_KP);
-		raceh = POSITION_RETURN_REACHED_TOLERANCE_M;
-		if (move_to_pose_target(
-		            task1_targets[20].x, task1_targets[20].y, -90.0f)) {
-			task1_state.current_step = 41;
-		}
-		break;
-	case 41:
-		/* 最后回到起始点，恢复精细到达容差。 */
-		raceh = POSITION_FINE_REACHED_TOLERANCE_M;
-		if (move_to_pose_target(
-		            task1_targets[18].x, task1_targets[18].y, -90.0f)) {
-			task1_state.current_step++;
-		}
-		break;
-	default:
-		/* 超出任务步骤后标记任务完成。 */
-		task1_state.active = 0;
-		task1_state.completed = 1;
-		break;
+	switch (task1_state.current_step) {
+	case 1: task1_go_first_qrcode(); break;                   /* 起步到二维码点 1。 */
+	case 2: task1_scan_material_colors(); break;              /* 转盘采集物料颜色。 */
+	case 11: task1_go_first_material_point(); break;          /* a 点取第 1 个物料。 */
+	case 12: task1_wait_vision(6); break;
+	case 13: task1_relative_action(0, 0U); break;
+	case 14: task1_go_material_point(7, 2, MIDSPEED); break;  /* b 点取第 2 个物料。 */
+	case 15: task1_wait_vision(7); break;
+	case 16: task1_relative_action(0, 0U); break;
+	case 17: task1_go_material_point(8, 3, 0.0f); break;      /* c 点取第 3 个物料。 */
+	case 18: task1_wait_vision(8); break;
+	case 19: task1_relative_action(0, 0U); break;
+	case 20: task1_go_material_point(9, 4, 0.0f); break;      /* d 点取第 4 个物料。 */
+	case 21: task1_wait_vision(9); break;
+	case 22: task1_relative_action(0, 0U); break;
+	case 23: task1_go_material_point(10, 5, 0.0f); break;     /* e 点取第 5 个物料。 */
+	case 24: task1_wait_vision(10); break;
+	case 25: task1_relative_action(0, 0U); break;
+	case 26: task1_go_second_qrcode(); break;                 /* 前往二维码点 2。 */
+	case 27: task1_go_trophy_point(19, 0); break;             /* 奖杯区过渡点。 */
+	case 28: task1_go_third_trophy(); break;                  /* 奖杯 3。 */
+	case 29: task1_go_trophy_point(13, 1); break;             /* 奖杯 2。 */
+	case 30: task1_go_first_trophy(); break;                  /* 奖杯 1。 */
+	case 31: task1_go_second_podium(); break;                 /* 亚军台。 */
+	case 32: task1_wait_vision(15); break;
+	case 33: task1_relative_action(3, 100U); break;
+	case 34: task1_go_champion_podium(); break;              /* 冠军台。 */
+	case 35: task1_wait_vision(16); break;
+	case 36: task1_relative_action(3, 0U); break;
+	case 37: task1_go_third_podium(); break;                 /* 季军台。 */
+	case 38: task1_wait_vision(17); break;
+	case 39: task1_relative_action(0, 0U); break;
+	case 40: task1_go_return_transition(); break;             /* 返航过渡点。 */
+	case 41: task1_go_home(); break;                          /* 回起始点。 */
+	default: task1_finish(); break;
 	}
 }
 uint8_t is_task1_active(void) {
 	return task1_state.active;
+}
+
+/**
+ * @brief 进入任务 1 的下一个顺序步骤。
+ *
+ * current_step 是任务 1 的主线步骤号，step_start 记录每次进新步骤的时间。
+ */
+static void task1_next_step(void) {
+	task1_state.current_step++;
+	task1_state.step_start = HAL_GetTick();
+}
+
+/**
+ * @brief 标记任务 1 已完成。
+ */
+static void task1_finish(void) {
+	task1_state.active = 0;
+	task1_state.completed = 1;
+}
+
+/**
+ * @brief 按任务 1 路径点移动。
+ *
+ * @param target_index task1_targets 下标。
+ * @param y_offset_mm Y 方向附加偏移，单位 mm。
+ * @param yaw_deg 目标 yaw，单位 deg。
+ * @return 1 表示到达目标点。
+ */
+static uint8_t task1_move_target(
+        uint8_t target_index, float y_offset_mm, float yaw_deg) {
+	return move_to_pose_target(task1_targets[target_index].x,
+	        task1_targets[target_index].y + y_offset_mm, yaw_deg);
+}
+
+/**
+ * @brief 起步到第一个二维码点。
+ *
+ * 这里保留接近二维码点时的舵机分段下压，现场调动作只改本函数。
+ */
+static void task1_go_first_qrcode(void) {
+	EnableAttitudeStabilization(1);
+	SetTargetYaw(0.0f);
+	Move_to_turnplate(1);
+	Servo_Action_Group(1);
+	tasknum = 1;
+	pospid_reinit(LOWSPEED, POSITION_PID_DEFAULT_KP);
+
+	if (task1_move_target(0, 0.0f, 0.0f)) {
+		Servo_Action_Group(2);
+		task1_next_step();
+	}
+
+	/* 接近二维码点时逐段下压，减小末端一次动作带来的识别抖动。 */
+	if (IsPositionReached(0.50f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);
+	}
+	if (IsPositionReached(0.45f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);
+	}
+	if (IsPositionReached(0.40f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);
+	}
+	if (IsPositionReached(0.35f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1900);
+	}
+	if (IsPositionReached(0.30f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);
+	}
+	if (IsPositionReached(0.25f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);
+	}
+	if (IsPositionReached(0.20f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);
+	}
+	if (IsPositionReached(0.15f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1820);
+	}
+	if (IsPositionReached(0.10f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1810);
+	}
+	if (IsPositionReached(0.04f)) {
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);
+	}
+}
+
+/**
+ * @brief 扫描转盘五个物料颜色。
+ *
+ * 转盘角度、底盘速度和延时都集中在这里，调颜色采集节奏时不用展开主流程。
+ */
+static void task1_scan_material_colors(void) {
+	Servo_Action_Group(2);
+	PositionControl_Enable(0);
+	EnableAttitudeStabilization(0);
+
+	SetTargetVelocity(1.0f, 0.0f, -2.57f);
+	HAL_Delay(500);
+	Move_to_turnplate(2);
+	HAL_Delay(1000);
+	Get_Materialcolor(0);
+
+	Move_to_turnplate(3);
+	HAL_Delay(450);
+	SetTargetVelocity(1.0f, 0.0f, -2.38f);
+	HAL_Delay(500);
+	Get_Materialcolor(1);
+
+	Move_to_turnplate(4);
+	HAL_Delay(500);
+	SetTargetVelocity(1.0f, 0.0f, -2.24f);
+	HAL_Delay(550);
+	Get_Materialcolor(2);
+
+	Move_to_turnplate(5);
+	HAL_Delay(1000);
+	Get_Materialcolor(3);
+
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[3] + 200);
+	MotionState_Reset();
+	HAL_Delay(300);
+	task1_state.current_step = 11;
+	task1_state.step_start = HAL_GetTick();
+}
+
+/**
+ * @brief 进入物块段第一个取放点。
+ *
+ * 这里额外开启姿态稳定，并补采第 5 个颜色点。
+ */
+static void task1_go_first_material_point(void) {
+	EnableAttitudeStabilization(1);
+	Get_Materialcolor(4);
+	task1_go_material_point(6, 1, LOWSPEED);
+}
+
+/**
+ * @brief 移动到物块区取放点并切换对应物料位。
+ *
+ * @param target_index task1_targets 下标。
+ * @param material_index 物料序号，从 1 开始。
+ * @param speed_mps 位置环速度，单位 m/s；传入 0 时沿用当前速度。
+ */
+static void task1_go_material_point(
+        uint8_t target_index, uint8_t material_index, float speed_mps) {
+	if (speed_mps > 0.0f) {
+		pospid_reinit(speed_mps, POSITION_PID_DEFAULT_KP);
+	}
+
+	if (task1_move_target(target_index, 0.0f, -90.0f)) {
+		Find_corresponding_material(material_index);
+		task1_next_step();
+	}
+}
+
+/**
+ * @brief 等待视觉搜索结束并进入下一步。
+ *
+ * 当前策略是收到坐标或超时都继续，视觉等待语义集中在这里方便后续改策略。
+ */
+static void task1_wait_vision(uint8_t point_index) {
+	(void)Wait_for_uart_with_search(point_index);
+	task1_next_step();
+}
+
+/**
+ * @brief 执行一次相对前后取放动作。
+ *
+ * @param servo_after 相对动作完成后的舵机动作组，0 表示不执行。
+ * @param delay_after_ms 舵机动作后的等待时间，单位 ms。
+ */
+static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) {
+	if (task1_relative_forward_back()) {
+		if (servo_after != 0U) {
+			Servo_Action_Group(servo_after);
+		}
+		if (delay_after_ms > 0U) {
+			HAL_Delay(delay_after_ms);
+		}
+		task1_next_step();
+	}
+}
+
+/**
+ * @brief 前往第二个二维码点。
+ *
+ * 到点后将转盘准备到第 3 个物料位。
+ */
+static void task1_go_second_qrcode(void) {
+	tasknum = 2;
+	if (task1_move_target(11, 0.0f, 0.0f)) {
+		Move_to_turnplate(3);
+		task1_next_step();
+	}
+}
+
+/**
+ * @brief 移动到奖杯点并在到点后切换转盘。
+ *
+ * @param target_index task1_targets 下标。
+ * @param turnplate_num 到点后切换的转盘物料位，0 表示不切换。
+ */
+static void task1_go_trophy_point(uint8_t target_index, uint8_t turnplate_num) {
+	if (task1_move_target(target_index, 0.0f, -90.0f)) {
+		task1_next_step();
+		if (turnplate_num != 0U) {
+			Move_to_turnplate(turnplate_num);
+		}
+	}
+}
+
+/**
+ * @brief 低速进入奖杯 3，并准备奖杯 2。
+ */
+static void task1_go_third_trophy(void) {
+	pospid_reinit(LOWESTSPEED, POSITION_PID_DEFAULT_KP);
+	task1_go_trophy_point(12, 2);
+}
+
+/**
+ * @brief 进入奖杯 1，并给转盘最后补偿量。
+ */
+static void task1_go_first_trophy(void) {
+	if (task1_move_target(14, 0.0f, -90.0f)) {
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1] + 200);
+		task1_next_step();
+	}
+}
+
+/**
+ * @brief 前往亚军台。
+ *
+ * 接近途中先展开舵机 5，到点后执行舵机 6 并切第 2 个物料。
+ */
+static void task1_go_second_podium(void) {
+	pospid_reinit(HIGHSPEED, POSITION_PID_DEFAULT_KP);
+	task1_go_podium_point(15, 15.0f, 6, 2, 5, 0.6f);
+}
+
+/**
+ * @brief 前往冠军台，到点后执行舵机 4 并切第 1 个物料。
+ */
+static void task1_go_champion_podium(void) {
+	task1_go_podium_point(16, 15.0f, 4, 1, 0, 0.0f);
+}
+
+/**
+ * @brief 前往季军台，到点后执行舵机 7 并切第 3 个物料。
+ */
+static void task1_go_third_podium(void) {
+	task1_go_podium_point(17, 25.0f, 7, 3, 0, 0.0f);
+}
+
+/**
+ * @brief 移动到奖台点。
+ *
+ * @param target_index task1_targets 下标。
+ * @param y_offset_mm Y 方向附加偏移，单位 mm。
+ * @param arrive_servo 到点后的舵机动作组。
+ * @param material_index 到点后切换的目标物料序号。
+ * @param prepare_servo 接近途中提前执行的舵机动作组，0 表示不执行。
+ * @param prepare_tolerance_m 提前动作触发容差，单位 m。
+ */
+static void task1_go_podium_point(uint8_t target_index, float y_offset_mm,
+        uint8_t arrive_servo, uint8_t material_index, uint8_t prepare_servo,
+        float prepare_tolerance_m) {
+	if (task1_move_target(target_index, y_offset_mm, -90.0f)) {
+		Servo_Action_Group(arrive_servo);
+		Find_corresponding_material(material_index);
+		task1_next_step();
+		return;
+	}
+
+	if (prepare_servo != 0U && IsPositionReached(prepare_tolerance_m)) {
+		Servo_Action_Group(prepare_servo);
+	}
+}
+
+/**
+ * @brief 返回起点前的过渡点。
+ */
+static void task1_go_return_transition(void) {
+	pospid_reinit(HIGHESTSPEED, POSITION_PID_DEFAULT_KP);
+	raceh = POSITION_RETURN_REACHED_TOLERANCE_M;
+	if (task1_move_target(20, 0.0f, -90.0f)) {
+		task1_state.current_step = 41;
+		task1_state.step_start = HAL_GetTick();
+	}
+}
+
+/**
+ * @brief 返回起始点并恢复精细到达容差。
+ */
+static void task1_go_home(void) {
+	raceh = POSITION_FINE_REACHED_TOLERANCE_M;
+	if (task1_move_target(18, 0.0f, -90.0f)) {
+		task1_next_step();
+	}
 }
 /***********Task1***************/

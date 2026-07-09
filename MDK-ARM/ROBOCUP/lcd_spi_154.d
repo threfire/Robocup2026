@@ -50,4 +50,5 @@ robocup\lcd_spi_154.o: ../Mymode/useradc.h
 robocup\lcd_spi_154.o: ../Core/Inc/usart.h
 robocup\lcd_spi_154.o: ..\UserDrivers\lcd_fonts.h
 robocup\lcd_spi_154.o: ..\UserDrivers\lcd_image.h
+robocup\lcd_spi_154.o: ../Core/Inc/spi.h
 robocup\lcd_spi_154.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdio.h
