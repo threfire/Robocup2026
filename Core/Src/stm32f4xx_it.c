@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    stm32f4xx_it.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    stm32f4xx_it.c
+ * @brief   Interrupt Service Routines.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -24,7 +24,8 @@
 /* USER CODE BEGIN Includes */
 #include "usart.h"
 #include "QAma.h"
-#include "hwt_imu.h"
+#include "odometer.h"
+#include "control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,9 +45,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-uint8_t uart_state = 0;     // 串口3帧解析状态：0等第1个帧头，1等第2个帧头，2接收数据帧
-uint8_t frame_count = 0;    // 当前帧已接收字节数
-uint8_t frame_buffer[8];    // 串口3颜色传感器8字节帧缓存
+typedef struct {
+	uint8_t state;
+	uint8_t count;
+	uint8_t buffer[8];
+} Uart3ColorParser_t;
+
+static Uart3ColorParser_t uart3_color_parser;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,6 +68,7 @@ uint8_t frame_buffer[8];    // 串口3颜色传感器8字节帧缓存
 extern ADC_HandleTypeDef hadc1;
 extern CAN_HandleTypeDef hcan1;
 extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim13;
 extern DMA_HandleTypeDef hdma_uart4_rx;
 extern DMA_HandleTypeDef hdma_uart4_tx;
 extern DMA_HandleTypeDef hdma_uart5_tx;
@@ -79,139 +85,89 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
+extern TIM_HandleTypeDef htim12;
+
 /* USER CODE BEGIN EV */
-extern int Is_coordgot;
 /* USER CODE END EV */
 
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
-  * @brief This function handles Non maskable interrupt.
-  */
-void NMI_Handler(void)
-{
-  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
+ * @brief This function handles Non maskable interrupt.
+ */
+void NMI_Handler(void) {
+	/* USER CODE BEGIN NonMaskableInt_IRQn 0 */
 
-  /* USER CODE END NonMaskableInt_IRQn 0 */
-  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-   while (1)
-  {
-  }
-  /* USER CODE END NonMaskableInt_IRQn 1 */
+	/* USER CODE END NonMaskableInt_IRQn 0 */
+	/* USER CODE BEGIN NonMaskableInt_IRQn 1 */
+	while (1) {
+	}
+	/* USER CODE END NonMaskableInt_IRQn 1 */
 }
 
 /**
-  * @brief This function handles Hard fault interrupt.
-  */
-void HardFault_Handler(void)
-{
-  /* USER CODE BEGIN HardFault_IRQn 0 */
+ * @brief This function handles Hard fault interrupt.
+ */
+void HardFault_Handler(void) {
+	/* USER CODE BEGIN HardFault_IRQn 0 */
 
-  /* USER CODE END HardFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
-  }
+	/* USER CODE END HardFault_IRQn 0 */
+	while (1) {
+		/* USER CODE BEGIN W1_HardFault_IRQn 0 */
+		/* USER CODE END W1_HardFault_IRQn 0 */
+	}
 }
 
 /**
-  * @brief This function handles Memory management fault.
-  */
-void MemManage_Handler(void)
-{
-  /* USER CODE BEGIN MemoryManagement_IRQn 0 */
+ * @brief This function handles Memory management fault.
+ */
+void MemManage_Handler(void) {
+	/* USER CODE BEGIN MemoryManagement_IRQn 0 */
 
-  /* USER CODE END MemoryManagement_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
-    /* USER CODE END W1_MemoryManagement_IRQn 0 */
-  }
+	/* USER CODE END MemoryManagement_IRQn 0 */
+	while (1) {
+		/* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
+		/* USER CODE END W1_MemoryManagement_IRQn 0 */
+	}
 }
 
 /**
-  * @brief This function handles Pre-fetch fault, memory access fault.
-  */
-void BusFault_Handler(void)
-{
-  /* USER CODE BEGIN BusFault_IRQn 0 */
+ * @brief This function handles Pre-fetch fault, memory access fault.
+ */
+void BusFault_Handler(void) {
+	/* USER CODE BEGIN BusFault_IRQn 0 */
 
-  /* USER CODE END BusFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_BusFault_IRQn 0 */
-    /* USER CODE END W1_BusFault_IRQn 0 */
-  }
+	/* USER CODE END BusFault_IRQn 0 */
+	while (1) {
+		/* USER CODE BEGIN W1_BusFault_IRQn 0 */
+		/* USER CODE END W1_BusFault_IRQn 0 */
+	}
 }
 
 /**
-  * @brief This function handles Undefined instruction or illegal state.
-  */
-void UsageFault_Handler(void)
-{
-  /* USER CODE BEGIN UsageFault_IRQn 0 */
+ * @brief This function handles Undefined instruction or illegal state.
+ */
+void UsageFault_Handler(void) {
+	/* USER CODE BEGIN UsageFault_IRQn 0 */
 
-  /* USER CODE END UsageFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
-    /* USER CODE END W1_UsageFault_IRQn 0 */
-  }
+	/* USER CODE END UsageFault_IRQn 0 */
+	while (1) {
+		/* USER CODE BEGIN W1_UsageFault_IRQn 0 */
+		/* USER CODE END W1_UsageFault_IRQn 0 */
+	}
 }
 
 /**
-  * @brief This function handles System service call via SWI instruction.
-  */
-void SVC_Handler(void)
-{
-  /* USER CODE BEGIN SVCall_IRQn 0 */
+ * @brief This function handles Debug monitor.
+ */
+void DebugMon_Handler(void) {
+	/* USER CODE BEGIN DebugMonitor_IRQn 0 */
 
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
+	/* USER CODE END DebugMonitor_IRQn 0 */
+	/* USER CODE BEGIN DebugMonitor_IRQn 1 */
 
-  /* USER CODE END SVCall_IRQn 1 */
-}
-
-/**
-  * @brief This function handles Debug monitor.
-  */
-void DebugMon_Handler(void)
-{
-  /* USER CODE BEGIN DebugMonitor_IRQn 0 */
-
-  /* USER CODE END DebugMonitor_IRQn 0 */
-  /* USER CODE BEGIN DebugMonitor_IRQn 1 */
-
-  /* USER CODE END DebugMonitor_IRQn 1 */
-}
-
-/**
-  * @brief This function handles Pendable request for system service.
-  */
-void PendSV_Handler(void)
-{
-  /* USER CODE BEGIN PendSV_IRQn 0 */
-
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
-
-  /* USER CODE END PendSV_IRQn 1 */
-}
-
-/**
-  * @brief This function handles System tick timer.
-  */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
+	/* USER CODE END DebugMonitor_IRQn 1 */
 }
 
 /******************************************************************************/
@@ -222,369 +178,366 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles DMA1 stream0 global interrupt.
-  */
-void DMA1_Stream0_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
+ * @brief This function handles DMA1 stream0 global interrupt.
+ */
+void DMA1_Stream0_IRQHandler(void) {
+	/* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
 
-  /* USER CODE END DMA1_Stream0_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_uart5_rx);
-  /* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
+	/* USER CODE END DMA1_Stream0_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_uart5_rx);
+	/* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream0_IRQn 1 */
+	/* USER CODE END DMA1_Stream0_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA1 stream2 global interrupt.
-  */
-void DMA1_Stream2_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream2_IRQn 0 */
+ * @brief This function handles DMA1 stream2 global interrupt.
+ */
+void DMA1_Stream2_IRQHandler(void) {
+	/* USER CODE BEGIN DMA1_Stream2_IRQn 0 */
 
-  /* USER CODE END DMA1_Stream2_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_uart4_rx);
-  /* USER CODE BEGIN DMA1_Stream2_IRQn 1 */
+	/* USER CODE END DMA1_Stream2_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_uart4_rx);
+	/* USER CODE BEGIN DMA1_Stream2_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream2_IRQn 1 */
+	/* USER CODE END DMA1_Stream2_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA1 stream4 global interrupt.
-  */
-void DMA1_Stream4_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream4_IRQn 0 */
+ * @brief This function handles DMA1 stream4 global interrupt.
+ */
+void DMA1_Stream4_IRQHandler(void) {
+	/* USER CODE BEGIN DMA1_Stream4_IRQn 0 */
 
-  /* USER CODE END DMA1_Stream4_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_uart4_tx);
-  /* USER CODE BEGIN DMA1_Stream4_IRQn 1 */
+	/* USER CODE END DMA1_Stream4_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_uart4_tx);
+	/* USER CODE BEGIN DMA1_Stream4_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream4_IRQn 1 */
+	/* USER CODE END DMA1_Stream4_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA1 stream5 global interrupt.
-  */
-void DMA1_Stream5_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
+ * @brief This function handles DMA1 stream5 global interrupt.
+ */
+void DMA1_Stream5_IRQHandler(void) {
+	/* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
 
-  /* USER CODE END DMA1_Stream5_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart2_rx);
-  /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
+	/* USER CODE END DMA1_Stream5_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_usart2_rx);
+	/* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream5_IRQn 1 */
+	/* USER CODE END DMA1_Stream5_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA1 stream6 global interrupt.
-  */
-void DMA1_Stream6_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream6_IRQn 0 */
+ * @brief This function handles DMA1 stream6 global interrupt.
+ */
+void DMA1_Stream6_IRQHandler(void) {
+	/* USER CODE BEGIN DMA1_Stream6_IRQn 0 */
 
-  /* USER CODE END DMA1_Stream6_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart2_tx);
-  /* USER CODE BEGIN DMA1_Stream6_IRQn 1 */
+	/* USER CODE END DMA1_Stream6_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_usart2_tx);
+	/* USER CODE BEGIN DMA1_Stream6_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream6_IRQn 1 */
+	/* USER CODE END DMA1_Stream6_IRQn 1 */
 }
 
 /**
-  * @brief This function handles ADC1, ADC2 and ADC3 global interrupts.
-  */
-void ADC_IRQHandler(void)
-{
-  /* USER CODE BEGIN ADC_IRQn 0 */
+ * @brief This function handles ADC1, ADC2 and ADC3 global interrupts.
+ */
+void ADC_IRQHandler(void) {
+	/* USER CODE BEGIN ADC_IRQn 0 */
 
-  /* USER CODE END ADC_IRQn 0 */
-  HAL_ADC_IRQHandler(&hadc1);
-  /* USER CODE BEGIN ADC_IRQn 1 */
+	/* USER CODE END ADC_IRQn 0 */
+	HAL_ADC_IRQHandler(&hadc1);
+	/* USER CODE BEGIN ADC_IRQn 1 */
 
-  /* USER CODE END ADC_IRQn 1 */
+	/* USER CODE END ADC_IRQn 1 */
 }
 
 /**
-  * @brief This function handles CAN1 RX0 interrupts.
-  */
-void CAN1_RX0_IRQHandler(void)
-{
-  /* USER CODE BEGIN CAN1_RX0_IRQn 0 */
+ * @brief This function handles CAN1 RX0 interrupts.
+ */
+void CAN1_RX0_IRQHandler(void) {
+	/* USER CODE BEGIN CAN1_RX0_IRQn 0 */
 	uint8_t i = 0;
-	// 接收一包CAN数据
-	if(HAL_CAN_GetRxMessage((&hcan1), CAN_RX_FIFO0, (CAN_RxHeaderTypeDef *)(&can.CAN_RxMsg), (uint8_t *)(&can.rxData)) == HAL_OK)
-	{
-		// 一帧数据接收完成，补齐剩余字节并置位接收标志
-		for(i=can.CAN_RxMsg.DLC; i < 8; i++) { can.rxData[i] = 0; } can.rxFrameFlag = true;
+	if (HAL_CAN_GetRxMessage((&hcan1), CAN_RX_FIFO0,
+	            (CAN_RxHeaderTypeDef *)(&can.CAN_RxMsg),
+	            (uint8_t *)(&can.rxData)) == HAL_OK) {
+		/* CAN 帧不足 8 字节时补零，避免旧数据残留到业务解析。 */
+		for (i = can.CAN_RxMsg.DLC; i < 8; i++) {
+			can.rxData[i] = 0;
+		}
+		can.rxFrameFlag = true;
 	}
-  /* USER CODE END CAN1_RX0_IRQn 0 */
-  HAL_CAN_IRQHandler(&hcan1);
-  /* USER CODE BEGIN CAN1_RX0_IRQn 1 */
+	/* USER CODE END CAN1_RX0_IRQn 0 */
+	HAL_CAN_IRQHandler(&hcan1);
+	/* USER CODE BEGIN CAN1_RX0_IRQn 1 */
 
-  /* USER CODE END CAN1_RX0_IRQn 1 */
+	/* USER CODE END CAN1_RX0_IRQn 1 */
 }
 
 /**
-  * @brief This function handles USART1 global interrupt.
-  */
-void USART1_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART1_IRQn 0 */
-uint32_t tmp_flag = 0;
+ * @brief This function handles USART1 global interrupt.
+ */
+void USART1_IRQHandler(void) {
+	/* USER CODE BEGIN USART1_IRQn 0 */
+	uint32_t tmp_flag = 0;
 	uint32_t temp;
-	tmp_flag =__HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE); // 读取IDLE标志位
-	if((tmp_flag != RESET))// IDLE标志置位
-	{ 
-		__HAL_UART_CLEAR_IDLEFLAG(&huart1);// 清除IDLE标志位
-		//temp = huart1.Instance->SR;  // 读SR寄存器可清除部分串口状态标志
-		//temp = huart1.Instance->DR;  // 读DR寄存器可清除部分串口状态标志
-		// 停止DMA后读取本帧实际长度
-		HAL_UART_DMAStop(&huart1); // 停止DMA接收
-		temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);// 读取DMA剩余接收计数
-		//temp  = hdma_usart1_rx.Instance->NDTR;// 直接读取NDTR也可得到DMA剩余计数
-		rx_len =  BUFFER_SIZE - temp; // 计算本帧已接收长度
-		recv_end_flag = 1;	// 置位接收完成标志
+	tmp_flag = __HAL_UART_GET_FLAG(&huart1, UART_FLAG_IDLE);
+	if ((tmp_flag != RESET)) {
+		/* MaixCam 使用 DMA + IDLE 收包，记录有效长度后交给主循环解析。 */
+		__HAL_UART_CLEAR_IDLEFLAG(&huart1);
+		HAL_UART_DMAStop(&huart1);
+		temp = __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
+		rx_len = BUFFER_SIZE - temp;
+		recv_end_flag = 1;
 		Is_coordgot = 1;
-	 }
-  /* USER CODE END USART1_IRQn 0 */
-  HAL_UART_IRQHandler(&huart1);
-  /* USER CODE BEGIN USART1_IRQn 1 */
+	}
+	/* USER CODE END USART1_IRQn 0 */
+	HAL_UART_IRQHandler(&huart1);
+	/* USER CODE BEGIN USART1_IRQn 1 */
 
-  /* USER CODE END USART1_IRQn 1 */
+	/* USER CODE END USART1_IRQn 1 */
 }
 
 /**
-  * @brief This function handles USART2 global interrupt.
-  */
-void USART2_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART2_IRQn 0 */
+ * @brief This function handles USART2 global interrupt.
+ */
+void USART2_IRQHandler(void) {
+	/* USER CODE BEGIN USART2_IRQn 0 */
 
-  /* USER CODE END USART2_IRQn 0 */
-  HAL_UART_IRQHandler(&huart2);
-  /* USER CODE BEGIN USART2_IRQn 1 */
+	/* USER CODE END USART2_IRQn 0 */
+	HAL_UART_IRQHandler(&huart2);
+	/* USER CODE BEGIN USART2_IRQn 1 */
 
-  /* USER CODE END USART2_IRQn 1 */
+	/* USER CODE END USART2_IRQn 1 */
 }
 
 /**
-  * @brief This function handles USART3 global interrupt.
-  */
-void USART3_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART3_IRQn 0 */
+ * @brief This function handles USART3 global interrupt.
+ */
+void USART3_IRQHandler(void) {
+	/* USER CODE BEGIN USART3_IRQn 0 */
 
-  /* USER CODE END USART3_IRQn 0 */
-  HAL_UART_IRQHandler(&huart3);
-  /* USER CODE BEGIN USART3_IRQn 1 */
-    uint8_t rx_byte = rx_data[0];
-    switch (uart_state)
-    {
-      case 0: // 等待第1个0x5A帧头
-        if (rx_byte == 0x5A) {
-          uart_state = 1;
+	/* USER CODE END USART3_IRQn 0 */
+	HAL_UART_IRQHandler(&huart3);
+	/* USER CODE BEGIN USART3_IRQn 1 */
+	uint8_t rx_byte = rx_data[0];
+	/* 颜色传感器帧格式：0x5A 0x5A ... checksum，逐字节状态机解析。 */
+	switch (uart3_color_parser.state) {
+	case 0:
+		if (rx_byte == 0x5A) {
+			uart3_color_parser.state = 1;
 		}
-        break;
-      case 1: // 等待第2个0x5A帧头
-        if (rx_byte == 0x5A) {
-          uart_state = 2;
-          frame_count = 2;
-          frame_buffer[0] = 0x5A;
-          frame_buffer[1] = 0x5A;
-		} 
-		else {
-          uart_state = 0;
-		} // 未收到连续帧头则复位状态
-        break;  
-      case 2: // 接收数据帧
-        if (frame_count < 8) {
-          frame_buffer[frame_count] = rx_byte;
-          frame_count++;
+		break;
+	case 1:
+		if (rx_byte == 0x5A) {
+			uart3_color_parser.state = 2;
+			uart3_color_parser.count = 2;
+			uart3_color_parser.buffer[0] = 0x5A;
+			uart3_color_parser.buffer[1] = 0x5A;
+		} else {
+			uart3_color_parser.state = 0;
 		}
-        // 判断是否接收完整8字节帧
-        if (frame_count == 8) {
-          // 校验和为前7字节累加和的低8位
-          uint8_t checksum = 0;
-          for (int i = 0; i < 7; i++) {
-            checksum += frame_buffer[i];
-		  }
-          // 验证校验和
-          if ((checksum & 0xFF) == frame_buffer[7]) {
-            // 读取RGB值，帧内第5/6/7字节对应数组索引4/5/6
-            scan_information.R = frame_buffer[4];
-            scan_information.G = frame_buffer[5];
-            scan_information.B = frame_buffer[6];
-		  }
-          // 复位状态，准备接收下一帧
-          uart_state = 0;
+		break;
+	case 2:
+		if (uart3_color_parser.count < 8) {
+			uart3_color_parser.buffer[uart3_color_parser.count] =
+			        rx_byte;
+			uart3_color_parser.count++;
 		}
-        break; 
-      default:
-        uart_state = 0;
-        break;
-    }
-	HAL_UART_Receive_IT(&huart3,rx_data,1);
-  /* USER CODE END USART3_IRQn 1 */
+		if (uart3_color_parser.count == 8) {
+			uint8_t checksum = 0;
+			for (int i = 0; i < 7; i++) {
+				checksum += uart3_color_parser.buffer[i];
+			}
+			if ((checksum & 0xFF) == uart3_color_parser.buffer[7]) {
+				/* 校验通过后更新 RGB 结果，业务层读取 scan_information。 */
+				scan_information.R =
+				        uart3_color_parser.buffer[4];
+				scan_information.G =
+				        uart3_color_parser.buffer[5];
+				scan_information.B =
+				        uart3_color_parser.buffer[6];
+			}
+			uart3_color_parser.state = 0;
+		}
+		break;
+	default:
+		uart3_color_parser.state = 0;
+		break;
+	}
+	HAL_UART_Receive_IT(&huart3, rx_data, 1);
+	/* USER CODE END USART3_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA1 stream7 global interrupt.
-  */
-void DMA1_Stream7_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream7_IRQn 0 */
+ * @brief This function handles TIM8 break interrupt and TIM12 global interrupt.
+ */
+void TIM8_BRK_TIM12_IRQHandler(void) {
+	/* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 0 */
 
-  /* USER CODE END DMA1_Stream7_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_uart5_tx);
-  /* USER CODE BEGIN DMA1_Stream7_IRQn 1 */
+	/* USER CODE END TIM8_BRK_TIM12_IRQn 0 */
+	HAL_TIM_IRQHandler(&htim12);
+	/* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream7_IRQn 1 */
+	/* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }
 
 /**
-  * @brief This function handles UART4 global interrupt.
-  */
-void UART4_IRQHandler(void)
-{
-  /* USER CODE BEGIN UART4_IRQn 0 */
-	if(__HAL_UART_GET_FLAG(&huart4, UART_FLAG_IDLE) != RESET)
-	{
-		__HAL_UART_CLEAR_IDLEFLAG(&huart4); // 清除IDLE标志
-		HAL_UART_DMAStop(&huart4); // 停止DMA后读取本帧长度
-		rxCount = CMD_LEN - __HAL_DMA_GET_COUNTER(&hdma_uart4_rx);	 
-		// 解析新OPS里程计8字节位置帧
-		OPS_Odometer_RxParse((const uint8_t *)rxCmd, rxCount);
+ * @brief This function handles TIM8 update interrupt and TIM13 global
+ * interrupt.
+ */
+void TIM8_UP_TIM13_IRQHandler(void) {
+	/* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
+
+	/* USER CODE END TIM8_UP_TIM13_IRQn 0 */
+	HAL_TIM_IRQHandler(&htim13);
+	/* USER CODE BEGIN TIM8_UP_TIM13_IRQn 1 */
+
+	/* USER CODE END TIM8_UP_TIM13_IRQn 1 */
+}
+
+/**
+ * @brief This function handles DMA1 stream7 global interrupt.
+ */
+void DMA1_Stream7_IRQHandler(void) {
+	/* USER CODE BEGIN DMA1_Stream7_IRQn 0 */
+
+	/* USER CODE END DMA1_Stream7_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_uart5_tx);
+	/* USER CODE BEGIN DMA1_Stream7_IRQn 1 */
+
+	/* USER CODE END DMA1_Stream7_IRQn 1 */
+}
+
+/**
+ * @brief This function handles UART4 global interrupt.
+ */
+void UART4_IRQHandler(void) {
+	/* USER CODE BEGIN UART4_IRQn 0 */
+	if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_IDLE) != RESET) {
+		/* UART4 为里程计入口，IDLE 表示一帧 DMA 数据已经结束。 */
+		__HAL_UART_CLEAR_IDLEFLAG(&huart4);
+		HAL_UART_DMAStop(&huart4);
+		rxCount = CMD_LEN - __HAL_DMA_GET_COUNTER(&hdma_uart4_rx);
+		/* 解析结果写入 odometer_ctx.pose，控制层直接读取世界系位姿。 */
+		odometer_rx_parse((const uint8_t *)rxCmd, rxCount);
 		HAL_UART_Receive_DMA(&huart4, (uint8_t *)rxCmd, CMD_LEN);
 	}
-  /* USER CODE END UART4_IRQn 0 */
-  HAL_UART_IRQHandler(&huart4);
-  /* USER CODE BEGIN UART4_IRQn 1 */
+	/* USER CODE END UART4_IRQn 0 */
+	HAL_UART_IRQHandler(&huart4);
+	/* USER CODE BEGIN UART4_IRQn 1 */
 
-  /* USER CODE END UART4_IRQn 1 */
+	/* USER CODE END UART4_IRQn 1 */
 }
 
 /**
-  * @brief This function handles UART5 global interrupt.
-  */
-void UART5_IRQHandler(void)
-{
-  /* USER CODE BEGIN UART5_IRQn 0 */
-	uint8_t len;
-
-	if(__HAL_UART_GET_FLAG(&huart5,UART_FLAG_IDLE)!=RESET)
-	{
+ * @brief This function handles UART5 global interrupt.
+ */
+void UART5_IRQHandler(void) {
+	/* USER CODE BEGIN UART5_IRQn 0 */
+	if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_IDLE) != RESET) {
+		/* UART5 当前用于 X42 发送链路保活，收到空闲中断后恢复 DMA 接收。 */
 		__HAL_UART_CLEAR_IDLEFLAG(&huart5);
 		HAL_UART_DMAStop(&huart5);
-		len = 100 - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
-		hwt906_rx_parse(uart5buff, len);
-		HWT906_Update_Attitude();
-		HAL_UART_Receive_DMA(&huart5,uart5buff,100);
+		HAL_UART_Receive_DMA(&huart5, uart5buff, 100);
 	}
-  /* USER CODE END UART5_IRQn 0 */
-  HAL_UART_IRQHandler(&huart5);
-  /* USER CODE BEGIN UART5_IRQn 1 */
+	/* USER CODE END UART5_IRQn 0 */
+	HAL_UART_IRQHandler(&huart5);
+	/* USER CODE BEGIN UART5_IRQn 1 */
 
-  /* USER CODE END UART5_IRQn 1 */
+	/* USER CODE END UART5_IRQn 1 */
 }
 
 /**
-  * @brief This function handles TIM6 global interrupt, DAC1 and DAC2 underrun error interrupts.
-  */
-void TIM6_DAC_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
+ * @brief This function handles TIM6 global interrupt, DAC1 and DAC2 underrun
+ * error interrupts.
+ */
+void TIM6_DAC_IRQHandler(void) {
+	/* USER CODE BEGIN TIM6_DAC_IRQn 0 */
 
-  /* USER CODE END TIM6_DAC_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim6);
-  /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
+	/* USER CODE END TIM6_DAC_IRQn 0 */
+	HAL_TIM_IRQHandler(&htim6);
+	/* USER CODE BEGIN TIM6_DAC_IRQn 1 */
 
-  /* USER CODE END TIM6_DAC_IRQn 1 */
+	/* USER CODE END TIM6_DAC_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA2 stream1 global interrupt.
-  */
-void DMA2_Stream1_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA2_Stream1_IRQn 0 */
+ * @brief This function handles DMA2 stream1 global interrupt.
+ */
+void DMA2_Stream1_IRQHandler(void) {
+	/* USER CODE BEGIN DMA2_Stream1_IRQn 0 */
 
-  /* USER CODE END DMA2_Stream1_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart6_rx);
-  /* USER CODE BEGIN DMA2_Stream1_IRQn 1 */
+	/* USER CODE END DMA2_Stream1_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_usart6_rx);
+	/* USER CODE BEGIN DMA2_Stream1_IRQn 1 */
 
-  /* USER CODE END DMA2_Stream1_IRQn 1 */
+	/* USER CODE END DMA2_Stream1_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA2 stream5 global interrupt.
-  */
-void DMA2_Stream5_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA2_Stream5_IRQn 0 */
+ * @brief This function handles DMA2 stream5 global interrupt.
+ */
+void DMA2_Stream5_IRQHandler(void) {
+	/* USER CODE BEGIN DMA2_Stream5_IRQn 0 */
 
-  /* USER CODE END DMA2_Stream5_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart1_rx);
-  /* USER CODE BEGIN DMA2_Stream5_IRQn 1 */
+	/* USER CODE END DMA2_Stream5_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_usart1_rx);
+	/* USER CODE BEGIN DMA2_Stream5_IRQn 1 */
 
-  /* USER CODE END DMA2_Stream5_IRQn 1 */
+	/* USER CODE END DMA2_Stream5_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA2 stream6 global interrupt.
-  */
-void DMA2_Stream6_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA2_Stream6_IRQn 0 */
+ * @brief This function handles DMA2 stream6 global interrupt.
+ */
+void DMA2_Stream6_IRQHandler(void) {
+	/* USER CODE BEGIN DMA2_Stream6_IRQn 0 */
 
-  /* USER CODE END DMA2_Stream6_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart6_tx);
-  /* USER CODE BEGIN DMA2_Stream6_IRQn 1 */
+	/* USER CODE END DMA2_Stream6_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_usart6_tx);
+	/* USER CODE BEGIN DMA2_Stream6_IRQn 1 */
 
-  /* USER CODE END DMA2_Stream6_IRQn 1 */
+	/* USER CODE END DMA2_Stream6_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA2 stream7 global interrupt.
-  */
-void DMA2_Stream7_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA2_Stream7_IRQn 0 */
+ * @brief This function handles DMA2 stream7 global interrupt.
+ */
+void DMA2_Stream7_IRQHandler(void) {
+	/* USER CODE BEGIN DMA2_Stream7_IRQn 0 */
 
-  /* USER CODE END DMA2_Stream7_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart1_tx);
-  /* USER CODE BEGIN DMA2_Stream7_IRQn 1 */
+	/* USER CODE END DMA2_Stream7_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_usart1_tx);
+	/* USER CODE BEGIN DMA2_Stream7_IRQn 1 */
 
-  /* USER CODE END DMA2_Stream7_IRQn 1 */
+	/* USER CODE END DMA2_Stream7_IRQn 1 */
 }
 
 /**
-  * @brief This function handles USART6 global interrupt.
-  */
-void USART6_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART6_IRQn 0 */
-if(__HAL_UART_GET_FLAG(&huart6,UART_FLAG_IDLE)!=RESET)
-{
-	__HAL_UART_CLEAR_IDLEFLAG(&huart6);
-	HAL_UART_DMAStop(&huart6);// 停止DMA接收
-	uint8_t len=100-__HAL_DMA_GET_COUNTER(huart6.hdmarx);// 计算本帧实际接收长度
-//	HAL_UART_Transmit_DMA(&huart1,QArxbuff,len);// 调试回传
-	if(len == 2 && QArxbuff[len-1] == 0x0D)
-	{
-		qanum = QArxbuff[0]%48;
+ * @brief This function handles USART6 global interrupt.
+ */
+void USART6_IRQHandler(void) {
+	/* USER CODE BEGIN USART6_IRQn 0 */
+	if (__HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE) != RESET) {
+		__HAL_UART_CLEAR_IDLEFLAG(&huart6);
+		HAL_UART_DMAStop(&huart6);
+		uint8_t len = 100 - __HAL_DMA_GET_COUNTER(huart6.hdmarx);
+		if (len == 2 && QArxbuff[len - 1] == 0x0D) {
+			qanum = QArxbuff[0] % 48;
+		} else if (len == 3 && QArxbuff[len - 1] == 0x0D) {
+			qanum = 10 + QArxbuff[1] % 48;
+		}
+		HAL_UART_Receive_DMA(&huart6, QArxbuff, 100);
 	}
-	else if(len == 3 && QArxbuff[len-1] == 0x0D)
-	{
-		qanum = 10+QArxbuff[1]%48;
-	}
-	HAL_UART_Receive_DMA(&huart6,QArxbuff,100);// 重新开启DMA接收
-}	
-  /* USER CODE END USART6_IRQn 0 */
-  HAL_UART_IRQHandler(&huart6);
-  /* USER CODE BEGIN USART6_IRQn 1 */
+	/* USER CODE END USART6_IRQn 0 */
+	HAL_UART_IRQHandler(&huart6);
+	/* USER CODE BEGIN USART6_IRQn 1 */
 
-  /* USER CODE END USART6_IRQn 1 */
+	/* USER CODE END USART6_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -36,15 +36,61 @@ extern "C" {
 #include "tim.h"
 #include "adc.h"
 #include "useradc.h"
-extern uint8_t IsLight;
-extern uint8_t IsFollowline;
-extern uint64_t Tick_Time;
-extern uint8_t QAtx_buff[];
-extern uint8_t QArxbuff[100];
-extern uint8_t uart5buff[100];
-extern uint8_t qanum;
-extern uint8_t rx_data[2];
-extern uint8_t Is_vel_mode;
+
+#define APP_QA_TX_BUF_LEN 9U
+#define APP_QA_RX_BUF_LEN 100U
+#define APP_UART5_RX_BUF_LEN 100U
+#define APP_COLOR_RX_BUF_LEN 2U
+#define APP_GY33_CMD_LEN 3U
+#define ODOM_TEST_TARGET_X_MM 200.0f
+#define ODOM_TEST_TARGET_Y_MM 200.0f
+#define ODOM_TEST_HOME_X_MM 0.0f
+#define ODOM_TEST_HOME_Y_MM 0.0f
+#define ODOM_TEST_REACHED_M 0.003f
+#define OPEN_LOOP_TEST_TIME_MS 500U
+#define OPEN_LOOP_STOP_TIME_MS 200U
+#define CONTROL_DT_S 0.001f
+#define TIM6_TICK_MS 1U
+#define MOTOR_CMD_DIVIDER 2U
+#define STATUS_TICK_DIVIDER 1000U
+
+typedef struct {
+	uint8_t is_light;
+	uint8_t is_followline;
+	uint8_t qa_tx_buf[APP_QA_TX_BUF_LEN];
+	uint8_t qa_rx_buf[APP_QA_RX_BUF_LEN];
+	uint8_t uart5_rx_buf[APP_UART5_RX_BUF_LEN];
+	uint8_t qa_num;
+	uint8_t color_rx_data[APP_COLOR_RX_BUF_LEN];
+	uint32_t camera_time_ms;
+	uint8_t camera_timeout_enable;
+	uint8_t debug_enable;
+	uint8_t start_flag;
+	uint16_t led_count;
+	uint32_t run_time_ms;
+	uint8_t gy33_white_balance_cmd[APP_GY33_CMD_LEN];
+	uint8_t gy33_read_cmd[APP_GY33_CMD_LEN];
+	uint8_t chassis_velocity_mode;
+} AppContext_t;
+
+extern AppContext_t app_ctx;
+
+#define IsLight app_ctx.is_light
+#define IsFollowline app_ctx.is_followline
+#define QAtx_buff app_ctx.qa_tx_buf
+#define QArxbuff app_ctx.qa_rx_buf
+#define uart5buff app_ctx.uart5_rx_buf
+#define qanum app_ctx.qa_num
+#define rx_data app_ctx.color_rx_data
+#define camtim app_ctx.camera_time_ms
+#define camtim_button app_ctx.camera_timeout_enable
+#define debug app_ctx.debug_enable
+#define Start_flag app_ctx.start_flag
+#define led_count app_ctx.led_count
+#define timcount app_ctx.run_time_ms
+#define gy33sendbuffer1 app_ctx.gy33_white_balance_cmd
+#define gy33sendbuffer2 app_ctx.gy33_read_cmd
+#define Is_vel_mode app_ctx.chassis_velocity_mode
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -68,6 +114,8 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 int abs_int(int int1);
 float abs_float(float value);
+void Robot_RealtimeControl(float dt);
+void Robot_ServiceTick(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

@@ -1,102 +1,261 @@
-#ifndef __CONTROL_H
-#define __CONTROL_H
+#ifndef CONTROL_H
+#define CONTROL_H
 
 #include "main.h"
 
-#define g 0.06f
-#define yuanhuan 0x03
-#define shizi 	 0x02
-extern uint8_t cammode;
-#define lookingangle 700
-extern uint16_t Material[5];
-void Setmaixcam_mode(uint8_t ch);
+/* 转盘和视觉识别参数 */
+#define MATERIAL_RING_MODE 0x03U
+#define MATERIAL_CROSS_MODE 0x02U
+#define MATERIAL_LOOKING_ANGLE 700U
 
-//********************************角度pid部分************************************//
-#define DEAD_ZONE 0.1f  // 姿态死区，单位度
-float GetAttitudeCorrection(void);  // 获取姿态校正量
-extern float attitude_correction;   // 姿态校正量（外部可访问）
-extern uint8_t isPosture_correction;	// 开启姿态校正标志位（外部可访问）
+/* 姿态控制参数 */
+#define ATTITUDE_DEAD_ZONE_DEG 0.1f
+
+/* 位置控制速度参数，单位 m/s */
+#define POSITION_SPEED_HIGHEST_MPS 6.3f
+#define POSITION_SPEED_HIGH_MPS 3.80f
+#define POSITION_SPEED_MID_MPS 2.0f
+#define POSITION_SPEED_LOW_MPS 1.5f
+#define POSITION_SPEED_LOWEST_MPS 0.55f
+#define TASK1_RELATIVE_SPEED_MPS 0.75f
+#define TASK1_RELATIVE_SWITCH_PAUSE_MS 20U
+
+/* 位置控制 PID 和轨迹规划参数 */
+#define POSITION_PID_DEFAULT_KP 7.0f
+#define POSITION_PID_DEFAULT_KD 0.05f
+#define POSITION_PID_TASK1_RELATIVE_KP 7.0f
+#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 0.90f
+#define POSITION_PLANNER_MAX_ACCEL_MPS2 5.0f
+#define POSITION_PLANNER_MAX_DECEL_MPS2 11.0f
+#define POSITION_PLANNER_MAX_JERK_MPS3 18.0f
+#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f
+#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.04f
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.35f
+#define POSITION_REACHED_TOLERANCE_M 0.003f
+#define POSITION_FINE_REACHED_TOLERANCE_M 0.002f
+#define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f
+
+/* 姿态协同参数 */
+#define POSE_SYNC_SLOW_DISTANCE_M 0.25f
+#define POSE_SYNC_SLOW_YAW_DEG 34.0f
+#define POSE_SYNC_MIN_SCALE 0.60f
+#define POSE_YAW_TOLERANCE_DEG 2.0f
+#define POSE_YAW_DEAD_ZONE_DEG 0.1f
+#define MAKEUP_FOR_ANGLE 2.0f
+
+/* 视觉稳定参数 */
+#define CAM_REACHED_TOLERANCE 3
+#define CAM_MAX_MIN_ERROR 3
+#define ERROR_QUEUE_SIZE 10U
+#define UART_WAIT_TIMEOUT_MS 500U
+#define CAM_STABILIZE_TIMEOUT_MS 1200U
+
+/* X42 力矩电流模式参数，单位 mA */
+#define CHASSIS_CURRENT_MAX_MA 2500U
+#define CHASSIS_CURRENT_MIN_MA 80U
+#define CHASSIS_TORQUE_RAMP_MA_S 4000U
+#define ZDT_X42_POS_DEG_PER_CLK (360.0f / 3200.0f)
+#define TASK1_RELATIVE_X_MOVE_MM 100.0f
+#define CHASSIS_POS_ACCEL 10U
+#define CHASSIS_POS_DECEL 10U
+#define POSITION_MAX_LINEAR_SPEED_MPS 7.0f
+#define ATTITUDE_MAX_OMEGA 20.0f
+#define CAM_DEAD_ZONE 0.0f
+#define CAM_ERROR_ABS_LIMIT 480
+
+/* 兼容旧任务代码的速度宏 */
+#define HIGHESTSPEED POSITION_SPEED_HIGHEST_MPS
+#define HIGHSPEED POSITION_SPEED_HIGH_MPS
+#define MIDSPEED POSITION_SPEED_MID_MPS
+#define LOWSPEED POSITION_SPEED_LOW_MPS
+#define LOWESTSPEED POSITION_SPEED_LOWEST_MPS
+#define TASK1_RELATIVE_SPEED TASK1_RELATIVE_SPEED_MPS
+#define DEAD_ZONE ATTITUDE_DEAD_ZONE_DEG
+#define TOLERANCE CAM_REACHED_TOLERANCE
+#define max_min_error CAM_MAX_MIN_ERROR
+#define g 0.06f
+#define yuanhuan MATERIAL_RING_MODE
+#define shizi MATERIAL_CROSS_MODE
+#define lookingangle MATERIAL_LOOKING_ANGLE
+
+typedef struct {
+	float Kp;         /* 比例系数 */
+	float Kp2;        /* 备用比例系数，用于视觉环分段参数 */
+	float Ki;         /* 积分系数 */
+	float Kd;         /* 微分系数 */
+	float integral;   /* 积分项 */
+	float prev_error; /* 上一次误差 */
+	float max_output; /* 输出限幅 */
+} PID_Controller;
+
+typedef struct {
+	PID_Controller pid_x;   /* X 轴位置 PID */
+	PID_Controller pid_y;   /* Y 轴位置 PID */
+	uint8_t is_enabled;     /* 位置环使能标志 */
+	float target_x;         /* 目标 X 坐标，单位 mm */
+	float target_y;         /* 目标 Y 坐标，单位 mm */
+	uint32_t last_update_time; /* 最后更新时间，单位 ms */
+} PositionController_t;
+
+typedef struct {
+	uint8_t is_enabled;      /* 位姿协同使能标志 */
+	float sync_scale;        /* 位置环和姿态环同步缩放系数 */
+	float slow_distance_m;   /* 进入降速区的位置误差，单位 m */
+	float slow_yaw_deg;      /* 进入降速区的 yaw 误差，单位 deg */
+	float min_scale;         /* 最小同步缩放系数 */
+	PID_Controller yaw_pid;  /* 预留 yaw PID */
+	float target_yaw;        /* 协同目标 yaw，单位 deg */
+	uint8_t has_yaw_target;  /* yaw 目标有效标志 */
+} PoseCoordination_t;
+
+typedef struct {
+	PID_Controller yaw_pid;  /* 偏航角 PID 控制器 */
+	float target_yaw;        /* 目标偏航角，单位 deg */
+	uint8_t is_enabled;      /* 姿态环使能标志 */
+	uint32_t last_update_time; /* 最后更新时间，单位 ms */
+} AttitudeStabilization_t;
+
+typedef struct {
+	int errors_x[ERROR_QUEUE_SIZE]; /* 视觉 X 误差队列 */
+	int errors_y[ERROR_QUEUE_SIZE]; /* 视觉 Y 误差队列 */
+	uint8_t index;                  /* 当前写入位置 */
+	uint8_t count;                  /* 已缓存数据个数 */
+	uint8_t is_full;                /* 队列满标志 */
+} ErrorQueue_t;
+
+typedef struct {
+	PID_Controller pid_x; /* 视觉 X 轴 PID */
+	PID_Controller pid_y; /* 视觉 Y 轴 PID */
+	uint8_t is_enabled;   /* 视觉稳定使能标志 */
+} CamStabilization_t;
+
+typedef struct {
+	float center_x;      /* 圆心 X 坐标，单位 mm */
+	float center_y;      /* 圆心 Y 坐标，单位 mm */
+	float radius;        /* 圆弧半径，单位 mm */
+	float start_angle;   /* 起始角度，单位 rad */
+	float end_angle;     /* 结束角度，单位 rad */
+	uint8_t direction;   /* 方向：0 逆时针，1 顺时针 */
+	float current_angle; /* 当前目标角度，单位 rad */
+	uint32_t start_time; /* 圆弧运动开始时间，单位 ms */
+	float total_time;    /* 圆弧运动总时间，单位 s */
+} ArcTrajectory_t;
+
+typedef struct {
+	PID_Controller angle_pid;  /* 圆弧角度跟踪 PID */
+	PID_Controller radius_pid; /* 圆弧半径跟踪 PID */
+	uint8_t is_enabled;        /* 圆弧跟踪使能标志 */
+} ArcTracking_t;
+
+typedef struct {
+	uint8_t active;       /* 任务激活标志 */
+	uint8_t current_step; /* 当前任务步骤 */
+	uint32_t step_start;  /* 当前步骤开始时间，单位 ms */
+	uint8_t completed;    /* 任务完成标志 */
+} TaskState_t;
+
+typedef struct {
+	float x; /* 世界系 X 坐标，单位 mm */
+	float y; /* 世界系 Y 坐标，单位 mm */
+} Point2D_t;
+
+typedef struct {
+	float vx;    /* 底盘局部 X 速度，单位 m/s */
+	float vy;    /* 底盘局部 Y 速度，单位 m/s */
+	float omega; /* 底盘角速度，单位 rad/s */
+} TargetVelocity_t;
+
+typedef struct {
+	int16_t current_ma; /* X42 力矩电流命令，单位 mA */
+	uint8_t direction;  /* X42 方向位 */
+} Motor_t;
+
+typedef struct {
+	float wheel_radius;      /* 轮子半径，单位 m */
+	float wheel_dist_x;      /* X 轴轮距，单位 m */
+	float wheel_dist_y;      /* Y 轴轮距，单位 m */
+	float max_wheel_mps;     /* 最大等效轮速，单位 m/s */
+	uint16_t max_current_ma; /* 最大力矩电流，单位 mA */
+} ChassisConfig_t;
+
+typedef struct {
+	float race_tolerance_m;             /* 当前任务到点容差，单位 m */
+	uint16_t material_pwm[5];           /* 转盘五个物料位 PWM */
+	TaskState_t task1;                  /* 任务 1 状态机 */
+	uint8_t task_num;                   /* 当前任务编号 */
+	uint8_t cam_mode;                   /* MaixCam 工作模式 */
+	uint8_t look_mode_control;          /* 视觉搜索模式控制标志 */
+	PositionController_t position;      /* 位置控制状态 */
+	uint8_t position_enabled;           /* 位置控制外部使能镜像 */
+	PoseCoordination_t pose;            /* 位姿协同状态 */
+	AttitudeStabilization_t attitude;   /* 姿态控制状态 */
+	float attitude_correction;          /* 姿态环角速度修正量 */
+	uint8_t posture_correction_enabled; /* 姿态校正任务标志 */
+	uint8_t position_test_flag;         /* 位置环测试到点标志 */
+	uint8_t rotating;                   /* 非阻塞转向状态 */
+	CamStabilization_t cam;             /* 视觉稳定控制状态 */
+	float cam_correction_x;             /* 视觉 X 修正量 */
+	float cam_correction_y;             /* 视觉 Y 修正量 */
+	uint8_t cam_stabilizing;            /* 视觉稳定过程标志 */
+	int coord_ready;                    /* 视觉坐标有效标志 */
+	uint8_t cam_reached_count;          /* 视觉连续到达计数 */
+	TargetVelocity_t target_velocity;   /* 当前底盘目标速度 */
+	Motor_t motor[4];                   /* 四个 X42 电机输出状态 */
+	uint8_t run_enabled;                /* 底盘运行使能 */
+	uint8_t line_follow_enabled;        /* 循迹控制使能 */
+	uint8_t target_set;                 /* 非阻塞目标已下发标志 */
+	uint8_t color_ready;                /* 颜色传感器数据有效标志 */
+} ControlContext_t;
+
+extern ControlContext_t control_ctx;
+
+#define raceh control_ctx.race_tolerance_m
+#define Material control_ctx.material_pwm
+#define task1_state control_ctx.task1
+#define tasknum control_ctx.task_num
+#define cammode control_ctx.cam_mode
+#define lookmode_centrl control_ctx.look_mode_control
+#define position_control control_ctx.position
+#define is_position_control_enabled control_ctx.position_enabled
+#define pose_coordination control_ctx.pose
+#define attitude_control control_ctx.attitude
+#define attitude_correction control_ctx.attitude_correction
+#define isPosture_correction control_ctx.posture_correction_enabled
+#define testflag control_ctx.position_test_flag
+#define is_rotating control_ctx.rotating
+#define cam_stabilization control_ctx.cam
+#define cam_correction_x control_ctx.cam_correction_x
+#define cam_correction_y control_ctx.cam_correction_y
+#define is_cam_stabilizing control_ctx.cam_stabilizing
+#define Is_coordgot control_ctx.coord_ready
+#define iscamreached_safecount control_ctx.cam_reached_count
+#define target_velocity control_ctx.target_velocity
+#define motor1 control_ctx.motor[0]
+#define motor2 control_ctx.motor[1]
+#define motor3 control_ctx.motor[2]
+#define motor4 control_ctx.motor[3]
+#define IsRun control_ctx.run_enabled
+#define is_line_follow_enabled control_ctx.line_follow_enabled
+#define target_set control_ctx.target_set
+#define is_hasgetcolor control_ctx.color_ready
+
+float GetAttitudeCorrection(void);
+void Setmaixcam_mode(uint8_t ch);
+void PID_Init(
+        PID_Controller *pid, float Kp, float Ki, float Kd, float max_output);
+void PID_Init_cam(PID_Controller *pid, float Kp, float Kp2, float Ki, float Kd,
+        float max_output);
+float PID_Update(PID_Controller *pid, float error, float dt);
+float PID_Update_cam(PID_Controller *pid, float error, float dt);
+float PID_Update_angle(PID_Controller *pid, float error, float dt);
+void Line_Follow_Init(void);
+void Follow_line_task(void);
 void AttitudeStabilization_Init(void);
 void SetTargetYaw(float target);
 uint8_t IsYawReached(float target_yaw, float tolerance_degrees);
 void UpdateAttitudeStabilization(float dt);
 void EnableAttitudeStabilization(uint8_t enable);
-//********************************角度pid部分************************************//
-
-//********************************循迹pid部分************************************//
-typedef struct {
-    float Kp;       // 比例系数
-	float Kp2;
-    float Ki;       // 积分系数
-    float Kd;       // 微分系数
-    float integral; // 积分项
-    float prev_error; // 上一次误差
-    float max_output; // 最大输出限制
-} PID_Controller;
-
-void PID_Init(PID_Controller* pid, float Kp, float Ki, float Kd, float max_output);
-void PID_Init_cam(PID_Controller* pid, float Kp,float Kp2, float Ki, float Kd, float max_output);
-float PID_Update(PID_Controller* pid, float error, float dt);
-float PID_Update_cam(PID_Controller* pid, float error, float dt);
-float PID_Update_angle(PID_Controller* pid, float error, float dt);
-void Line_Follow_Init(void);
-void Follow_line_task(void);
-//********************************循迹pid部分************************************//
-
-//********************************位置控制pid部分************************************//
-#define HIGHESTSPEED 6.3f                           // 最高位置控制速度，单位m/s
-#define HIGHSPEED 3.80f                             // 高速位置控制速度，单位m/s
-#define MIDSPEED 2.0f                               // 中速位置控制速度，单位m/s
-#define LOWSPEED  1.5f                              // 低速位置控制速度，单位m/s
-#define LOWESTSPEED  0.55f                          // 最低位置控制速度，单位m/s
-#define TASK1_RELATIVE_SPEED 0.75f                  // Task1相对位移动作速度，单位m/s
-#define TASK1_RELATIVE_SWITCH_PAUSE_MS 20U          // Task1相对位移切换停顿时间，单位ms
-#define POSITION_PID_DEFAULT_KP 7.0f                // 位置PID默认比例系数
-#define POSITION_PID_DEFAULT_KD 0.05f               // 位置PID默认微分系数
-#define POSITION_PID_TASK1_RELATIVE_KP 7.0f         // Task1相对位移使用的位置PID比例系数
-#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f        // 位置规划最小速度，单位m/s
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 0.90f     // 位置规划巡航速度，单位m/s
-#define POSITION_PLANNER_MAX_ACCEL_MPS2 5.0f        // 位置规划最大加速度，单位m/s^2
-#define POSITION_PLANNER_MAX_DECEL_MPS2 11.0f       // 位置规划最大减速度，单位m/s^2
-#define POSITION_PLANNER_MAX_JERK_MPS3 18.0f        // 位置规划最大加加速度，单位m/s^3
-#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f       // 位置规划停止速度阈值，单位m/s
-#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.04f // 位置规划近目标距离阈值，单位m
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.35f       // 位置反馈速度上限，单位m/s
-#define POSITION_REACHED_TOLERANCE_M 0.003f         // 默认位置到位容差，单位m
-#define POSITION_FINE_REACHED_TOLERANCE_M 0.002f    // 精定位位置到位容差，单位m
-#define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f  // 回家段粗定位位置到位容差，单位m
-#define POSE_SYNC_SLOW_DISTANCE_M 0.25f             // 姿态协同减速距离，单位m
-#define POSE_SYNC_SLOW_YAW_DEG    34.0f             // 姿态协同减速角度，单位deg
-#define POSE_SYNC_MIN_SCALE       0.60f             // 姿态协同最小缩放比例
-#define POSE_YAW_TOLERANCE_DEG    2.0f              // 姿态到位角度容差，单位deg
-#define POSE_YAW_DEAD_ZONE_DEG    0.1f              // 姿态死区，单位deg
-
-#define MAKEUP_FOR_ANGLE 2.0f
-
-typedef struct {
-    PID_Controller pid_x;      // X轴位置PID
-    PID_Controller pid_y;      // Y轴位置PID
-    uint8_t is_enabled;        // 位置控制使能标志
-    float target_x;            // 目标X坐标
-    float target_y;            // 目标Y坐标
-    uint32_t last_update_time; // 最后更新时间
-} PositionController_t;
-
-typedef struct {
-    uint8_t is_enabled;       // 位姿协调使能
-    float sync_scale;         // 平移和旋转共用减速比例
-    float slow_distance_m;    // 平移减速距离，单位m
-    float slow_yaw_deg;       // 旋转减速角度，单位deg
-    float min_scale;          // 最小输出比例
-    PID_Controller yaw_pid;   // yaw轴PID
-    float target_yaw;         // 目标yaw角，单位deg
-    uint8_t has_yaw_target;   // yaw目标有效标志
-} PoseCoordination_t;
-
-extern PositionController_t position_control;
-extern uint8_t is_position_control_enabled;
-extern PoseCoordination_t pose_coordination;
-
 void PositionControl_Init(void);
 void PositionControl_Enable(uint8_t enable);
 void SetTargetPosition(float x, float y);
@@ -109,111 +268,23 @@ void UpdatePoseCoordination(float dt);
 uint8_t IsPoseReached(float tolerance_xy, float tolerance_yaw_degrees);
 uint8_t move_to_pose_target(float x, float y, float yaw);
 uint8_t move_to_target(float x, float y);
-//********************************位置控制pid部分************************************//
-
-//********************************摄像头校正pid部分************************************//
-#define TOLERANCE 3
-#define max_min_error 3
-#define ERROR_QUEUE_SIZE 10		  // 定义误差队列长度
-#define UART_WAIT_TIMEOUT_MS 500  // 超时时间，单位ms
-#define CAM_STABILIZE_TIMEOUT_MS 1200  // 视觉校正等待超时时间，单位ms
-
-typedef struct {
-    int errors_x[ERROR_QUEUE_SIZE];
-    int errors_y[ERROR_QUEUE_SIZE];
-    uint8_t index;
-    uint8_t count;
-    uint8_t is_full;
-} ErrorQueue_t;
-
-typedef struct {
-    PID_Controller pid_x;  // X轴PID
-    PID_Controller pid_y;  // Y轴PID
-    uint8_t is_enabled;    // 使能标志
-} CamStabilization_t;
-
-extern CamStabilization_t cam_stabilization;
-extern float cam_correction_x; // X轴校正量
-extern float cam_correction_y; // Y轴校正量
-
 void CamStabilization_Init(void);
 void CamStabilization_Enable(uint8_t enable);
 void UpdateCamStabilization(float x_err, float y_err, float dt);
-//********************************摄像头校正pid部分************************************//
-
-//********************************圆弧跟踪部分************************************//
-typedef struct {
-    float center_x;        // 圆心x坐标，单位mm
-    float center_y;        // 圆心y坐标，单位mm
-    float radius;          // 圆弧半径，单位mm
-    float start_angle;     // 起始角度，单位rad
-    float end_angle;       // 结束角度，单位rad
-    uint8_t direction;     // 方向：0逆时针，1顺时针
-    float current_angle;   // 当前目标角度
-    uint32_t start_time;   // 开始时间
-    float total_time;      // 总运动时间
-} ArcTrajectory_t;
-
-typedef struct {
-    PID_Controller angle_pid;    // 角度跟踪PID
-    PID_Controller radius_pid;   // 半径跟踪PID
-    uint8_t is_enabled;
-} ArcTracking_t;
-
 void ArcTracking_Init(void);
 uint8_t MoveAlongArc(float center_x, float center_y, float radius,
-                    float start_angle, float end_angle, uint8_t direction, float speed);
+        float start_angle, float end_angle, uint8_t direction, float speed);
 uint8_t IsArcMotionCompleted(void);
 void ArcTracking_Enable(uint8_t enable);
 void UpdateArcTracking(float dt);
-//********************************圆弧跟踪部分************************************//
-
-//********************************任务调度部分************************************//
-typedef struct {
-    uint8_t active;         // 任务是否激活
-    uint8_t current_step;   // 当前执行步骤
-    uint32_t step_start;    // 当前步骤开始时间
-	uint8_t completed;      // 任务结束时置1
-} TaskState_t;
-
 void start_task1(void);
 void run_task1(void);
 uint8_t is_task1_active(void);
-//********************************任务调度部分************************************//
-
-typedef struct {
-    float x;
-    float y;
-} Point2D_t;
-
-typedef struct {
-    float vx;
-    float vy;
-    float omega;
-} TargetVelocity_t;
-
-extern TargetVelocity_t target_velocity; // 全局目标速度
-
-typedef struct {
-    int16_t speed_rpm;  // 转速范围：-32768~32767 RPM
-	uint8_t direction;  // 方向标识：0停止，1正转，2反转
-} Motor_t;
-
-typedef struct {
-    float wheel_radius;  // 轮子半径，单位m
-    float wheel_dist_x;  // X轴轮距，单位m
-    float wheel_dist_y;  // Y轴轮距，单位m
-    float max_rpm;       // 电机最大转速，单位RPM
-} ChassisConfig_t;
-
-extern Motor_t motor1, motor2, motor3, motor4;
 void SetTargetVelocity(float vx, float vy, float omega);
 void SetTargetLinearVelocity(float vx, float vy);
-extern uint8_t task1state;
-
 void Mecanum_Init(ChassisConfig_t config);
 void Mecanum_Kinematics(float vx, float vy, float omega);
-
+void Mecanum_SendTorqueCurrent(void);
 void stop(void);
 void go(void);
 void back(void);
@@ -226,7 +297,7 @@ void fangzhi(void);
 void jiaozhun(void);
 void POS_move(void);
 uint8_t task1_relative_forward_back(void);
-
 void task1(void);
 void Motor_tick(void);
+
 #endif

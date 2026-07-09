@@ -18,15 +18,14 @@
 	*
 	*	1. 中文字库使用的是小字库，即用到了对应的汉字再去取模，用户可以根据需求自行增添或删减
 	*	2. 各个函数的功能和使用可以参考函数的说明
-	*	3. 如果报错Error: L6218E: Undefined symbol HAL_SPI_Init去stm32f1xx_hal_conf.h文件下的*#define HAL_SPI_MODULE_ENABLED *取消掉这条宏定义语句的注释
+	*	3. SPI3 和 HAL_SPI_MODULE_ENABLED 由 CubeMX 的 SPI3 配置生成，重新生成后无需手动改 HAL 配置宏
 	*
 	*********************************************************************************************************************************************************************************************LXB*****
 ***/
 
 #include "lcd_spi_154.h"
+#include "spi.h"
 #include "stdio.h"
-
-SPI_HandleTypeDef hspi3;			// SPI_HandleTypeDef 结构体变量
 
 #define  LCD_SPI hspi3           // SPI局部宏，方便修改和移植
 
@@ -56,99 +55,45 @@ struct	//LCD相关参数结构体
 
 
 /*************************************************************************************************
-*	函 数 名:	HAL_SPI_MspInit
-*	入口参数:	hspi - SPI_HandleTypeDef定义的变量，即表示定义的 SPI 句柄
-*	返 回 值:	无
-*	函数功能:	初始化 SPI3 引脚
-*	说    明:	无		
-*************************************************************************************************/
-
-void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
-{
-   GPIO_InitTypeDef GPIO_InitStruct = {0};
-   if(hspi->Instance==SPI3)
-   {
-		__HAL_RCC_SPI3_CLK_ENABLE();	// 使能SPI3时钟
-		
-      GPIO_LCD_SCK_CLK;    	 		// 使能 SCK          引脚时钟	
-      GPIO_LCD_SDA_CLK;    			// 使能 SDA          引脚时钟	
-		GPIO_LCD_CS_CLK;					// 使能 CS           引脚时钟	
-      GPIO_LCD_Backlight_CLK;   		// 使能 背光         引脚时钟
-      GPIO_LCD_DC_CLK;          		// 使能 数据指令选择 引脚时钟
-		
-// 初始化 SCK、MOSI
-      GPIO_InitStruct.Pin 		   = LCD_SCK_PIN;      	// SCK引脚
-      GPIO_InitStruct.Mode 		= GPIO_MODE_AF_PP;           	 	// 复用推挽输出
-      GPIO_InitStruct.Pull 		= GPIO_NOPULL;                	// 无上下拉
-      GPIO_InitStruct.Speed 		= GPIO_SPEED_FREQ_VERY_HIGH;  	// 最高速度等级
-		GPIO_InitStruct.Alternate 	= GPIO_AF6_SPI3;				
-      HAL_GPIO_Init(LCD_SCK_PORT, &GPIO_InitStruct);
-
-      GPIO_InitStruct.Pin 		   = LCD_SDA_PIN;      	// SCK、MOSI引脚		
-      HAL_GPIO_Init(LCD_SDA_PORT, &GPIO_InitStruct);
-		
-
-// 初始化片选引脚，使用硬件 SPI 片选
-
-		GPIO_InitStruct.Pin 		= LCD_CS_PIN;						// 背光 引脚
-		GPIO_InitStruct.Mode 	= GPIO_MODE_OUTPUT_PP;			// 推挽输出模式
-		GPIO_InitStruct.Pull 	= GPIO_NOPULL;					   // 无上下拉
-		GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_HIGH;			// 速度等级高
-		HAL_GPIO_Init(LCD_CS_PORT, &GPIO_InitStruct);			// 初始化  
-  
-// 初始化 背光 引脚  
-		GPIO_InitStruct.Pin 		= LCD_Backlight_PIN;				// 背光 引脚
-		GPIO_InitStruct.Mode 	= GPIO_MODE_OUTPUT_PP;			// 推挽输出模式
-		GPIO_InitStruct.Pull 	= GPIO_NOPULL;					   // 无上下拉
-		GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_LOW;			// 速度等级低
-		HAL_GPIO_Init(LCD_Backlight_PORT, &GPIO_InitStruct);	// 初始化  
-
-// 初始化 数据指令选择 引脚  
-		GPIO_InitStruct.Pin 		= LCD_DC_PIN;				      // 数据指令选择 引脚
-		GPIO_InitStruct.Mode 	= GPIO_MODE_OUTPUT_PP;			// 推挽输出模式
-		GPIO_InitStruct.Pull 	= GPIO_NOPULL;						// 无上下拉
-		GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_HIGH;			// 速度等级高
-		HAL_GPIO_Init(LCD_DC_PORT, &GPIO_InitStruct);	      // 初始化  
-		
-		LCD_DC_Data;			// DC引脚拉高，默认处于写数据状态
-		LCD_CS_H;				// 拉高片选，禁止通信
-		LCD_Backlight_OFF;  	// 先关闭背光，初始化完成之后再打开		
-   }
-}
-
-	  
-/*************************************************************************************************
-*	函 数 名:	MX_SPI3_Init
+*	函 数 名:	LCD_GPIO_Init
 *	入口参数:	无
 *	返 回 值:	无
-*	函数功能:	初始化SPI配置
-*	说    明:	使用硬件片选	 
+*	函数功能:	初始化 LCD 片选、数据指令选择和背光控制引脚
+*	说    明:	SPI3 SCK/MOSI 和 SPI 外设参数由 CubeMX 生成的 spi.c 初始化
 *************************************************************************************************/
 
-void MX_SPI3_Init(void)
+static void LCD_GPIO_Init(void)
 {
-	LCD_SPI.Instance 									= SPI3;							   					//	使用SPI3
-	LCD_SPI.Init.Mode 								= SPI_MODE_MASTER;            					//	主机模式
-	LCD_SPI.Init.Direction 							= SPI_DIRECTION_1LINE;       					   //	单线
-	LCD_SPI.Init.DataSize 							= SPI_DATASIZE_8BIT;          					//	8位数据宽度
-	LCD_SPI.Init.CLKPolarity 						= SPI_POLARITY_LOW;           					//	CLK空闲时保持低电平
-	LCD_SPI.Init.CLKPhase 							= SPI_PHASE_1EDGE;            					//	数据在CLK第一个边沿有效
-	LCD_SPI.Init.NSS 									= SPI_NSS_SOFT;        								//	软件片选   
-	
-// SPI3 挂载在APB1总线，总线时钟42MHz	
-// 设置为2分频，得到21MHz的SPI驱动时钟
-	LCD_SPI.Init.BaudRatePrescaler 				= SPI_BAUDRATEPRESCALER_2;							// 2分频
-	
-	LCD_SPI.Init.FirstBit	 						= SPI_FIRSTBIT_MSB;									//	高位在先
-	LCD_SPI.Init.TIMode 								= SPI_TIMODE_DISABLE;         					//	禁止TI模式
-	LCD_SPI.Init.CRCCalculation					= SPI_CRCCALCULATION_DISABLE; 					//	禁止CRC
-	LCD_SPI.Init.CRCPolynomial 					= 0x0;                        					// CRC校验项，这里用不到				
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-   HAL_SPI_Init(&LCD_SPI);       // 初始化SPI
+	GPIO_LCD_CS_CLK;					// 使能 CS           引脚时钟
+	GPIO_LCD_Backlight_CLK;   		// 使能 背光         引脚时钟
+	GPIO_LCD_DC_CLK;          		// 使能 数据指令选择 引脚时钟
 
-// 为了传输效率，本例程的SPI通信采用寄存器操作，不用HAL库自带的收发函数，所以需要单独配置下面2个   
-   __HAL_SPI_ENABLE(&LCD_SPI);   // 使能SPI
-   SPI_1LINE_TX(&LCD_SPI);       // 单线发送模式
+	// 初始化片选引脚，低电平有效
+	GPIO_InitStruct.Pin 		= LCD_CS_PIN;						// 片选 引脚
+	GPIO_InitStruct.Mode 	= GPIO_MODE_OUTPUT_PP;			// 推挽输出模式
+	GPIO_InitStruct.Pull 	= GPIO_NOPULL;					   // 无上下拉
+	GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_HIGH;			// 速度等级高
+	HAL_GPIO_Init(LCD_CS_PORT, &GPIO_InitStruct);			// 初始化
+
+	// 初始化 背光 引脚
+	GPIO_InitStruct.Pin 		= LCD_Backlight_PIN;				// 背光 引脚
+	GPIO_InitStruct.Mode 	= GPIO_MODE_OUTPUT_PP;			// 推挽输出模式
+	GPIO_InitStruct.Pull 	= GPIO_NOPULL;					   // 无上下拉
+	GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_LOW;			// 速度等级低
+	HAL_GPIO_Init(LCD_Backlight_PORT, &GPIO_InitStruct);	// 初始化
+
+	// 初始化 数据指令选择 引脚
+	GPIO_InitStruct.Pin 		= LCD_DC_PIN;				      // 数据指令选择 引脚
+	GPIO_InitStruct.Mode 	= GPIO_MODE_OUTPUT_PP;			// 推挽输出模式
+	GPIO_InitStruct.Pull 	= GPIO_NOPULL;						// 无上下拉
+	GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_HIGH;			// 速度等级高
+	HAL_GPIO_Init(LCD_DC_PORT, &GPIO_InitStruct);	      // 初始化
+
+	LCD_DC_Data;			// DC引脚拉高，默认处于写数据状态
+	LCD_CS_H;				// 拉高片选，禁止通信
+	LCD_Backlight_OFF;  	// 先关闭背光，初始化完成之后再打开
 }
 
 
@@ -249,7 +194,7 @@ void  LCD_WriteBuff(uint16_t *DataBuff, uint16_t DataSize)
 
 void SPI_LCD_Init(void)
 {
-   MX_SPI3_Init();               // 初始化SPI和控制引脚
+   LCD_GPIO_Init();             // 初始化 LCD 控制引脚
 
    HAL_Delay(10);               // 屏幕刚完成复位时（包括上电复位），需要等待5ms才能发送指令
 
