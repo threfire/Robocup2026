@@ -100,6 +100,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  uint32_t startup_begin_ms = HAL_GetTick();
 
   /* USER CODE END Init */
 
@@ -163,6 +164,10 @@ int main(void)
 	/* 等待里程计上电后进入稳定输出，再初始化零点状态。 */
 	HAL_Delay(2000);
 	odometer_init();
+	uint32_t startup_elapsed_ms = HAL_GetTick() - startup_begin_ms;
+	if (startup_elapsed_ms < ODOMETER_ZERO_MIN_STARTUP_MS) {
+		HAL_Delay(ODOMETER_ZERO_MIN_STARTUP_MS - startup_elapsed_ms);
+	}
 	/* 里程计稳定后清零外部坐标与航向积分。 */
 	(void)odometer_request_zero();
 	/* 控制环模块初始化：视觉、位置、位姿协同和姿态环。 */
