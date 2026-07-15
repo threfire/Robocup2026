@@ -313,8 +313,8 @@ void UpdatePositionControl(float dt) {
 
 	vx_local *= pose_coordination.sync_scale;
 	vy_local *= pose_coordination.sync_scale;
-	/* SetTargetLinearVelocity 的参数顺序对应当前底盘局部轴定义。 */
-	SetTargetLinearVelocity(vy_local, vx_local);
+	/* 世界系误差经 yaw 旋转后，局部 vx/vy 按同名轴传入麦轮逆解。 */
+	SetTargetLinearVelocity(vx_local, vy_local);
 
 	if (IsPositionControlFinished(raceh)) {
 		testflag = 1;
