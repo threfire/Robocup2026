@@ -140,8 +140,22 @@ static float odometer_read_float_le(const uint8_t *data) {
  */
 static void odometer_update_pose(float x_mm, float y_mm, float yaw_deg,
         float gyro_dps, float vel_x_mmps, float vel_y_mmps) {
-	odometer_ctx.pose.pos_x_mm = x_mm;
-	odometer_ctx.pose.pos_y_mm = y_mm;
+	float yaw_rad = yaw_deg * 0.017453292519943295f;
+	float yaw_cos = cosf(yaw_rad);
+	float yaw_sin = sinf(yaw_rad);
+	float offset_x_world_mm = ODOMETER_SENSOR_OFFSET_X_MM * yaw_cos -
+	        ODOMETER_SENSOR_OFFSET_Y_MM * yaw_sin;
+	float offset_y_world_mm = ODOMETER_SENSOR_OFFSET_X_MM * yaw_sin +
+	        ODOMETER_SENSOR_OFFSET_Y_MM * yaw_cos;
+	float gyro_rad_s = gyro_dps * 0.017453292519943295f;
+	float chassis_vel_x_mmps = vel_x_mmps + gyro_rad_s * offset_y_world_mm;
+	float chassis_vel_y_mmps = vel_y_mmps - gyro_rad_s * offset_x_world_mm;
+
+	/* 外部里程计给出传感器中心位姿，旋转安装偏移后换算车体中心并保持清零点不变。 */
+	odometer_ctx.pose.pos_x_mm = x_mm - offset_x_world_mm +
+	        ODOMETER_SENSOR_OFFSET_X_MM;
+	odometer_ctx.pose.pos_y_mm = y_mm - offset_y_world_mm +
+	        ODOMETER_SENSOR_OFFSET_Y_MM;
 	odometer_ctx.pose.yaw_deg = yaw_deg;
 	odometer_ctx.pose.yaw_gyro_dps = gyro_dps;
 	odometer_ctx.pose.data_updated = 1U;
@@ -150,13 +164,14 @@ static void odometer_update_pose(float x_mm, float y_mm, float yaw_deg,
 	        (fabsf(y_mm) <= ODOMETER_REMOTE_ZERO_TOLERANCE_MM) &&
 	        (fabsf(yaw_deg) <= ODOMETER_REMOTE_ZERO_TOLERANCE_DEG)) {
 		s_remote_zero_pending = 0U;
-		odometer_observer_reset(x_mm * 0.001f, y_mm * 0.001f, gyro_dps);
+		odometer_observer_reset(odometer_ctx.pose.pos_x_mm * 0.001f,
+		        odometer_ctx.pose.pos_y_mm * 0.001f, gyro_dps);
 		return;
 	}
 	odometer_observer_update(odometer_ctx.pose.pos_x_mm * 0.001f,
 	        odometer_ctx.pose.pos_y_mm * 0.001f, gyro_dps);
-	odometer_ctx.motion.vel_x_mps = vel_x_mmps * 0.001f;
-	odometer_ctx.motion.vel_y_mps = vel_y_mmps * 0.001f;
+	odometer_ctx.motion.vel_x_mps = chassis_vel_x_mmps * 0.001f;
+	odometer_ctx.motion.vel_y_mps = chassis_vel_y_mmps * 0.001f;
 }
 
 void odometer_init(void) {
