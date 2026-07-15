@@ -1189,14 +1189,18 @@ uint8_t is_task1_active(void) {
 }
 
 void start_task2(void) {
-	/* 任务二按当前零点测试前移和原地旋转。 */
+	/* 任务二按顺序测试局部 vx 前进、局部 vy 左移和 -90° 航向闭环。 */
 	task2_state.active = 1U;
 	task2_state.current_step = 1U;
 	task2_state.completed = 0U;
 	task2_state.step_start = HAL_GetTick();
 	tasknum = 2U;
-	raceh = POSITION_FINE_REACHED_TOLERANCE_M;
-	SetTargetPose(TASK2_TEST_MOVE_X_MM, TASK2_TEST_MOVE_Y_MM, 0.0f);
+	MotionState_Reset();
+	PoseCoordination_Enable(0U);
+	PositionControl_Enable(0U);
+	EnableAttitudeStabilization(0U);
+	Is_vel_mode = 1U;
+	SetTargetVelocity(TASK2_OPEN_LOOP_SPEED_MPS, 0.0f, 0.0f);
 }
 
 void run_task2(void) {
@@ -1206,21 +1210,24 @@ void run_task2(void) {
 
 	switch (task2_state.current_step) {
 	case 1U:
-		if (IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG)) {
+		if ((HAL_GetTick() - task2_state.step_start) >=
+		        TASK2_OPEN_LOOP_TIME_MS) {
 			stop();
-			PoseCoordination_Enable(0U);
-			PositionControl_Enable(0U);
-			EnableAttitudeStabilization(0U);
 			task2_state.current_step = 2U;
 			task2_state.step_start = HAL_GetTick();
+			SetTargetVelocity(0.0f, TASK2_OPEN_LOOP_SPEED_MPS, 0.0f);
 		}
 		break;
 
 	case 2U:
-		EnableAttitudeStabilization(1U);
-		SetTargetYaw(TASK2_TEST_YAW_DEG);
-		task2_state.current_step = 3U;
-		task2_state.step_start = HAL_GetTick();
+		if ((HAL_GetTick() - task2_state.step_start) >=
+		        TASK2_OPEN_LOOP_TIME_MS) {
+			stop();
+			EnableAttitudeStabilization(1U);
+			SetTargetYaw(TASK2_TEST_YAW_DEG);
+			task2_state.current_step = 3U;
+			task2_state.step_start = HAL_GetTick();
+		}
 		break;
 
 	case 3U:
