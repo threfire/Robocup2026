@@ -54,7 +54,7 @@ extern "C" {
 #define MOTOR_CMD_DIVIDER 3U
 #define STATUS_TICK_DIVIDER 1000U
 #define TASK2_ZERO_SETTLE_MS 100U
-#define ODOMETER_ZERO_MIN_STARTUP_MS 10000U
+#define ODOMETER_ZERO_FINAL_WAIT_MS 8000U
 
 typedef struct {
 	uint8_t is_light;
