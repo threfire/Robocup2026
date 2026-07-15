@@ -262,8 +262,8 @@ static void Robot_HandleDebugModeTransition(void) {
 
 	previous_debug = debug;
 	Start_flag = 0U;
-	task1_start_pending = 0U;
-	task1_zero_confirm_time_ms = 0U;
+	task2_start_pending = 0U;
+	task2_zero_confirm_time_ms = 0U;
 	task1_state.active = 0U;
 	task2_state.active = 0U;
 	PositionControl_Enable(0U);
@@ -331,22 +331,21 @@ void Robot_ServiceTick(void) {
 	if (Key_Num == 1) {
 		Key_Num = 0;
 		Start_flag = 0U;
-		task1_start_pending = odometer_request_zero();
-		task1_zero_confirm_time_ms = 0U;
+		task2_start_pending = odometer_request_zero();
+		task2_zero_confirm_time_ms = 0U;
 	}
-	if ((task1_start_pending == 1U) && odometer_is_zeroed()) {
-		task1_start_pending = 2U;
-		task1_zero_confirm_time_ms = HAL_GetTick();
+	if ((task2_start_pending == 1U) && odometer_is_zeroed()) {
+		task2_start_pending = 2U;
+		task2_zero_confirm_time_ms = HAL_GetTick();
 	}
-	if ((task1_start_pending == 2U) &&
-	        ((HAL_GetTick() - task1_zero_confirm_time_ms) >=
-	                TASK1_ZERO_SETTLE_MS)) {
-		task1_start_pending = 0U;
+	if ((task2_start_pending == 2U) &&
+	        ((HAL_GetTick() - task2_zero_confirm_time_ms) >=
+	                TASK2_ZERO_SETTLE_MS)) {
+		task2_start_pending = 0U;
 		Start_flag = 1U;
-		servo_init();
-		start_task1();
+		start_task2();
 	}
-	run_task1();
+	run_task2();
 }
 
 int abs_int(int int1) {
