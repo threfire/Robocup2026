@@ -304,6 +304,15 @@ void UpdatePositionControl(float dt) {
 		feedback_vx *= feedback_ratio;
 		feedback_vy *= feedback_ratio;
 	}
+	if ((distance_error > raceh) &&
+	        (distance_error <= POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M) &&
+	        (feedback_speed < POSITION_STATIC_FRICTION_SPEED_MPS)) {
+		/* 近点误差沿目标方向叠加最小有效速度，克服底盘静摩擦。 */
+		float static_friction_scale =
+		        POSITION_STATIC_FRICTION_SPEED_MPS / distance_error;
+		feedforward_vx = error_x_local * static_friction_scale;
+		feedforward_vy = error_y_local * static_friction_scale;
+	}
 
 	float vx_local = feedforward_vx + feedback_vx;
 	float vy_local = feedforward_vy + feedback_vy;
