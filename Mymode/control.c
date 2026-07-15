@@ -1055,71 +1055,36 @@ uint8_t move_to_target(float x, float y) {
 	return 0;
 }
 uint8_t task1_relative_forward_back(void) {
-	/* 任务 1 的局部前后微动：记录当前点，先前进固定距离，再回到基准点。 */
-	static uint8_t relative_stage = 0;
 	static uint8_t yaw_hold_set = 0;
-	static uint32_t switch_pause_start = 0;
 	static float base_x_mm = 0.0f;
 	static float base_y_mm = 0.0f;
 
-	if (relative_stage == 0) {
-		if (!yaw_hold_set) {
-			/* 微动前锁定 yaw，降低相对位移过程中的方向漂移。 */
-			PoseCoordination_Enable(0);
-			stop();
-			attitude_correction = 0.0f;
-			attitude_control.yaw_pid.integral = 0.0f;
-			attitude_control.yaw_pid.prev_error = 0.0f;
-			EnableAttitudeStabilization(1);
-			SetTargetYaw(-90.0f);
-			base_x_mm = odometer_ctx.pose.pos_x_mm;
-			base_y_mm = odometer_ctx.pose.pos_y_mm;
-			yaw_hold_set = 1;
-		}
-		pospid_reinit(
-		        TASK1_RELATIVE_SPEED, POSITION_PID_TASK1_RELATIVE_KP);
-		if (move_to_pose_target(base_x_mm + TASK1_RELATIVE_X_MOVE_MM,
-		            base_y_mm, -90.0f)) {
-			relative_stage = 1;
-			switch_pause_start = HAL_GetTick();
-			stop();
-			PositionPlanner_Reset();
-		}
-		return 0;
-	}
-
-	if (relative_stage == 1) {
-		/* 前进和返回之间停顿一小段时间，让底盘电流和里程计状态稳定。 */
+	if (!yaw_hold_set) {
+		PoseCoordination_Enable(0);
 		stop();
-		if ((HAL_GetTick() - switch_pause_start) <
-		        TASK1_RELATIVE_SWITCH_PAUSE_MS) {
-			PositionPlanner_Reset();
-			return 0;
-		}
-		relative_stage = 2;
+		attitude_correction = 0.0f;
+		attitude_control.yaw_pid.integral = 0.0f;
+		attitude_control.yaw_pid.prev_error = 0.0f;
+		EnableAttitudeStabilization(1);
+		SetTargetYaw(-90.0f);
+		base_x_mm = odometer_ctx.pose.pos_x_mm;
+		base_y_mm = odometer_ctx.pose.pos_y_mm;
+		raceh = TASK1_RELATIVE_REACHED_TOLERANCE_M;
+		yaw_hold_set = 1;
+	}
+
+	pospid_reinit(TASK1_RELATIVE_SPEED, POSITION_PID_TASK1_RELATIVE_KP);
+	if (move_to_pose_target(base_x_mm,
+	        base_y_mm - TASK1_RELATIVE_BACKWARD_Y_MOVE_MM, -90.0f)) {
+		yaw_hold_set = 0;
+		base_x_mm = 0.0f;
+		base_y_mm = 0.0f;
+		raceh = POSITION_FINE_REACHED_TOLERANCE_M;
 		PositionPlanner_Reset();
-		return 0;
+		pospid_reinit(MIDSPEED, POSITION_PID_DEFAULT_KP);
+		return 1;
 	}
 
-	if (relative_stage == 2) {
-		if (move_to_pose_target(base_x_mm, base_y_mm, -90.0f)) {
-			relative_stage = 0;
-			yaw_hold_set = 0;
-			switch_pause_start = 0;
-			base_x_mm = 0.0f;
-			base_y_mm = 0.0f;
-			PositionPlanner_Reset();
-			pospid_reinit(MIDSPEED, POSITION_PID_DEFAULT_KP);
-			return 1;
-		}
-		return 0;
-	}
-
-	relative_stage = 0;
-	yaw_hold_set = 0;
-	switch_pause_start = 0;
-	base_x_mm = 0.0f;
-	base_y_mm = 0.0f;
 	return 0;
 }
 /***********Task1***************/
