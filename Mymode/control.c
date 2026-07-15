@@ -24,13 +24,15 @@ ControlContext_t control_ctx = {
  * 15-17: 奖台，18: 起始点，19-20: 过渡点。
  */
 static const Point2D_t task1_targets[] = {
-        {250.25f, 650.0f}, {258.25f, 1058.24f}, {604.89f, 1399.38f},
-        {1075.0f, 1524.0f}, {1545.10f, 1399.38f}, {1891.74f, 1058.24f},
-        {835.14f, 631.60f}, {553.90f, 425.91f}, {836.02f, -220.80f},
-        {554.98f, -334.63f}, {623.60f, -837.96f}, {345.80f, -646.16f},
-        {409.58f, -1467.21f}, {860.0f, -1564.0f}, {1315.42f, -1442.21f},
-        {1710.0f, -270.0f}, {1695.0f, 0.0f}, {1715.0f, 270.0f}, {0.0f, 0.0f},
-        {150.00f, -1467.21f}, {1000.f, 0.0f}, {156.27f, 682.54f}
+        {-650.0f, 250.25f}, {-1058.24f, 258.25f},
+        {-1399.38f, 604.89f}, {-1524.0f, 1075.0f},
+        {-1399.38f, 1545.10f}, {-1058.24f, 1891.74f},
+        {-631.60f, 835.14f}, {-425.91f, 553.90f},
+        {220.80f, 836.02f}, {334.63f, 554.98f}, {837.96f, 623.60f},
+        {646.16f, 345.80f}, {1467.21f, 409.58f}, {1564.0f, 860.0f},
+        {1442.21f, 1315.42f}, {270.0f, 1710.0f}, {0.0f, 1695.0f},
+        {-270.0f, 1715.0f}, {0.0f, 0.0f}, {1467.21f, 150.00f},
+        {0.0f, 1000.0f}, {-682.54f, 156.27f}
 
 };
 void Setmaixcam_mode(uint8_t ch) {
@@ -280,20 +282,10 @@ void UpdatePositionControl(float dt) {
 	float error_y_local = -error_x_global * sinf(current_yaw_rad) +
 	                      error_y_global * cosf(current_yaw_rad);
 
-	float direction_x = 0.0f;
-	float direction_y = 0.0f;
-	float error_norm = sqrtf(
-	        error_x_local * error_x_local + error_y_local * error_y_local);
-	float planned_speed = PositionSpeedPlan_Update(distance_error, dt);
-
-	if (error_norm > 0.001f) {
-		/* 单位方向向量叠加前馈速度，PID 只补偿剩余误差。 */
-		direction_x = error_x_local / error_norm;
-		direction_y = error_y_local / error_norm;
-	}
-
-	float feedforward_vx = direction_x * planned_speed;
-	float feedforward_vy = direction_y * planned_speed;
+	/* 轨迹规划器保留加速度状态，速度前馈当前设为零。 */
+	(void)PositionSpeedPlan_Update(distance_error, dt);
+	float feedforward_vx = 0.0f;
+	float feedforward_vy = 0.0f;
 	float feedback_vx =
 	        PID_Update(&position_control.pid_x, error_x_local, dt);
 	float feedback_vy =
@@ -719,6 +711,7 @@ void Mecanum_Init(ChassisConfig_t config) {
 		chassis_config.max_current_ma = CHASSIS_CURRENT_MAX_MA;
 	}
 	k_omega = (config.wheel_dist_x + config.wheel_dist_y) / 2.0f;
+	memset(control_ctx.motor, 0, sizeof(control_ctx.motor));
 }
 
 void Mecanum_Kinematics(float vx, float vy, float omega) {
@@ -738,14 +731,15 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 		vy += cam_correction_x * 0.01f;
 		vx += cam_correction_y * 0.01f;
 	}
+	/* 底盘坐标系 X/Y 正方向与当前机械安装方向相反。 */
+	vx = -vx;
+	vy = -vy;
 
 	/* 麦轮逆解：局部 vx/vy/omega 映射到四轮等效线速度。 */
 	float v4 = vx - vy - k_omega * actual_omega;
 	float v2 = vx + vy + k_omega * actual_omega;
 	float v3 = vx + vy - k_omega * actual_omega;
 	float v1 = vx - vy + k_omega * actual_omega;
-
-	float current_scale;
 
 	float max_abs_v = fabsf(v4);
 	float scale = 1.0f;
@@ -766,22 +760,21 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 		v1 *= scale;
 	}
 
-	current_scale = (float)chassis_config.max_current_ma /
-	                chassis_config.max_wheel_mps;
-	/* X42 力矩电流模式：等效轮速按最大电流线性换算为电流命令。 */
+	/* 各轮目标线速度按上限比例映射为开环力矩电流。 */
+	float current_scale = (float)chassis_config.max_current_ma /
+	                      chassis_config.max_wheel_mps;
 	motor4.current_ma = (int16_t)(v4 * current_scale);
 	motor2.current_ma = (int16_t)(v2 * current_scale);
 	motor3.current_ma = (int16_t)(v3 * current_scale);
 	motor1.current_ma = (int16_t)(v1 * current_scale);
-
-	motor4.direction = (motor4.current_ma >= 0) ? 0 : 1;
-	motor2.direction = (motor2.current_ma >= 0) ? 1 : 0;
-	motor3.direction = (motor3.current_ma >= 0) ? 0 : 1;
-	motor1.direction = (motor1.current_ma >= 0) ? 1 : 0;
+	motor4.direction = (motor4.current_ma >= 0) ? 0U : 1U;
+	motor2.direction = (motor2.current_ma >= 0) ? 1U : 0U;
+	motor3.direction = (motor3.current_ma >= 0) ? 0U : 1U;
+	motor1.direction = (motor1.current_ma >= 0) ? 1U : 0U;
 }
 
 static uint16_t Motor_CurrentAbs(int16_t current_ma) {
-	/* 固件接口方向和电流幅值分开发送，电流幅值需要限幅和最小有效值。 */
+	/* 固件接口方向和电流幅值分开发送，电流幅值只做上限保护。 */
 	uint16_t current_abs;
 
 	if (current_ma < 0) {
@@ -792,9 +785,6 @@ static uint16_t Motor_CurrentAbs(int16_t current_ma) {
 
 	if (current_abs > chassis_config.max_current_ma) {
 		current_abs = chassis_config.max_current_ma;
-	}
-	if ((current_abs > 0U) && (current_abs < CHASSIS_CURRENT_MIN_MA)) {
-		current_abs = CHASSIS_CURRENT_MIN_MA;
 	}
 
 	return current_abs;
@@ -1214,6 +1204,62 @@ void run_task1(void) {
 }
 uint8_t is_task1_active(void) {
 	return task1_state.active;
+}
+
+void start_task2(void) {
+	/* 任务二按当前零点测试前移和原地旋转。 */
+	task2_state.active = 1U;
+	task2_state.current_step = 1U;
+	task2_state.completed = 0U;
+	task2_state.step_start = HAL_GetTick();
+	tasknum = 2U;
+	raceh = POSITION_FINE_REACHED_TOLERANCE_M;
+	SetTargetPose(TASK2_TEST_MOVE_X_MM, TASK2_TEST_MOVE_Y_MM, 0.0f);
+}
+
+void run_task2(void) {
+	if (!task2_state.active) {
+		return;
+	}
+
+	switch (task2_state.current_step) {
+	case 1U:
+		if (IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG)) {
+			stop();
+			PoseCoordination_Enable(0U);
+			PositionControl_Enable(0U);
+			EnableAttitudeStabilization(0U);
+			task2_state.current_step = 2U;
+			task2_state.step_start = HAL_GetTick();
+		}
+		break;
+
+	case 2U:
+		EnableAttitudeStabilization(1U);
+		SetTargetYaw(TASK2_TEST_YAW_DEG);
+		task2_state.current_step = 3U;
+		task2_state.step_start = HAL_GetTick();
+		break;
+
+	case 3U:
+		if (IsYawReached(TASK2_TEST_YAW_DEG, POSE_YAW_TOLERANCE_DEG)) {
+			stop();
+			EnableAttitudeStabilization(0U);
+			task2_state.active = 0U;
+			task2_state.completed = 1U;
+		}
+		break;
+
+	default:
+		stop();
+		task2_state.active = 0U;
+		task2_state.completed = 1U;
+		break;
+	}
+}
+
+uint8_t is_task2_active(void) {
+	return task2_state.active;
 }
 
 /**

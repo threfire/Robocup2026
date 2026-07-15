@@ -51,8 +51,9 @@ extern "C" {
 #define OPEN_LOOP_STOP_TIME_MS 200U
 #define CONTROL_DT_S 0.001f
 #define TIM6_TICK_MS 1U
-#define MOTOR_CMD_DIVIDER 2U
+#define MOTOR_CMD_DIVIDER 3U
 #define STATUS_TICK_DIVIDER 1000U
+#define TASK2_ZERO_SETTLE_MS 100U
 
 typedef struct {
 	uint8_t is_light;
@@ -66,6 +67,8 @@ typedef struct {
 	uint8_t camera_timeout_enable;
 	uint8_t debug_enable;
 	uint8_t start_flag;
+	uint8_t task2_start_pending;
+	uint32_t task2_zero_confirm_time_ms;
 	uint16_t led_count;
 	uint32_t run_time_ms;
 	uint8_t gy33_white_balance_cmd[APP_GY33_CMD_LEN];
@@ -86,6 +89,8 @@ extern AppContext_t app_ctx;
 #define camtim_button app_ctx.camera_timeout_enable
 #define debug app_ctx.debug_enable
 #define Start_flag app_ctx.start_flag
+#define task2_start_pending app_ctx.task2_start_pending
+#define task2_zero_confirm_time_ms app_ctx.task2_zero_confirm_time_ms
 #define led_count app_ctx.led_count
 #define timcount app_ctx.run_time_ms
 #define gy33sendbuffer1 app_ctx.gy33_white_balance_cmd

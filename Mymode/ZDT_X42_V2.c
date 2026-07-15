@@ -96,6 +96,30 @@ void ZDT_X42_V2_Read_Sys_Params(uint8_t addr, SysParams_t s)
   }
 }
 
+bool ZDT_X42_V2_Parse_Velocity_Feedback(const CAN_RxHeaderTypeDef *rx_header,
+        const uint8_t *motor_rx_data, uint8_t data_len, uint8_t *motor_addr,
+        float *speed_rpm)
+{
+  uint16_t speed_raw;
+
+  if ((rx_header == NULL) || (motor_rx_data == NULL) ||
+          (motor_addr == NULL) || (speed_rpm == NULL))
+  {
+    return false;
+  }
+
+  if ((rx_header->IDE != CAN_ID_EXT) || (data_len < 5U) ||
+          (motor_rx_data[0] != 0x35U) || (motor_rx_data[4] != 0x6BU))
+  {
+    return false;
+  }
+
+  speed_raw = ((uint16_t)motor_rx_data[2] << 8) | motor_rx_data[3];
+  *motor_addr = (uint8_t)(rx_header->ExtId >> 8);
+  *speed_rpm = (float)speed_raw * 0.1f;
+  return true;
+}
+
 /**
   * @brief    修改开环/闭环控制模式
   * @param    addr     ：电机地址

@@ -27,87 +27,94 @@ __IO CAN_t can = {0};
 CAN_HandleTypeDef hcan1;
 
 /* CAN1 init function */
-void MX_CAN1_Init(void) {
+void MX_CAN1_Init(void)
+{
 
-	/* USER CODE BEGIN CAN1_Init 0 */
+  /* USER CODE BEGIN CAN1_Init 0 */
 
-	/* USER CODE END CAN1_Init 0 */
+  /* USER CODE END CAN1_Init 0 */
 
-	/* USER CODE BEGIN CAN1_Init 1 */
+  /* USER CODE BEGIN CAN1_Init 1 */
 
-	/* USER CODE END CAN1_Init 1 */
-	hcan1.Instance = CAN1;
-	hcan1.Init.Prescaler = 7;
-	hcan1.Init.Mode = CAN_MODE_NORMAL;
-	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-	hcan1.Init.TimeSeg1 = CAN_BS1_4TQ;
-	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
-	hcan1.Init.TimeTriggeredMode = DISABLE;
-	hcan1.Init.AutoBusOff = ENABLE;
-	hcan1.Init.AutoWakeUp = DISABLE;
-	hcan1.Init.AutoRetransmission = DISABLE;
-	hcan1.Init.ReceiveFifoLocked = DISABLE;
-	hcan1.Init.TransmitFifoPriority = DISABLE;
-	if (HAL_CAN_Init(&hcan1) != HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN CAN1_Init 2 */
+  /* USER CODE END CAN1_Init 1 */
+  hcan1.Instance = CAN1;
+  hcan1.Init.Prescaler = 7;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_4TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan1.Init.TimeTriggeredMode = DISABLE;
+  hcan1.Init.AutoBusOff = ENABLE;
+  hcan1.Init.AutoWakeUp = DISABLE;
+  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.ReceiveFifoLocked = DISABLE;
+  hcan1.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN1_Init 2 */
 
-	/* USER CODE END CAN1_Init 2 */
+  /* USER CODE END CAN1_Init 2 */
+
 }
 
-void HAL_CAN_MspInit(CAN_HandleTypeDef *canHandle) {
+void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
+{
 
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	if (canHandle->Instance == CAN1) {
-		/* USER CODE BEGIN CAN1_MspInit 0 */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(canHandle->Instance==CAN1)
+  {
+  /* USER CODE BEGIN CAN1_MspInit 0 */
 
-		/* USER CODE END CAN1_MspInit 0 */
-		/* CAN1 clock enable */
-		__HAL_RCC_CAN1_CLK_ENABLE();
+  /* USER CODE END CAN1_MspInit 0 */
+    /* CAN1 clock enable */
+    __HAL_RCC_CAN1_CLK_ENABLE();
 
-		__HAL_RCC_GPIOB_CLK_ENABLE();
-		/**CAN1 GPIO Configuration
-		PB8     ------> CAN1_RX
-		PB9     ------> CAN1_TX
-		*/
-		GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9;
-		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-		GPIO_InitStruct.Pull = GPIO_NOPULL;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-		GPIO_InitStruct.Alternate = GPIO_AF9_CAN1;
-		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**CAN1 GPIO Configuration
+    PB8     ------> CAN1_RX
+    PB9     ------> CAN1_TX
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF9_CAN1;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-		/* CAN1 interrupt Init */
-		HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 5, 0);
-		HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
-		/* USER CODE BEGIN CAN1_MspInit 1 */
+    /* CAN1 interrupt Init */
+    HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
+  /* USER CODE BEGIN CAN1_MspInit 1 */
 
-		/* USER CODE END CAN1_MspInit 1 */
-	}
+  /* USER CODE END CAN1_MspInit 1 */
+  }
 }
 
-void HAL_CAN_MspDeInit(CAN_HandleTypeDef *canHandle) {
+void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
+{
 
-	if (canHandle->Instance == CAN1) {
-		/* USER CODE BEGIN CAN1_MspDeInit 0 */
+  if(canHandle->Instance==CAN1)
+  {
+  /* USER CODE BEGIN CAN1_MspDeInit 0 */
 
-		/* USER CODE END CAN1_MspDeInit 0 */
-		/* Peripheral clock disable */
-		__HAL_RCC_CAN1_CLK_DISABLE();
+  /* USER CODE END CAN1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_CAN1_CLK_DISABLE();
 
-		/**CAN1 GPIO Configuration
-		PB8     ------> CAN1_RX
-		PB9     ------> CAN1_TX
-		*/
-		HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8 | GPIO_PIN_9);
+    /**CAN1 GPIO Configuration
+    PB8     ------> CAN1_RX
+    PB9     ------> CAN1_TX
+    */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8|GPIO_PIN_9);
 
-		/* CAN1 interrupt Deinit */
-		HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
-		/* USER CODE BEGIN CAN1_MspDeInit 1 */
+    /* CAN1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
+  /* USER CODE BEGIN CAN1_MspDeInit 1 */
 
-		/* USER CODE END CAN1_MspDeInit 1 */
-	}
+  /* USER CODE END CAN1_MspDeInit 1 */
+  }
 }
 
 /* USER CODE BEGIN 1 */
@@ -147,6 +154,73 @@ void USER_CAN1_Filter_Init(void) {
 	// 配置并自检
 	while (HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig) != HAL_OK)
 		;
+}
+
+/**
+ * @brief 接收 FIFO0 中的全部 CAN 帧并写入环形队列。
+ */
+void can_ReceiveFifo0(void) {
+	CAN_RxHeaderTypeDef rx_header;
+	uint8_t frame_data[8] = {0U};
+	uint8_t queue_head;
+	uint8_t next_head;
+	uint8_t i;
+
+	while (HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) > 0U) {
+		if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &rx_header,
+		            frame_data) != HAL_OK) {
+			return;
+		}
+
+		queue_head = can.rxQueueHead;
+		next_head = queue_head + 1U;
+		if (next_head >= CAN_RX_QUEUE_SIZE) {
+			next_head = 0U;
+		}
+		if (next_head == can.rxQueueTail) {
+			continue;
+		}
+
+		can.rxQueue[queue_head].header = rx_header;
+		for (i = 0U; i < 8U; i++) {
+			can.rxQueue[queue_head].data[i] = frame_data[i];
+		}
+		can.rxQueueHead = next_head;
+	}
+}
+
+/**
+ * @brief 从 CAN 接收环形队列中读取一帧数据。
+ *
+ * @param rx_header CAN 帧头输出地址。
+ * @param frame_data CAN 数据输出地址，长度为 8 字节。
+ * @return 读取到数据时返回 true。
+ */
+bool can_GetRxFrame(CAN_RxHeaderTypeDef *rx_header, uint8_t *frame_data) {
+	uint8_t queue_tail;
+	uint8_t next_tail;
+	uint8_t i;
+
+	if ((rx_header == NULL) || (frame_data == NULL)) {
+		return false;
+	}
+
+	queue_tail = can.rxQueueTail;
+	if (queue_tail == can.rxQueueHead) {
+		return false;
+	}
+
+	*rx_header = can.rxQueue[queue_tail].header;
+	for (i = 0U; i < 8U; i++) {
+		frame_data[i] = can.rxQueue[queue_tail].data[i];
+	}
+	next_tail = queue_tail + 1U;
+	if (next_tail >= CAN_RX_QUEUE_SIZE) {
+		next_tail = 0U;
+	}
+	can.rxQueueTail = next_tail;
+
+	return true;
 }
 
 /**

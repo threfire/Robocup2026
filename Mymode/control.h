@@ -19,16 +19,19 @@
 #define POSITION_SPEED_LOWEST_MPS 0.55f
 #define TASK1_RELATIVE_SPEED_MPS 0.75f
 #define TASK1_RELATIVE_SWITCH_PAUSE_MS 20U
+#define TASK2_TEST_MOVE_X_MM 300.0f
+#define TASK2_TEST_MOVE_Y_MM 0.0f
+#define TASK2_TEST_YAW_DEG 90.0f
 
 /* 位置控制 PID 和轨迹规划参数 */
-#define POSITION_PID_DEFAULT_KP 7.0f
-#define POSITION_PID_DEFAULT_KD 0.05f
-#define POSITION_PID_TASK1_RELATIVE_KP 7.0f
+#define POSITION_PID_DEFAULT_KP 3.5f
+#define POSITION_PID_DEFAULT_KD 0.025f
+#define POSITION_PID_TASK1_RELATIVE_KP 3.5f
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.20f
 #define POSITION_PLANNER_CRUISE_SPEED_MPS 0.90f
-#define POSITION_PLANNER_MAX_ACCEL_MPS2 5.0f
-#define POSITION_PLANNER_MAX_DECEL_MPS2 11.0f
-#define POSITION_PLANNER_MAX_JERK_MPS3 18.0f
+#define POSITION_PLANNER_MAX_ACCEL_MPS2 2.5f
+#define POSITION_PLANNER_MAX_DECEL_MPS2 5.5f
+#define POSITION_PLANNER_MAX_JERK_MPS3 9.0f
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.04f
 #define POSITION_FEEDBACK_MAX_SPEED_MPS 0.35f
@@ -52,8 +55,7 @@
 #define CAM_STABILIZE_TIMEOUT_MS 1200U
 
 /* X42 力矩电流模式参数，单位 mA */
-#define CHASSIS_CURRENT_MAX_MA 2500U
-#define CHASSIS_CURRENT_MIN_MA 80U
+#define CHASSIS_CURRENT_MAX_MA 2000U
 #define CHASSIS_TORQUE_RAMP_MA_S 4000U
 #define ZDT_X42_POS_DEG_PER_CLK (360.0f / 3200.0f)
 #define TASK1_RELATIVE_X_MOVE_MM 100.0f
@@ -183,6 +185,7 @@ typedef struct {
 	float race_tolerance_m;             /* 当前任务到点容差，单位 m */
 	uint16_t material_pwm[5];           /* 转盘五个物料位 PWM */
 	TaskState_t task1;                  /* 任务 1 状态机 */
+	TaskState_t task2;                  /* 任务 2 状态机 */
 	uint8_t task_num;                   /* 当前任务编号 */
 	uint8_t cam_mode;                   /* MaixCam 工作模式 */
 	uint8_t look_mode_control;          /* 视觉搜索模式控制标志 */
@@ -213,6 +216,7 @@ extern ControlContext_t control_ctx;
 #define raceh control_ctx.race_tolerance_m
 #define Material control_ctx.material_pwm
 #define task1_state control_ctx.task1
+#define task2_state control_ctx.task2
 #define tasknum control_ctx.task_num
 #define cammode control_ctx.cam_mode
 #define lookmode_centrl control_ctx.look_mode_control
@@ -280,6 +284,9 @@ void UpdateArcTracking(float dt);
 void start_task1(void);
 void run_task1(void);
 uint8_t is_task1_active(void);
+void start_task2(void);
+void run_task2(void);
+uint8_t is_task2_active(void);
 void SetTargetVelocity(float vx, float vy, float omega);
 void SetTargetLinearVelocity(float vx, float vy);
 void Mecanum_Init(ChassisConfig_t config);

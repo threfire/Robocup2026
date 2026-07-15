@@ -8,20 +8,93 @@
  */
 
 #include "odometer.h"
+#include "main.h"
+#include "usart.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <string.h>
 
 odometer_context_t odometer_ctx;
 
 /* 里程计原始世界系位姿，手动清零时用当前原始值作为新零点。 */
-static float s_odometer_raw_x_mm;
-static float s_odometer_raw_y_mm;
-static float s_odometer_raw_yaw_deg;
-static float s_odometer_zero_x_mm;
-static float s_odometer_zero_y_mm;
-static float s_odometer_zero_yaw_deg;
-static uint8_t s_odometer_world_inited;
+static float s_observer_pos_x_m;
+static float s_observer_pos_y_m;
+static float s_observer_last_gyro_dps;
+static uint32_t s_observer_last_time_ms;
+static uint8_t s_observer_initialized;
+static uint8_t s_remote_zero_pending;
+
+/**
+ * @brief 使用当前测量值重置运动状态观测器。
+ */
+static void odometer_observer_reset(
+        float pos_x_m, float pos_y_m, float gyro_dps) {
+	s_observer_pos_x_m = pos_x_m;
+	s_observer_pos_y_m = pos_y_m;
+	s_observer_last_gyro_dps = gyro_dps;
+	s_observer_last_time_ms = HAL_GetTick();
+	s_observer_initialized = 1U;
+	memset(&odometer_ctx.motion, 0, sizeof(odometer_ctx.motion));
+	odometer_ctx.motion.yaw_rate_dps = gyro_dps;
+}
+
+/**
+ * @brief 用里程计坐标和陀螺仪角速度更新 α-β-γ 观测状态。
+ */
+static void odometer_observer_update(
+        float pos_x_m, float pos_y_m, float gyro_dps) {
+	uint32_t now_ms = HAL_GetTick();
+	uint32_t elapsed_ms;
+	float dt;
+	float predicted_x_m;
+	float predicted_y_m;
+	float residual_x_m;
+	float residual_y_m;
+	float gyro_accel_dps2;
+
+	if (!s_observer_initialized) {
+		odometer_observer_reset(pos_x_m, pos_y_m, gyro_dps);
+		return;
+	}
+
+	elapsed_ms = now_ms - s_observer_last_time_ms;
+	if ((elapsed_ms == 0U) || (elapsed_ms > ODOMETER_OBSERVER_MAX_DT_MS)) {
+		odometer_observer_reset(pos_x_m, pos_y_m, gyro_dps);
+		return;
+	}
+
+	dt = (float)elapsed_ms * 0.001f;
+	predicted_x_m = s_observer_pos_x_m +
+	                odometer_ctx.motion.vel_x_mps * dt +
+	                0.5f * odometer_ctx.motion.accel_x_mps2 * dt * dt;
+	predicted_y_m = s_observer_pos_y_m +
+	                odometer_ctx.motion.vel_y_mps * dt +
+	                0.5f * odometer_ctx.motion.accel_y_mps2 * dt * dt;
+	residual_x_m = pos_x_m - predicted_x_m;
+	residual_y_m = pos_y_m - predicted_y_m;
+
+	s_observer_pos_x_m = predicted_x_m + ODOMETER_OBSERVER_ALPHA * residual_x_m;
+	s_observer_pos_y_m = predicted_y_m + ODOMETER_OBSERVER_ALPHA * residual_y_m;
+	odometer_ctx.motion.vel_x_mps +=
+	        odometer_ctx.motion.accel_x_mps2 * dt +
+	        ODOMETER_OBSERVER_BETA * residual_x_m / dt;
+	odometer_ctx.motion.vel_y_mps +=
+	        odometer_ctx.motion.accel_y_mps2 * dt +
+	        ODOMETER_OBSERVER_BETA * residual_y_m / dt;
+	odometer_ctx.motion.accel_x_mps2 +=
+	        2.0f * ODOMETER_OBSERVER_GAMMA * residual_x_m / (dt * dt);
+	odometer_ctx.motion.accel_y_mps2 +=
+	        2.0f * ODOMETER_OBSERVER_GAMMA * residual_y_m / (dt * dt);
+	gyro_accel_dps2 = (gyro_dps - s_observer_last_gyro_dps) / dt;
+	odometer_ctx.motion.yaw_accel_dps2 +=
+	        ODOMETER_OBSERVER_YAW_ACCEL_FILTER *
+	        (gyro_accel_dps2 - odometer_ctx.motion.yaw_accel_dps2);
+	odometer_ctx.motion.yaw_rate_dps = gyro_dps;
+	odometer_ctx.motion.valid = 1U;
+	s_observer_last_gyro_dps = gyro_dps;
+	s_observer_last_time_ms = now_ms;
+}
 
 /**
  * @brief 计算里程计帧 CRC16。
@@ -67,34 +140,28 @@ static float odometer_read_float_le(const uint8_t *data) {
  */
 static void odometer_update_pose(
         float x_mm, float y_mm, float yaw_deg, float gyro_dps) {
-	s_odometer_raw_x_mm = x_mm;
-	s_odometer_raw_y_mm = y_mm;
-	s_odometer_raw_yaw_deg = yaw_deg;
-
-	if (s_odometer_world_inited == 0U) {
-		s_odometer_zero_x_mm = x_mm;
-		s_odometer_zero_y_mm = y_mm;
-		s_odometer_zero_yaw_deg = yaw_deg;
-		s_odometer_world_inited = 1U;
-	}
-
-	odometer_ctx.pose.pos_x_mm = x_mm - s_odometer_zero_x_mm;
-	odometer_ctx.pose.pos_y_mm = y_mm - s_odometer_zero_y_mm;
-	odometer_ctx.pose.yaw_deg = yaw_deg - s_odometer_zero_yaw_deg;
+	odometer_ctx.pose.pos_x_mm = x_mm;
+	odometer_ctx.pose.pos_y_mm = y_mm;
+	odometer_ctx.pose.yaw_deg = yaw_deg;
 	odometer_ctx.pose.yaw_gyro_dps = gyro_dps;
 	odometer_ctx.pose.data_updated = 1U;
+	if (s_remote_zero_pending &&
+	        (fabsf(x_mm) <= ODOMETER_REMOTE_ZERO_TOLERANCE_MM) &&
+	        (fabsf(y_mm) <= ODOMETER_REMOTE_ZERO_TOLERANCE_MM) &&
+	        (fabsf(yaw_deg) <= ODOMETER_REMOTE_ZERO_TOLERANCE_DEG)) {
+		s_remote_zero_pending = 0U;
+		odometer_observer_reset(x_mm * 0.001f, y_mm * 0.001f, gyro_dps);
+		return;
+	}
+	odometer_observer_update(odometer_ctx.pose.pos_x_mm * 0.001f,
+	        odometer_ctx.pose.pos_y_mm * 0.001f, gyro_dps);
 }
 
 void odometer_init(void) {
 	memset(&odometer_ctx, 0, sizeof(odometer_ctx));
 
-	s_odometer_raw_x_mm = 0.0f;
-	s_odometer_raw_y_mm = 0.0f;
-	s_odometer_raw_yaw_deg = 0.0f;
-	s_odometer_zero_x_mm = 0.0f;
-	s_odometer_zero_y_mm = 0.0f;
-	s_odometer_zero_yaw_deg = 0.0f;
-	s_odometer_world_inited = 0U;
+	s_observer_initialized = 0U;
+	s_remote_zero_pending = 0U;
 }
 
 void odometer_rx_parse(const uint8_t *data, uint16_t len) {
@@ -150,15 +217,28 @@ float odometer_get_yaw_deg(void) {
 	return odometer_ctx.pose.yaw_deg;
 }
 
-void odometer_update_zero(void) {
-	/* 按键启动任务时重置零点，避免开机后里程计自身初始化漂移进入任务坐标。 */
-	s_odometer_zero_x_mm = s_odometer_raw_x_mm;
-	s_odometer_zero_y_mm = s_odometer_raw_y_mm;
-	s_odometer_zero_yaw_deg = s_odometer_raw_yaw_deg;
+/**
+ * @brief 发送外部里程计坐标归零控制帧。
+ */
+uint8_t odometer_request_zero(void) {
+	uint8_t frame[ODOMETER_CTRL_FRAME_LEN] = {
+	        ODOMETER_HEAD0, ODOMETER_HEAD1, ODOMETER_CTRL_POSE_ZERO, 0U, 0U, 0U};
+	uint16_t crc = odometer_crc16(frame, 4U);
 
-	odometer_ctx.pose.pos_x_mm = 0.0f;
-	odometer_ctx.pose.pos_y_mm = 0.0f;
-	odometer_ctx.pose.yaw_deg = 0.0f;
+	frame[4] = (uint8_t)(crc & 0xFFU);
+	frame[5] = (uint8_t)(crc >> 8);
+	if (HAL_UART_Transmit(&huart4, frame, sizeof(frame), 10U) != HAL_OK) {
+		return 0U;
+	}
+
+	s_remote_zero_pending = 1U;
 	odometer_ctx.pose.data_updated = 0U;
-	s_odometer_world_inited = 1U;
+	return 1U;
+}
+
+/**
+ * @brief 判断外部里程计归零后的位姿帧是否已到达。
+ */
+uint8_t odometer_is_zeroed(void) {
+	return (s_remote_zero_pending == 0U) && odometer_ctx.pose.data_updated;
 }

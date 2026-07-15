@@ -73,3 +73,4 @@ void MX_USART6_UART_Init(void);
 #endif
 
 #endif /* __USART_H__ */
+

@@ -1,0 +1,56 @@
+# Keil MDK 输出目录
+MDK-ARM/DebugConfig/
+MDK-ARM/**/Listings/
+MDK-ARM/**/Objects/
+MDK-ARM/**/Debug/
+MDK-ARM/**/Output/
+MDK-ARM/mileage_counter/
+
+# Keil 用户文件
+*.uvguix.*
+*.uvoptx
+*.suo
+*.user
+*.userossc
+
+# 常见编译中间文件
+*.o
+*.d
+*.dep
+*.crf
+*.lnp
+*.lst
+*.map
+*.axf
+*.elf
+*.hex
+*.bin
+*.lib
+
+# 常见日志与临时文件
+*.log
+*.tmp
+*.bak
+*.orig
+*.swp
+*.swo
+*.temp
+
+# CMake / Ninja / Make
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+Makefile
+*.ninja
+.ninja_deps
+.ninja_log
+
+# IDE 与系统文件
+.vscode/
+.idea/
+*.code-workspace
+Thumbs.db
+Desktop.ini
+.DS_Store

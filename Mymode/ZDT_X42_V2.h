@@ -56,6 +56,22 @@ void ZDT_X42_V2_Origin_Trigger_Return(uint8_t addr, uint8_t o_mode, bool snF); /
 void ZDT_X42_V2_Origin_Interrupt(uint8_t addr); // 强制中断并退出回零
 void ZDT_X42_V2_Receive_Data(uint8_t *rxCmd, uint8_t *rxCount); // 返回数据接收函数
 
+/**
+ * @brief 解析电机实时转速反馈帧。
+ *
+ * 解析读取实时转速命令 0x35 的 CAN 应答，转速单位为 rpm。
+ *
+ * @param rx_header CAN 接收帧头。
+ * @param motor_rx_data CAN 接收数据。
+ * @param data_len CAN 数据长度。
+ * @param motor_addr 解析得到的电机地址。
+ * @param speed_rpm 解析得到的转速幅值，单位 rpm。
+ * @return 反馈帧有效时返回 true。
+ */
+bool ZDT_X42_V2_Parse_Velocity_Feedback(const CAN_RxHeaderTypeDef *rx_header,
+        const uint8_t *motor_rx_data, uint8_t data_len, uint8_t *motor_addr,
+        float *speed_rpm);
+
 void USER_ZDT_X42_V2_Read_Sys_Params(CAN_HandleTypeDef *hcan, uint8_t addr, SysParams_t s); // 读取参数
 void USER_ZDT_X42_V2_Torque_Control(CAN_HandleTypeDef *hcan, uint8_t addr, uint8_t sign, uint16_t t_ramp, uint16_t torque, uint8_t snF); // 力矩模式控制
 #endif
