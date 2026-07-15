@@ -105,6 +105,11 @@ void POS_move(void) {
 }
 static float position_plan_speed_mps = 0.0f;
 static float position_plan_accel_mps2 = 0.0f;
+static float position_feedback_last_vel_x_mps;
+static float position_feedback_last_vel_y_mps;
+static float position_feedback_accel_x_mps2;
+static float position_feedback_accel_y_mps2;
+static uint8_t position_feedback_accel_valid;
 
 static float NormalizeYawError(float error) {
 	while (error > 180.0f)
@@ -125,9 +130,35 @@ static float ClampFloat(float value, float min_value, float max_value) {
 static void PositionPlanner_Reset(void) {
 	position_plan_speed_mps = 0.0f;
 	position_plan_accel_mps2 = 0.0f;
+	position_feedback_accel_valid = 0U;
+	position_feedback_accel_x_mps2 = 0.0f;
+	position_feedback_accel_y_mps2 = 0.0f;
 }
 
 static void MotionState_Reset(void);
+
+static void PositionAccelerationFeedback_Update(float dt) {
+	float vel_x_mps = odometer_ctx.motion.vel_x_mps;
+	float vel_y_mps = odometer_ctx.motion.vel_y_mps;
+	float accel_x_mps2;
+	float accel_y_mps2;
+
+	if (!position_feedback_accel_valid) {
+		position_feedback_last_vel_x_mps = vel_x_mps;
+		position_feedback_last_vel_y_mps = vel_y_mps;
+		position_feedback_accel_valid = 1U;
+		return;
+	}
+
+	accel_x_mps2 = (vel_x_mps - position_feedback_last_vel_x_mps) / dt;
+	accel_y_mps2 = (vel_y_mps - position_feedback_last_vel_y_mps) / dt;
+	position_feedback_accel_x_mps2 += POSITION_ACCEL_FEEDBACK_FILTER_ALPHA *
+	        (accel_x_mps2 - position_feedback_accel_x_mps2);
+	position_feedback_accel_y_mps2 += POSITION_ACCEL_FEEDBACK_FILTER_ALPHA *
+	        (accel_y_mps2 - position_feedback_accel_y_mps2);
+	position_feedback_last_vel_x_mps = vel_x_mps;
+	position_feedback_last_vel_y_mps = vel_y_mps;
+}
 
 static float PositionSpeedPlan_Update(float distance_error_m, float dt) {
 	/* 距离误差生成前馈速度，减速距离约束保证接近目标点时速度可收敛。 */
@@ -286,10 +317,33 @@ void UpdatePositionControl(float dt) {
 	control_ctx.error_x_local_m = error_x_local;
 	control_ctx.error_y_local_m = error_y_local;
 
-	/* 轨迹规划器保留加速度状态，速度前馈当前设为零。 */
+	/* 轨迹规划器提供目标加速度，里程计速度差分提供实测加速度。 */
 	(void)PositionSpeedPlan_Update(distance_error, dt);
+	PositionAccelerationFeedback_Update(dt);
 	float feedforward_vx = 0.0f;
 	float feedforward_vy = 0.0f;
+	float accel_x_local = -position_feedback_accel_x_mps2 *
+	                              cosf(current_yaw_rad) -
+	                      position_feedback_accel_y_mps2 *
+	                              sinf(current_yaw_rad);
+	float accel_y_local = -position_feedback_accel_x_mps2 *
+	                              sinf(current_yaw_rad) +
+	                      position_feedback_accel_y_mps2 *
+	                              cosf(current_yaw_rad);
+	if (distance_error > raceh) {
+		float desired_accel_x_local = error_x_local *
+		        position_plan_accel_mps2 / distance_error;
+		float desired_accel_y_local = error_y_local *
+		        position_plan_accel_mps2 / distance_error;
+		float force_x_n = CHASSIS_MASS_KG *
+		        (desired_accel_x_local + POSITION_ACCEL_FEEDBACK_GAIN *
+		                (desired_accel_x_local - accel_x_local));
+		float force_y_n = CHASSIS_MASS_KG *
+		        (desired_accel_y_local + POSITION_ACCEL_FEEDBACK_GAIN *
+		                (desired_accel_y_local - accel_y_local));
+		feedforward_vx = force_x_n * POSITION_FORCE_TO_SPEED_FF_MPS_PER_N;
+		feedforward_vy = force_y_n * POSITION_FORCE_TO_SPEED_FF_MPS_PER_N;
+	}
 	float feedback_vx =
 	        PID_Update(&position_control.pid_x, error_x_local, dt);
 	float feedback_vy =
@@ -310,8 +364,8 @@ void UpdatePositionControl(float dt) {
 		/* 近点误差沿目标方向叠加最小有效速度，克服底盘静摩擦。 */
 		float static_friction_scale =
 		        POSITION_STATIC_FRICTION_SPEED_MPS / distance_error;
-		feedforward_vx = error_x_local * static_friction_scale;
-		feedforward_vy = error_y_local * static_friction_scale;
+		feedforward_vx += error_x_local * static_friction_scale;
+		feedforward_vy += error_y_local * static_friction_scale;
 	}
 
 	float vx_local = feedforward_vx + feedback_vx;
