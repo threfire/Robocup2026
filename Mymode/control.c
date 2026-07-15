@@ -276,10 +276,10 @@ void UpdatePositionControl(float dt) {
 	float distance_error = sqrtf(error_x_global * error_x_global +
 	                             error_y_global * error_y_global);
 
-	/* 全局和车体均定义 x 正前、y 正右，yaw 正方向为逆时针。 */
-	float error_x_local = error_x_global * cosf(current_yaw_rad) -
+	/* 全局 x 正方向对应车体后方，全局 y 正方向对应车体右方。 */
+	float error_x_local = -error_x_global * cosf(current_yaw_rad) -
 	                      error_y_global * sinf(current_yaw_rad);
-	float error_y_local = error_x_global * sinf(current_yaw_rad) +
+	float error_y_local = -error_x_global * sinf(current_yaw_rad) +
 	                      error_y_global * cosf(current_yaw_rad);
 
 	/* 轨迹规划器保留加速度状态，速度前馈当前设为零。 */
