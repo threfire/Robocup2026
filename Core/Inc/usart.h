@@ -50,7 +50,7 @@ extern volatile uint8_t rx_len;        // 一帧数据的长度
 extern volatile uint8_t recv_end_flag; // 一帧数据接收完成标志
 extern uint8_t rx_buffer[100];         // 串口接收缓冲区
 
-#define CMD_LEN 20
+#define CMD_LEN 28U
 
 extern __IO bool rxFrameFlag;
 extern __IO uint8_t rxCmd[CMD_LEN];

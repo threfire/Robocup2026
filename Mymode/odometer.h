@@ -16,14 +16,16 @@
 extern "C" {
 #endif
 
-#define ODOMETER_FRAME_LEN 20U    /* 里程计固定帧长度，单位 byte */
+#define ODOMETER_FRAME_LEN 28U    /* 里程计固定帧长度，单位 byte */
 #define ODOMETER_HEAD0 0xA5U      /* 帧头第 1 字节 */
 #define ODOMETER_HEAD1 0x5AU      /* 帧头第 2 字节 */
 #define ODOMETER_X_OFFSET 2U      /* 世界系 x 坐标偏移，单位 mm */
 #define ODOMETER_Y_OFFSET 6U      /* 世界系 y 坐标偏移，单位 mm */
 #define ODOMETER_YAW_OFFSET 10U   /* 世界系 yaw 角偏移，单位 deg */
 #define ODOMETER_GYRO_OFFSET 14U  /* yaw 角速度偏移，单位 deg/s */
-#define ODOMETER_CRC_OFFSET 18U   /* CRC16 低字节偏移 */
+#define ODOMETER_VEL_X_OFFSET 18U /* 世界系 X 速度偏移，单位 mm/s */
+#define ODOMETER_VEL_Y_OFFSET 22U /* 世界系 Y 速度偏移，单位 mm/s */
+#define ODOMETER_CRC_OFFSET 26U   /* CRC16 低字节偏移 */
 #define ODOMETER_CRC_INIT 0xFFFFU /* CRC16 初值 */
 #define ODOMETER_CRC_POLY 0xA001U /* CRC16 多项式 */
 #define ODOMETER_CTRL_FRAME_LEN 6U

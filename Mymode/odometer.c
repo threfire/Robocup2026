@@ -138,8 +138,8 @@ static float odometer_read_float_le(const uint8_t *data) {
  *
  * 第一次收到有效帧时自动记录世界系零点，之后输出相对启动零点的位姿。
  */
-static void odometer_update_pose(
-        float x_mm, float y_mm, float yaw_deg, float gyro_dps) {
+static void odometer_update_pose(float x_mm, float y_mm, float yaw_deg,
+        float gyro_dps, float vel_x_mmps, float vel_y_mmps) {
 	odometer_ctx.pose.pos_x_mm = x_mm;
 	odometer_ctx.pose.pos_y_mm = y_mm;
 	odometer_ctx.pose.yaw_deg = yaw_deg;
@@ -155,6 +155,8 @@ static void odometer_update_pose(
 	}
 	odometer_observer_update(odometer_ctx.pose.pos_x_mm * 0.001f,
 	        odometer_ctx.pose.pos_y_mm * 0.001f, gyro_dps);
+	odometer_ctx.motion.vel_x_mps = vel_x_mmps * 0.001f;
+	odometer_ctx.motion.vel_y_mps = vel_y_mmps * 0.001f;
 }
 
 void odometer_init(void) {
@@ -172,6 +174,8 @@ void odometer_rx_parse(const uint8_t *data, uint16_t len) {
 	float y_mm;
 	float yaw_deg;
 	float gyro_dps;
+	float vel_x_mmps;
+	float vel_y_mmps;
 
 	if ((data == NULL) || (len < ODOMETER_FRAME_LEN)) {
 		return;
@@ -204,9 +208,15 @@ void odometer_rx_parse(const uint8_t *data, uint16_t len) {
 				gyro_dps = odometer_read_float_le(
 				        &data[frame_offset +
 				                ODOMETER_GYRO_OFFSET]);
+				vel_x_mmps = odometer_read_float_le(
+				        &data[frame_offset +
+				                ODOMETER_VEL_X_OFFSET]);
+				vel_y_mmps = odometer_read_float_le(
+				        &data[frame_offset +
+				                ODOMETER_VEL_Y_OFFSET]);
 
-				odometer_update_pose(
-				        x_mm, y_mm, yaw_deg, gyro_dps);
+				odometer_update_pose(x_mm, y_mm, yaw_deg, gyro_dps,
+				        vel_x_mmps, vel_y_mmps);
 				return;
 			}
 		}
