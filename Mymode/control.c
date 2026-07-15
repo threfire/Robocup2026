@@ -728,9 +728,8 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 		vy += cam_correction_x * 0.01f;
 		vx += cam_correction_y * 0.01f;
 	}
-	/* 底盘坐标系 X/Y 正方向与当前机械安装方向相反。 */
+	/* 局部坐标定义为 vx 正向前、vy 正向左；X42 安装使 vx 需反向。 */
 	vx = -vx;
-	vy = -vy;
 
 	/* 麦轮逆解：局部 vx/vy/omega 映射到四轮等效线速度。 */
 	float v4 = vx - vy - k_omega * actual_omega;
