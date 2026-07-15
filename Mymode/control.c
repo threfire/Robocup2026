@@ -275,12 +275,16 @@ void UpdatePositionControl(float dt) {
 	float error_y_global = target_y_global - current_y_global;
 	float distance_error = sqrtf(error_x_global * error_x_global +
 	                             error_y_global * error_y_global);
+	control_ctx.error_x_global_m = error_x_global;
+	control_ctx.error_y_global_m = error_y_global;
 
 	/* 全局 x 正方向对应车体后方，全局 y 正方向对应车体右方。 */
 	float error_x_local = -error_x_global * cosf(current_yaw_rad) -
 	                      error_y_global * sinf(current_yaw_rad);
 	float error_y_local = -error_x_global * sinf(current_yaw_rad) +
 	                      error_y_global * cosf(current_yaw_rad);
+	control_ctx.error_x_local_m = error_x_local;
+	control_ctx.error_y_local_m = error_y_local;
 
 	/* 轨迹规划器保留加速度状态，速度前馈当前设为零。 */
 	(void)PositionSpeedPlan_Update(distance_error, dt);
@@ -400,6 +404,7 @@ void UpdateAttitudeStabilization(float dt) {
 		error -= 360.0f;
 	while (error < -180.0f)
 		error += 360.0f;
+	control_ctx.yaw_error_deg = error;
 
 	if (abs_float(error) < DEAD_ZONE) {
 		error = 0.0f;

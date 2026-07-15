@@ -200,6 +200,11 @@ typedef struct {
 	int coord_ready;                    /* 视觉坐标有效标志 */
 	uint8_t cam_reached_count;          /* 视觉连续到达计数 */
 	TargetVelocity_t target_velocity;   /* 当前底盘目标速度 */
+	float error_x_global_m;             /* 世界系 X 坐标误差，单位 m */
+	float error_y_global_m;             /* 世界系 Y 坐标误差，单位 m */
+	float error_x_local_m;              /* 车体系 X 坐标误差，单位 m */
+	float error_y_local_m;              /* 车体系 Y 坐标误差，单位 m */
+	float yaw_error_deg;                /* 当前航向误差，单位 deg */
 	Motor_t motor[4];                   /* 四个 X42 电机输出状态 */
 	uint8_t run_enabled;                /* 底盘运行使能 */
 	uint8_t line_follow_enabled;        /* 循迹控制使能 */
