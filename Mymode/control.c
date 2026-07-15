@@ -704,11 +704,8 @@ void SetTargetLinearVelocity(float vx, float vy) {
 void Mecanum_Init(ChassisConfig_t config) {
 	/* 麦轮几何参数在启动时配置，后续运动学解算只使用静态配置。 */
 	chassis_config = config;
-	if (chassis_config.max_wheel_mps <= 0.0f) {
-		chassis_config.max_wheel_mps = 1.0f;
-	}
-	if (chassis_config.max_current_ma == 0U) {
-		chassis_config.max_current_ma = CHASSIS_CURRENT_MAX_MA;
+	if (chassis_config.max_rpm <= 0.0f) {
+		chassis_config.max_rpm = CHASSIS_SPEED_MAX_RPM;
 	}
 	k_omega = (config.wheel_dist_x + config.wheel_dist_y) / 2.0f;
 	memset(control_ctx.motor, 0, sizeof(control_ctx.motor));
@@ -741,65 +738,50 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 	float v3 = vx + vy - k_omega * actual_omega;
 	float v1 = vx - vy + k_omega * actual_omega;
 
-	float max_abs_v = fabsf(v4);
+	/* 等效轮速转换为电机速度命令。 */
+	const float linear_to_rpm = 60.0f /
+	        (2.0f * 3.1415926f * chassis_config.wheel_radius);
+	float rpm4 = v4 * linear_to_rpm;
+	float rpm2 = v2 * linear_to_rpm;
+	float rpm3 = v3 * linear_to_rpm;
+	float rpm1 = v1 * linear_to_rpm;
+	float max_abs_rpm = fabsf(rpm4);
 	float scale = 1.0f;
 
-	/* 四轮速度统一缩放，保持运动方向和角速度比例。 */
-	if (fabsf(v2) > max_abs_v)
-		max_abs_v = fabsf(v2);
-	if (fabsf(v3) > max_abs_v)
-		max_abs_v = fabsf(v3);
-	if (fabsf(v1) > max_abs_v)
-		max_abs_v = fabsf(v1);
-
-	if (max_abs_v > chassis_config.max_wheel_mps) {
-		scale = chassis_config.max_wheel_mps / max_abs_v;
-		v4 *= scale;
-		v2 *= scale;
-		v3 *= scale;
-		v1 *= scale;
+	if (fabsf(rpm2) > max_abs_rpm)
+		max_abs_rpm = fabsf(rpm2);
+	if (fabsf(rpm3) > max_abs_rpm)
+		max_abs_rpm = fabsf(rpm3);
+	if (fabsf(rpm1) > max_abs_rpm)
+		max_abs_rpm = fabsf(rpm1);
+	if (max_abs_rpm > chassis_config.max_rpm) {
+		scale = chassis_config.max_rpm / max_abs_rpm;
+		rpm4 *= scale;
+		rpm2 *= scale;
+		rpm3 *= scale;
+		rpm1 *= scale;
 	}
 
-	/* 各轮目标线速度按上限比例映射为开环力矩电流。 */
-	float current_scale = (float)chassis_config.max_current_ma /
-	                      chassis_config.max_wheel_mps;
-	motor4.current_ma = (int16_t)(v4 * current_scale);
-	motor2.current_ma = (int16_t)(v2 * current_scale);
-	motor3.current_ma = (int16_t)(v3 * current_scale);
-	motor1.current_ma = (int16_t)(v1 * current_scale);
-	motor4.direction = (motor4.current_ma >= 0) ? 0U : 1U;
-	motor2.direction = (motor2.current_ma >= 0) ? 1U : 0U;
-	motor3.direction = (motor3.current_ma >= 0) ? 0U : 1U;
-	motor1.direction = (motor1.current_ma >= 0) ? 1U : 0U;
+	motor4.speed_rpm = (int16_t)rpm4;
+	motor2.speed_rpm = (int16_t)rpm2;
+	motor3.speed_rpm = (int16_t)rpm3;
+	motor1.speed_rpm = (int16_t)rpm1;
+	motor4.direction = (motor4.speed_rpm >= 0) ? 0U : 1U;
+	motor2.direction = (motor2.speed_rpm >= 0) ? 1U : 0U;
+	motor3.direction = (motor3.speed_rpm >= 0) ? 0U : 1U;
+	motor1.direction = (motor1.speed_rpm >= 0) ? 1U : 0U;
 }
 
-static uint16_t Motor_CurrentAbs(int16_t current_ma) {
-	/* 固件接口方向和电流幅值分开发送，电流幅值只做上限保护。 */
-	uint16_t current_abs;
-
-	if (current_ma < 0) {
-		current_abs = (uint16_t)(-current_ma);
-	} else {
-		current_abs = (uint16_t)current_ma;
-	}
-
-	if (current_abs > chassis_config.max_current_ma) {
-		current_abs = chassis_config.max_current_ma;
-	}
-
-	return current_abs;
-}
-
-void Mecanum_SendTorqueCurrent(void) {
-	/* 四个 X42 电机使用力矩电流模式，方向位由运动学符号生成。 */
-	ZDT_X42_V2_Torque_Control(1, motor1.direction, CHASSIS_TORQUE_RAMP_MA_S,
-	        Motor_CurrentAbs(motor1.current_ma), 0);
-	ZDT_X42_V2_Torque_Control(2, motor2.direction, CHASSIS_TORQUE_RAMP_MA_S,
-	        Motor_CurrentAbs(motor2.current_ma), 0);
-	ZDT_X42_V2_Torque_Control(3, motor3.direction, CHASSIS_TORQUE_RAMP_MA_S,
-	        Motor_CurrentAbs(motor3.current_ma), 0);
-	ZDT_X42_V2_Torque_Control(4, motor4.direction, CHASSIS_TORQUE_RAMP_MA_S,
-	        Motor_CurrentAbs(motor4.current_ma), 0);
+void Mecanum_SendVelocity(void) {
+	/* 速度命令持续发送，未启动时四轮速度为 0 RPM。 */
+	ZDT_X42_V2_Velocity_Control(1, motor1.direction, CHASSIS_VELOCITY_RAMP,
+	        (float)abs_int(motor1.speed_rpm), 0);
+	ZDT_X42_V2_Velocity_Control(2, motor2.direction, CHASSIS_VELOCITY_RAMP,
+	        (float)abs_int(motor2.speed_rpm), 0);
+	ZDT_X42_V2_Velocity_Control(3, motor3.direction, CHASSIS_VELOCITY_RAMP,
+	        (float)abs_int(motor3.speed_rpm), 0);
+	ZDT_X42_V2_Velocity_Control(4, motor4.direction, CHASSIS_VELOCITY_RAMP,
+	        (float)abs_int(motor4.speed_rpm), 0);
 }
 
 void stop(void) {
@@ -821,10 +803,10 @@ static void MotionState_Reset(void) {
 	position_control.pid_y.prev_error = 0.0f;
 	attitude_control.yaw_pid.integral = 0.0f;
 	attitude_control.yaw_pid.prev_error = 0.0f;
-	motor1.current_ma = 0;
-	motor2.current_ma = 0;
-	motor3.current_ma = 0;
-	motor4.current_ma = 0;
+	motor1.speed_rpm = 0;
+	motor2.speed_rpm = 0;
+	motor3.speed_rpm = 0;
+	motor4.speed_rpm = 0;
 	motor1.direction = 0;
 	motor2.direction = 0;
 	motor3.direction = 0;

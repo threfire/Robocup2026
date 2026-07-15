@@ -54,9 +54,9 @@
 #define UART_WAIT_TIMEOUT_MS 500U
 #define CAM_STABILIZE_TIMEOUT_MS 1200U
 
-/* X42 力矩电流模式参数，单位 mA */
-#define CHASSIS_CURRENT_MAX_MA 2000U
-#define CHASSIS_TORQUE_RAMP_MA_S 4000U
+/* X42 速度模式参数：最大轮速和速度爬升值沿用已调版本。 */
+#define CHASSIS_SPEED_MAX_RPM 300.0f
+#define CHASSIS_VELOCITY_RAMP 230U
 #define ZDT_X42_POS_DEG_PER_CLK (360.0f / 3200.0f)
 #define TASK1_RELATIVE_X_MOVE_MM 100.0f
 #define CHASSIS_POS_ACCEL 10U
@@ -169,16 +169,15 @@ typedef struct {
 } TargetVelocity_t;
 
 typedef struct {
-	int16_t current_ma; /* X42 力矩电流命令，单位 mA */
-	uint8_t direction;  /* X42 方向位 */
+	int16_t speed_rpm; /* X42 速度命令，单位 RPM */
+	uint8_t direction; /* X42 方向位 */
 } Motor_t;
 
 typedef struct {
 	float wheel_radius;      /* 轮子半径，单位 m */
 	float wheel_dist_x;      /* X 轴轮距，单位 m */
 	float wheel_dist_y;      /* Y 轴轮距，单位 m */
-	float max_wheel_mps;     /* 最大等效轮速，单位 m/s */
-	uint16_t max_current_ma; /* 最大力矩电流，单位 mA */
+	float max_rpm;           /* 最大电机转速，单位 RPM */
 } ChassisConfig_t;
 
 typedef struct {
@@ -291,7 +290,7 @@ void SetTargetVelocity(float vx, float vy, float omega);
 void SetTargetLinearVelocity(float vx, float vy);
 void Mecanum_Init(ChassisConfig_t config);
 void Mecanum_Kinematics(float vx, float vy, float omega);
-void Mecanum_SendTorqueCurrent(void);
+void Mecanum_SendVelocity(void);
 void stop(void);
 void go(void);
 void back(void);

@@ -152,15 +152,14 @@ int main(void)
 	task1_state.completed = 0;
 	task2_state.active = 0;
 	task2_state.completed = 0;
-	/* 麦轮几何参数和电流上限在启动时写入控制模块。 */
+	/* 麦轮几何参数和速度上限在启动时写入控制模块。 */
 	ChassisConfig_t config = {.wheel_radius = 0.077f,
 	        .wheel_dist_x = 0.0759f,
 	        .wheel_dist_y = 0.085f,
-	        .max_wheel_mps = 2.4f,
-	        .max_current_ma = CHASSIS_CURRENT_MAX_MA};
+	        .max_rpm = CHASSIS_SPEED_MAX_RPM};
 	Mecanum_Init(config);
-	/* 复位后立即清除电机保留的上一条力矩指令。 */
-	Mecanum_SendTorqueCurrent();
+	/* 复位后立即下发四轮 0 RPM，清除电机保留的上一条速度指令。 */
+	Mecanum_SendVelocity();
 	/* 等待里程计上电后进入稳定输出，再初始化零点状态。 */
 	HAL_Delay(2000);
 	odometer_init();
@@ -270,7 +269,7 @@ static void Robot_HandleDebugModeTransition(void) {
 	EnableAttitudeStabilization(0U);
 	CamStabilization_Enable(0U);
 	stop();
-	Mecanum_SendTorqueCurrent();
+	Mecanum_SendVelocity();
 }
 
 void Robot_RealtimeControl(float dt) {
@@ -299,12 +298,12 @@ void Robot_RealtimeControl(float dt) {
 			current_target.omega = 0.0f;
 		}
 
-		/* 速度目标统一进入麦轮逆解，再由 X42 电流模式发送。 */
+		/* 速度目标统一进入麦轮逆解，再由 X42 速度模式发送。 */
 		Mecanum_Kinematics(current_target.vx, current_target.vy,
 		        current_target.omega);
 		if (Is_vel_mode) {
 			if ((led_count % MOTOR_CMD_DIVIDER) == 0U) {
-				Mecanum_SendTorqueCurrent();
+				Mecanum_SendVelocity();
 			}
 		}
 		if (led_count >= STATUS_TICK_DIVIDER) {
