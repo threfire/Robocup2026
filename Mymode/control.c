@@ -276,10 +276,10 @@ void UpdatePositionControl(float dt) {
 	float distance_error = sqrtf(error_x_global * error_x_global +
 	                             error_y_global * error_y_global);
 
-	/* 局部坐标误差用于麦轮底盘速度指令，正负号与底盘安装方向保持一致。 */
-	float error_x_local = error_x_global * cosf(current_yaw_rad) +
+	/* 全局和车体均定义 x 正前、y 正右，yaw 正方向为逆时针。 */
+	float error_x_local = error_x_global * cosf(current_yaw_rad) -
 	                      error_y_global * sinf(current_yaw_rad);
-	float error_y_local = -error_x_global * sinf(current_yaw_rad) +
+	float error_y_local = error_x_global * sinf(current_yaw_rad) +
 	                      error_y_global * cosf(current_yaw_rad);
 
 	/* 轨迹规划器保留加速度状态，速度前馈当前设为零。 */
@@ -728,8 +728,9 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 		vy += cam_correction_x * 0.01f;
 		vx += cam_correction_y * 0.01f;
 	}
-	/* 局部坐标定义为 vx 正向前、vy 正向左；X42 安装使 vx 需反向。 */
+	/* 局部坐标定义为 vx 正向前、vy 正向右；X42 安装使 vx/vy 均需反向。 */
 	vx = -vx;
+	vy = -vy;
 
 	/* 麦轮逆解：局部 vx/vy/omega 映射到四轮等效线速度。 */
 	float v4 = vx - vy - k_omega * actual_omega;
