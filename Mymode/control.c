@@ -1211,14 +1211,19 @@ void run_task2(void) {
 			stop();
 			PoseCoordination_Enable(0U);
 			PositionControl_Enable(0U);
-			EnableAttitudeStabilization(0U);
+			EnableAttitudeStabilization(1U);
+			SetTargetYaw(TASK2_TEST_YAW_DEG);
 			task2_state.current_step = 2U;
 		}
 		break;
 
 	case 2U:
-		task2_state.active = 0U;
-		task2_state.completed = 1U;
+		if (IsYawReached(TASK2_TEST_YAW_DEG, POSE_YAW_TOLERANCE_DEG)) {
+			stop();
+			EnableAttitudeStabilization(0U);
+			task2_state.active = 0U;
+			task2_state.completed = 1U;
+		}
 		break;
 
 	default:
