@@ -47,6 +47,14 @@ Makefile
 .ninja_deps
 .ninja_log
 
+# Coordinate-loop AI tuning run artifacts
+ai_tune*.csv
+ai_tune*.svg
+tools/ai_tune*.csv
+tools/ai_tune*.png
+tools/ai_tuner*.err
+tools/__pycache__/
+
 # IDE 与系统文件
 .vscode/
 .idea/

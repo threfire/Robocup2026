@@ -1,0 +1,4 @@
+interface:
+  display_name: "坐标闭环 AI 调参"
+  short_description: "面向 RoboCup 坐标闭环的安全在线调参与参数固化流程"
+  default_prompt: "Use $coordinate-loop-ai-tuning to safely tune the RoboCup coordinate closed loop."

@@ -26,6 +26,7 @@
 #include "QAma.h"
 #include "odometer.h"
 #include "control.h"
+#include "ai_tune.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -316,7 +317,6 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
@@ -453,12 +453,7 @@ void UART4_IRQHandler(void)
 void UART5_IRQHandler(void)
 {
   /* USER CODE BEGIN UART5_IRQn 0 */
-	if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_IDLE) != RESET) {
-		/* UART5 当前用于 X42 发送链路保活，收到空闲中断后恢复 DMA 接收。 */
-		__HAL_UART_CLEAR_IDLEFLAG(&huart5);
-		HAL_UART_DMAStop(&huart5);
-		HAL_UART_Receive_DMA(&huart5, uart5buff, 100);
-	}
+	ai_tune_uart_idle_irq();
   /* USER CODE END UART5_IRQn 0 */
   HAL_UART_IRQHandler(&huart5);
   /* USER CODE BEGIN UART5_IRQn 1 */

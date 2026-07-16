@@ -43,6 +43,7 @@
 #include "graysensor.h"
 #include "mxcam.h"
 #include "QAma.h"
+#include "ai_tune.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -119,7 +120,6 @@ int main(void)
   MX_UART4_Init();
   MX_UART5_Init();
   MX_USART1_UART_Init();
-  MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_TIM6_Init();
@@ -165,6 +165,7 @@ int main(void)
 	odometer_init();
 	/* 控制环模块初始化：视觉、位置、位姿协同和姿态环。 */
 	CamStabilization_Init();
+	ai_tune_init();
 	PositionControl_Init();
 	PoseCoordination_Init();
 	AttitudeStabilization_Init();
@@ -286,6 +287,42 @@ void Robot_RealtimeControl(float dt) {
 		if (is_position_control_enabled) {
 			UpdatePositionControl(dt);
 		}
+		{
+			float target_x_mm;
+			float target_y_mm;
+			float max_speed_mps;
+
+			if (ai_tune_take_start(&target_x_mm, &target_y_mm,
+			        &max_speed_mps)) {
+				task2_start_pending = 0U;
+				task2_state.active = 0U;
+				task2_state.completed = 0U;
+				PoseCoordination_Enable(0U);
+				EnableAttitudeStabilization(1U);
+				SetTargetYaw(0.0f);
+				Start_flag = 1U;
+				PositionControl_SetMaxSpeed(max_speed_mps);
+				SetTargetPosition(target_x_mm, target_y_mm);
+				PositionControl_Enable(1U);
+			}
+		}
+		if (!is_position_control_enabled) {
+			ai_tune_telemetry_t telemetry = {
+			        .time_ms = HAL_GetTick(),
+			        .target_x_m = position_control.target_x * 0.001f,
+			        .target_y_m = position_control.target_y * 0.001f,
+			        .position_x_m = odometer_ctx.pose.pos_x_mm * 0.001f,
+			        .position_y_m = odometer_ctx.pose.pos_y_mm * 0.001f,
+			        .error_x_local_m = control_ctx.error_x_local_m,
+			        .error_y_local_m = control_ctx.error_y_local_m,
+			        .velocity_x_mps = odometer_ctx.motion.vel_x_mps,
+			        .velocity_y_mps = odometer_ctx.motion.vel_y_mps,
+			        .motor_rpm = {motor1.speed_rpm, motor2.speed_rpm,
+			                motor3.speed_rpm, motor4.speed_rpm},
+			        .position_reached = IsPositionReached(raceh),
+			};
+			ai_tune_send_telemetry(&telemetry);
+		}
 		UpdateAttitudeStabilization(dt);
 		Process_usart1_packet();
 		if (cam_stabilization.is_enabled) {
@@ -329,10 +366,17 @@ void Robot_ServiceTick(void) {
 
 	Key_Tick();
 	if (Key_Num == 1) {
-		Key_Num = 0;
+		Key_Num = 0U;
 		Start_flag = 0U;
 		task2_start_pending = odometer_request_zero();
 		task2_zero_confirm_time_ms = 0U;
+		tasknum = 1U;
+		task1_state.active = 0U;
+		task1_state.completed = 0U;
+		task2_state.active = 0U;
+		task2_state.completed = 0U;
+		EnableAttitudeStabilization(1U);
+		SetTargetYaw(0.0f);
 	}
 	if ((task2_start_pending == 1U) && odometer_is_zeroed()) {
 		task2_start_pending = 2U;
@@ -343,9 +387,9 @@ void Robot_ServiceTick(void) {
 	                TASK2_ZERO_SETTLE_MS)) {
 		task2_start_pending = 0U;
 		Start_flag = 1U;
-		start_task2();
+		start_task1();
 	}
-	run_task2();
+	run_task1();
 }
 
 int abs_int(int int1) {

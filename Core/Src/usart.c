@@ -90,7 +90,7 @@ void MX_UART5_Init(void)
 
   /* USER CODE END UART5_Init 1 */
   huart5.Instance = UART5;
-  huart5.Init.BaudRate = 921600;
+  huart5.Init.BaudRate = 2000000;
   huart5.Init.WordLength = UART_WORDLENGTH_8B;
   huart5.Init.StopBits = UART_STOPBITS_1;
   huart5.Init.Parity = UART_PARITY_NONE;
@@ -102,8 +102,6 @@ void MX_UART5_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN UART5_Init 2 */
-	HAL_UART_Receive_DMA(&huart5, uart5buff, 100);
-	__HAL_UART_ENABLE_IT(&huart5, UART_IT_IDLE);
   /* USER CODE END UART5_Init 2 */
 
 }
@@ -145,14 +143,14 @@ void MX_USART2_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART2_Init 0 */
-	// PD5、PD6 为串口2信号线
+	/* 2025 年主控核心板的 USART2 硬件链路不可用，通信功能不得分配给 USART2。 */
   /* USER CODE END USART2_Init 0 */
 
   /* USER CODE BEGIN USART2_Init 1 */
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 961200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -334,7 +332,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     hdma_uart5_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_uart5_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
     hdma_uart5_tx.Init.Mode = DMA_NORMAL;
-    hdma_uart5_tx.Init.Priority = DMA_PRIORITY_MEDIUM;
+    hdma_uart5_tx.Init.Priority = DMA_PRIORITY_HIGH;
     hdma_uart5_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_uart5_tx) != HAL_OK)
     {
@@ -352,7 +350,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     hdma_uart5_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_uart5_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
     hdma_uart5_rx.Init.Mode = DMA_NORMAL;
-    hdma_uart5_rx.Init.Priority = DMA_PRIORITY_MEDIUM;
+    hdma_uart5_rx.Init.Priority = DMA_PRIORITY_HIGH;
     hdma_uart5_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_uart5_rx) != HAL_OK)
     {
@@ -462,7 +460,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     hdma_usart2_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_usart2_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
     hdma_usart2_rx.Init.Mode = DMA_NORMAL;
-    hdma_usart2_rx.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_usart2_rx.Init.Priority = DMA_PRIORITY_HIGH;
     hdma_usart2_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_usart2_rx) != HAL_OK)
     {
@@ -480,7 +478,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     hdma_usart2_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_usart2_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
     hdma_usart2_tx.Init.Mode = DMA_NORMAL;
-    hdma_usart2_tx.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_usart2_tx.Init.Priority = DMA_PRIORITY_HIGH;
     hdma_usart2_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_usart2_tx) != HAL_OK)
     {

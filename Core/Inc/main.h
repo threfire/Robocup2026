@@ -39,7 +39,6 @@ extern "C" {
 
 #define APP_QA_TX_BUF_LEN 9U
 #define APP_QA_RX_BUF_LEN 100U
-#define APP_UART5_RX_BUF_LEN 100U
 #define APP_COLOR_RX_BUF_LEN 2U
 #define APP_GY33_CMD_LEN 3U
 #define ODOM_TEST_TARGET_X_MM 200.0f
@@ -61,7 +60,6 @@ typedef struct {
 	uint8_t is_followline;
 	uint8_t qa_tx_buf[APP_QA_TX_BUF_LEN];
 	uint8_t qa_rx_buf[APP_QA_RX_BUF_LEN];
-	uint8_t uart5_rx_buf[APP_UART5_RX_BUF_LEN];
 	uint8_t qa_num;
 	uint8_t color_rx_data[APP_COLOR_RX_BUF_LEN];
 	uint32_t camera_time_ms;
@@ -83,7 +81,6 @@ extern AppContext_t app_ctx;
 #define IsFollowline app_ctx.is_followline
 #define QAtx_buff app_ctx.qa_tx_buf
 #define QArxbuff app_ctx.qa_rx_buf
-#define uart5buff app_ctx.uart5_rx_buf
 #define qanum app_ctx.qa_num
 #define rx_data app_ctx.color_rx_data
 #define camtim app_ctx.camera_time_ms

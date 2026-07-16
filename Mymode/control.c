@@ -8,6 +8,7 @@
 #include "userkey.h"
 #include "QAma.h"
 #include "mxcam.h"
+#include "ai_tune.h"
 
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
@@ -105,6 +106,8 @@ void POS_move(void) {
 }
 static float position_plan_speed_mps = 0.0f;
 static float position_plan_accel_mps2 = 0.0f;
+static float position_plan_cruise_speed_mps =
+        POSITION_PLANNER_CRUISE_SPEED_MPS;
 static float position_feedback_last_vel_x_mps;
 static float position_feedback_last_vel_y_mps;
 static float position_feedback_accel_x_mps2;
@@ -162,10 +165,10 @@ static void PositionAccelerationFeedback_Update(float dt) {
 
 static float PositionSpeedPlan_Update(float distance_error_m, float dt) {
 	/* 距离误差生成前馈速度，减速距离约束保证接近目标点时速度可收敛。 */
-	float cruise_speed = ClampFloat(POSITION_PLANNER_CRUISE_SPEED_MPS, 0.0f,
+	float cruise_speed = ClampFloat(position_plan_cruise_speed_mps, 0.0f,
 	        position_control.pid_x.max_output);
-	float brake_speed = sqrtf(
-	        2.0f * POSITION_PLANNER_MAX_DECEL_MPS2 * distance_error_m);
+	float brake_speed = sqrtf(2.0f * POSITION_COMMAND_BRAKE_DECEL_MPS2 *
+	        distance_error_m);
 	float target_speed = ClampFloat(cruise_speed, 0.0f, brake_speed);
 	float target_accel = 0.0f;
 	float accel_delta;
@@ -200,8 +203,7 @@ static float PositionSpeedPlan_Update(float distance_error_m, float dt) {
 	position_plan_speed_mps =
 	        ClampFloat(position_plan_speed_mps, 0.0f, cruise_speed);
 
-	if (position_plan_speed_mps > target_speed &&
-	        position_plan_accel_mps2 > 0.0f) {
+	if (position_plan_speed_mps > target_speed) {
 		position_plan_speed_mps = target_speed;
 		position_plan_accel_mps2 = 0.0f;
 	}
@@ -226,6 +228,7 @@ void PositionControl_Init(void) {
 	position_control.target_x = 0.0f;
 	position_control.target_y = 0.0f;
 	position_control.last_update_time = HAL_GetTick();
+	position_plan_cruise_speed_mps = POSITION_PLANNER_CRUISE_SPEED_MPS;
 
 	is_position_control_enabled = 0;
 }
@@ -254,7 +257,23 @@ void PositionControl_Enable(uint8_t enable) {
 	}
 }
 
+void PositionControl_SetMaxSpeed(float max_speed_mps) {
+	max_speed_mps = ClampFloat(max_speed_mps, POSITION_PLANNER_MIN_SPEED_MPS,
+	        POSITION_MAX_LINEAR_SPEED_MPS);
+	position_control.pid_x.max_output = max_speed_mps;
+	position_control.pid_y.max_output = max_speed_mps;
+	position_plan_cruise_speed_mps = max_speed_mps;
+}
+
 void SetTargetPosition(float x, float y) {
+	if (ai_tune_apply_pending()) {
+		const ai_tune_param_t *param = ai_tune_get_active();
+		position_control.pid_x.Kp = param->kp;
+		position_control.pid_x.Kd = param->kd;
+		position_control.pid_y.Kp = param->kp;
+		position_control.pid_y.Kd = param->kd;
+	}
+	ai_tune_segment_start();
 	/* 目标点单位 mm，来自任务路径表；控制计算内部统一换算为 m。 */
 	Is_vel_mode = 1;
 	position_control.target_x = x;
@@ -317,9 +336,12 @@ void UpdatePositionControl(float dt) {
 	control_ctx.error_x_local_m = error_x_local;
 	control_ctx.error_y_local_m = error_y_local;
 
-	/* 轨迹规划器提供目标加速度，里程计速度差分提供实测加速度。 */
-	(void)PositionSpeedPlan_Update(distance_error, dt);
+	/* 规划速度沿目标方向进入速度命令，加速度前馈补偿动态跟踪误差。 */
+	float plan_speed = PositionSpeedPlan_Update(distance_error, dt);
 	PositionAccelerationFeedback_Update(dt);
+	const ai_tune_param_t *param = ai_tune_get_active();
+	float plan_vx = 0.0f;
+	float plan_vy = 0.0f;
 	float feedforward_vx = 0.0f;
 	float feedforward_vy = 0.0f;
 	float accel_x_local = -position_feedback_accel_x_mps2 *
@@ -331,18 +353,20 @@ void UpdatePositionControl(float dt) {
 	                      position_feedback_accel_y_mps2 *
 	                              cosf(current_yaw_rad);
 	if (distance_error > raceh) {
+		plan_vx = error_x_local * plan_speed / distance_error;
+		plan_vy = error_y_local * plan_speed / distance_error;
 		float desired_accel_x_local = error_x_local *
 		        position_plan_accel_mps2 / distance_error;
 		float desired_accel_y_local = error_y_local *
 		        position_plan_accel_mps2 / distance_error;
 		float force_x_n = CHASSIS_MASS_KG *
-		        (desired_accel_x_local + POSITION_ACCEL_FEEDBACK_GAIN *
+		        (desired_accel_x_local + param->accel_feedback_gain *
 		                (desired_accel_x_local - accel_x_local));
 		float force_y_n = CHASSIS_MASS_KG *
-		        (desired_accel_y_local + POSITION_ACCEL_FEEDBACK_GAIN *
+		        (desired_accel_y_local + param->accel_feedback_gain *
 		                (desired_accel_y_local - accel_y_local));
-		feedforward_vx = force_x_n * POSITION_FORCE_TO_SPEED_FF_MPS_PER_N;
-		feedforward_vy = force_y_n * POSITION_FORCE_TO_SPEED_FF_MPS_PER_N;
+		feedforward_vx = force_x_n * param->force_to_speed_ff;
+		feedforward_vy = force_y_n * param->force_to_speed_ff;
 	}
 	float feedback_vx =
 	        PID_Update(&position_control.pid_x, error_x_local, dt);
@@ -352,7 +376,7 @@ void UpdatePositionControl(float dt) {
 	        sqrtf(feedback_vx * feedback_vx + feedback_vy * feedback_vy);
 
 	if (feedback_speed > POSITION_FEEDBACK_MAX_SPEED_MPS) {
-		/* 反馈速度限幅保留前馈速度主导性，减少近点抖动。 */
+		/* 反馈速度限幅使规划速度主导长距离运动，减少近点抖动。 */
 		float feedback_ratio =
 		        POSITION_FEEDBACK_MAX_SPEED_MPS / feedback_speed;
 		feedback_vx *= feedback_ratio;
@@ -360,28 +384,67 @@ void UpdatePositionControl(float dt) {
 	}
 	if ((distance_error > raceh) &&
 	        (distance_error <= POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M) &&
-	        (feedback_speed < POSITION_STATIC_FRICTION_SPEED_MPS)) {
+	        (feedback_speed < param->static_friction_speed_mps)) {
 		/* 近点误差沿目标方向叠加最小有效速度，克服底盘静摩擦。 */
 		float static_friction_scale =
-		        POSITION_STATIC_FRICTION_SPEED_MPS / distance_error;
+		        param->static_friction_speed_mps / distance_error;
 		feedforward_vx += error_x_local * static_friction_scale;
 		feedforward_vy += error_y_local * static_friction_scale;
 	}
 
-	float vx_local = feedforward_vx + feedback_vx;
-	float vy_local = feedforward_vy + feedback_vy;
+	float vx_local = plan_vx + feedforward_vx + feedback_vx;
+	float vy_local = plan_vy + feedforward_vy + feedback_vy;
 	float linear_speed = sqrtf(vx_local * vx_local + vy_local * vy_local);
-	if (linear_speed > POSITION_MAX_LINEAR_SPEED_MPS) {
-		/* 最终平移速度按比例缩放，保留运动方向。 */
-		float ratio = POSITION_MAX_LINEAR_SPEED_MPS / linear_speed;
+	float command_speed_limit = sqrtf(2.0f *
+	        POSITION_COMMAND_BRAKE_DECEL_MPS2 * distance_error);
+	command_speed_limit = ClampFloat(command_speed_limit, 0.0f,
+	        position_plan_cruise_speed_mps);
+	if (linear_speed > command_speed_limit) {
+		/* 制动包络约束规划、前馈和反馈速度总和。 */
+		float ratio = command_speed_limit / linear_speed;
 		vx_local *= ratio;
 		vy_local *= ratio;
+		linear_speed = command_speed_limit;
 	}
 
 	vx_local *= pose_coordination.sync_scale;
 	vy_local *= pose_coordination.sync_scale;
+	if (ai_tune_guard_update(distance_error, linear_speed, dt)) {
+		vx_local = 0.0f;
+		vy_local = 0.0f;
+	}
+	{
+		ai_tune_telemetry_t telemetry = {
+		        .time_ms = HAL_GetTick(),
+		        .target_x_m = target_x_global,
+		        .target_y_m = target_y_global,
+		        .position_x_m = current_x_global,
+		        .position_y_m = current_y_global,
+		        .error_x_local_m = error_x_local,
+		        .error_y_local_m = error_y_local,
+		        .velocity_x_mps = odometer_ctx.motion.vel_x_mps,
+		        .velocity_y_mps = odometer_ctx.motion.vel_y_mps,
+		        .plan_accel_mps2 = position_plan_accel_mps2,
+		        .accel_x_mps2 = accel_x_local,
+		        .accel_y_mps2 = accel_y_local,
+		        .feedforward_vx_mps = feedforward_vx,
+		        .feedforward_vy_mps = feedforward_vy,
+		        .feedback_vx_mps = feedback_vx,
+		        .feedback_vy_mps = feedback_vy,
+		        .command_vx_mps = vx_local,
+		        .command_vy_mps = vy_local,
+		        .motor_rpm = {motor1.speed_rpm, motor2.speed_rpm,
+		                motor3.speed_rpm, motor4.speed_rpm},
+		        .position_reached = IsPositionControlFinished(raceh),
+		};
+		ai_tune_send_telemetry(&telemetry);
+	}
 	/* 世界系误差经 yaw 旋转后，局部 vx/vy 按同名轴传入麦轮逆解。 */
 	SetTargetLinearVelocity(vx_local, vy_local);
+	if (ai_tune_is_guarded()) {
+		PositionControl_Enable(0U);
+		return;
+	}
 
 	if (IsPositionControlFinished(raceh)) {
 		testflag = 1;

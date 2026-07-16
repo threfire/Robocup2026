@@ -1170,6 +1170,16 @@
               <FilePath>..\Mymode\control.h</FilePath>
             </File>
             <File>
+              <FileName>ai_tune.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\ai_tune.c</FilePath>
+            </File>
+            <File>
+              <FileName>ai_tune.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\ai_tune.h</FilePath>
+            </File>
+            <File>
               <FileName>woniudonghua.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Mymode\woniudonghua.c</FilePath>
