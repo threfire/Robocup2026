@@ -61,38 +61,36 @@ void Find_corresponding_material(uint8_t index) {
 	}
 }
 void Pos_moveconctrl(uint8_t dir, uint16_t vel, uint16_t clk) {
-	/* X42 位置模式用于局部前后微动，clk 按 3200 脉冲每圈换算为角度。 */
-	float position_deg = (float)clk * ZDT_X42_POS_DEG_PER_CLK;
-
+	/* EMM 位置模式用于局部前后微动，clk 单位为脉冲。 */
 	if (dir == 1) {
-		ZDT_X42_V2_Traj_Position_Control(1, 1, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(1, 1, vel, CHASSIS_POS_FORWARD_ACCEL,
+		        clk, 0, 1);
 
-		ZDT_X42_V2_Traj_Position_Control(2, 1, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(2, 1, vel, CHASSIS_POS_FORWARD_ACCEL,
+		        clk, 0, 1);
 
-		ZDT_X42_V2_Traj_Position_Control(3, 0, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(3, 0, vel, CHASSIS_POS_FORWARD_ACCEL,
+		        clk, 0, 1);
 
-		ZDT_X42_V2_Traj_Position_Control(4, 0, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(4, 0, vel, CHASSIS_POS_FORWARD_ACCEL,
+		        clk, 0, 1);
 		HAL_Delay(5);
-		ZDT_X42_V2_Synchronous_motion(0);
+		Emm_V5_Synchronous_motion(0);
 	}
 	if (dir == 0) {
-		ZDT_X42_V2_Traj_Position_Control(1, 0, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(1, 0, vel, CHASSIS_POS_BACKWARD_ACCEL,
+		        clk, 0, 1);
 
-		ZDT_X42_V2_Traj_Position_Control(2, 0, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(2, 0, vel, CHASSIS_POS_BACKWARD_ACCEL,
+		        clk, 0, 1);
 
-		ZDT_X42_V2_Traj_Position_Control(3, 1, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(3, 1, vel, CHASSIS_POS_BACKWARD_ACCEL,
+		        clk, 0, 1);
 
-		ZDT_X42_V2_Traj_Position_Control(4, 1, CHASSIS_POS_ACCEL,
-		        CHASSIS_POS_DECEL, (float)vel, position_deg, 0, 1);
+		Emm_V5_Pos_Control(4, 1, vel, CHASSIS_POS_BACKWARD_ACCEL,
+		        clk, 0, 1);
 		HAL_Delay(5);
-		ZDT_X42_V2_Synchronous_motion(0);
+		Emm_V5_Synchronous_motion(0);
 	}
 }
 void POS_move(void) {
@@ -328,8 +326,8 @@ void UpdatePositionControl(float dt) {
 	control_ctx.error_x_global_m = error_x_global;
 	control_ctx.error_y_global_m = error_y_global;
 
-	/* 全局 x 正方向对应车体后方，全局 y 正方向对应车体右方。 */
-	float error_x_local = -error_x_global * cosf(current_yaw_rad) -
+	/* 世界系误差旋转到车体系，x 正向前，y 正向右。 */
+	float error_x_local = error_x_global * cosf(current_yaw_rad) +
 	                      error_y_global * sinf(current_yaw_rad);
 	float error_y_local = -error_x_global * sinf(current_yaw_rad) +
 	                      error_y_global * cosf(current_yaw_rad);
@@ -344,8 +342,8 @@ void UpdatePositionControl(float dt) {
 	float plan_vy = 0.0f;
 	float feedforward_vx = 0.0f;
 	float feedforward_vy = 0.0f;
-	float accel_x_local = -position_feedback_accel_x_mps2 *
-	                              cosf(current_yaw_rad) -
+	float accel_x_local = position_feedback_accel_x_mps2 *
+	                              cosf(current_yaw_rad) +
 	                      position_feedback_accel_y_mps2 *
 	                              sinf(current_yaw_rad);
 	float accel_y_local = -position_feedback_accel_x_mps2 *
@@ -859,7 +857,7 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 		vy += cam_correction_x * 0.01f;
 		vx += cam_correction_y * 0.01f;
 	}
-	/* 局部坐标定义为 vx 正向前、vy 正向右；X42 安装使 vx/vy 均需反向。 */
+	/* 局部坐标定义为 vx 正向前、vy 正向右；当前安装使 vx/vy 均需反向。 */
 	vx = -vx;
 	vy = -vy;
 
@@ -893,10 +891,11 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 		rpm1 *= scale;
 	}
 
+	/* 实际轮位：左前4、左后3、右前1、右后2。 */
 	motor4.speed_rpm = (int16_t)rpm4;
-	motor2.speed_rpm = (int16_t)rpm2;
 	motor3.speed_rpm = (int16_t)rpm3;
-	motor1.speed_rpm = (int16_t)rpm1;
+	motor1.speed_rpm = (int16_t)rpm2;
+	motor2.speed_rpm = (int16_t)rpm1;
 	motor4.direction = (motor4.speed_rpm >= 0) ? 0U : 1U;
 	motor2.direction = (motor2.speed_rpm >= 0) ? 1U : 0U;
 	motor3.direction = (motor3.speed_rpm >= 0) ? 0U : 1U;
@@ -905,14 +904,14 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 
 void Mecanum_SendVelocity(void) {
 	/* 速度命令持续发送，未启动时四轮速度为 0 RPM。 */
-	ZDT_X42_V2_Velocity_Control(1, motor1.direction, CHASSIS_VELOCITY_RAMP,
-	        (float)abs_int(motor1.speed_rpm), 0);
-	ZDT_X42_V2_Velocity_Control(2, motor2.direction, CHASSIS_VELOCITY_RAMP,
-	        (float)abs_int(motor2.speed_rpm), 0);
-	ZDT_X42_V2_Velocity_Control(3, motor3.direction, CHASSIS_VELOCITY_RAMP,
-	        (float)abs_int(motor3.speed_rpm), 0);
-	ZDT_X42_V2_Velocity_Control(4, motor4.direction, CHASSIS_VELOCITY_RAMP,
-	        (float)abs_int(motor4.speed_rpm), 0);
+	Emm_V5_Vel_Control(1, motor1.direction,
+	        (uint16_t)abs_int(motor1.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
+	Emm_V5_Vel_Control(2, motor2.direction,
+	        (uint16_t)abs_int(motor2.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
+	Emm_V5_Vel_Control(3, motor3.direction,
+	        (uint16_t)abs_int(motor3.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
+	Emm_V5_Vel_Control(4, motor4.direction,
+	        (uint16_t)abs_int(motor4.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
 }
 
 void stop(void) {
@@ -1285,15 +1284,18 @@ uint8_t is_task1_active(void) {
 }
 
 void start_task2(void) {
-	/* 任务二复用任务一路径索引 0 的世界系目标位姿。 */
+	/* 任务二用于底盘 X 轴恒速调试。 */
 	task2_state.active = 1U;
 	task2_state.current_step = 1U;
 	task2_state.completed = 0U;
 	task2_state.step_start = HAL_GetTick();
 	tasknum = 2U;
 	MotionState_Reset();
-	raceh = POSITION_FINE_REACHED_TOLERANCE_M;
-	SetTargetPose(task1_targets[0].x, task1_targets[0].y, 0.0f);
+	PoseCoordination_Enable(0U);
+	PositionControl_Enable(0U);
+	EnableAttitudeStabilization(0U);
+	CamStabilization_Enable(0U);
+	SetTargetVelocity(TASK2_TEST_SPEED_MPS, 0.0f, 0.0f);
 }
 
 void run_task2(void) {
@@ -1301,33 +1303,7 @@ void run_task2(void) {
 		return;
 	}
 
-	switch (task2_state.current_step) {
-	case 1U:
-		if (IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG)) {
-			stop();
-			PoseCoordination_Enable(0U);
-			PositionControl_Enable(0U);
-			EnableAttitudeStabilization(1U);
-			SetTargetYaw(TASK2_TEST_YAW_DEG);
-			task2_state.current_step = 2U;
-		}
-		break;
-
-	case 2U:
-		if (IsYawReached(TASK2_TEST_YAW_DEG, POSE_YAW_TOLERANCE_DEG)) {
-			stop();
-			EnableAttitudeStabilization(0U);
-			task2_state.active = 0U;
-			task2_state.completed = 1U;
-		}
-		break;
-
-	default:
-		stop();
-		task2_state.active = 0U;
-		task2_state.completed = 1U;
-		break;
-	}
+	SetTargetVelocity(0.0f, 0.5f, 0.0f);
 }
 
 uint8_t is_task2_active(void) {
@@ -1427,7 +1403,7 @@ static void task1_scan_material_colors(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(1.0f, 0.0f, -2.57f);
+	SetTargetVelocity(-1.0f, 0.0f, -2.57f);
 	HAL_Delay(500);
 	Move_to_turnplate(2);
 	HAL_Delay(1000);
@@ -1435,13 +1411,13 @@ static void task1_scan_material_colors(void) {
 
 	Move_to_turnplate(3);
 	HAL_Delay(450);
-	SetTargetVelocity(1.0f, 0.0f, -2.38f);
+	SetTargetVelocity(-1.0f, 0.0f, -2.38f);
 	HAL_Delay(500);
 	Get_Materialcolor(1);
 
 	Move_to_turnplate(4);
 	HAL_Delay(500);
-	SetTargetVelocity(1.0f, 0.0f, -2.24f);
+	SetTargetVelocity(-1.0f, 0.0f, -2.24f);
 	HAL_Delay(550);
 	Get_Materialcolor(2);
 

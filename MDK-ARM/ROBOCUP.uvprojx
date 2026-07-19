@@ -1139,6 +1139,16 @@
               <FileType>5</FileType>
               <FilePath>..\UserDrivers\hardware_iic.h</FilePath>
             </File>
+            <File>
+              <FileName>Emm_V5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UserDrivers\Emm_V5.c</FilePath>
+            </File>
+            <File>
+              <FileName>Emm_V5.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\UserDrivers\Emm_V5.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1228,16 +1238,6 @@
               <FileName>odometer.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Mymode\odometer.h</FilePath>
-            </File>
-            <File>
-              <FileName>ZDT_X42_V2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Mymode\ZDT_X42_V2.c</FilePath>
-            </File>
-            <File>
-              <FileName>ZDT_X42_V2.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Mymode\ZDT_X42_V2.h</FilePath>
             </File>
             <File>
               <FileName>graysensor.c</FileName>
