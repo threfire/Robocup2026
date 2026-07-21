@@ -24,7 +24,15 @@ TELEMETRY_PAYLOAD_SIZE = 36
 EPISODE_MIN_DISTANCE_M = 0.05
 PARAM_NAMES = ("kp", "kd", "accel_feedback_gain", "force_to_speed_ff", "static_friction_speed_mps")
 LIMITS = ((2.0, 10.0), (0.0, 0.10), (0.0, 0.40), (0.0, 0.040), (0.04, 0.16))
-BASELINE_VALUES = (9.073, 0.0946, 0.1955, 0.03627, 0.1206)
+BASELINE_VALUES = (4.0581363, 0.0555565, 0.2745124, 0.0103671, 0.0500433)
+STOP_SPEED_MPS = 0.05
+STOP_HOLD_S = 0.30
+SPEED_ERROR_WEIGHT = 3.0
+TIMING_WEIGHT = 0.4
+SPEED_ACCEPT_MIN_RATIO = 0.95
+PLATEAU_ACCEPT_MIN_RATIO = 0.90
+PLATEAU_ACCEPT_MAX_RATIO = 1.05
+STOP_DISTANCE_MAX_M = 0.35
 
 
 def crc16(data: bytes) -> int:
@@ -78,6 +86,17 @@ class Telemetry:
 class Evaluation:
     parameters: Parameters
     score: float
+
+
+@dataclass
+class EpisodeResult:
+    score: float
+    actual_peak_mps: float
+    plateau_mean_mps: float
+    stopping_distance_m: float
+    rise_time_s: float
+    stop_time_s: float
+    guarded: int
 
 
 class FrameReader:
@@ -165,23 +184,47 @@ class KernelOptimizer:
                 key=lambda candidate: self.predict(candidate)[0] - 0.8 * self.predict(candidate)[1])
 
 
-def score_episode(samples: list[Telemetry]) -> float:
+def score_episode(samples: list[Telemetry], target_speed_mps: float) -> EpisodeResult:
     first = samples[0]
     last = samples[-1]
     target_distance = math.hypot(last.target_x_m - last.position_x_m,
             last.target_y_m - last.position_y_m)
     distance_integral = 0.0
+    speed_error_integral = 0.0
     overshoot = 0.0
     oscillations = 0
     target_dx = first.target_x_m - first.position_x_m
     target_dy = first.target_y_m - first.position_y_m
     target_length = math.hypot(target_dx, target_dy)
+    cruise_threshold_mps = target_speed_mps * 0.90
+    actual_peak_mps = 0.0
+    plateau_speeds = []
+    rise_timestamp_ms = None
+    last_cruise_timestamp_ms = None
+    braking_progress_m = None
+    cruise_seen = False
     previous_sign_x = 0
     previous_sign_y = 0
     for previous, current in zip(samples, samples[1:]):
         dt = max(0.0, (current.timestamp_ms - previous.timestamp_ms) * 0.001)
+        actual_speed_mps = math.hypot(current.velocity_x_mps,
+                current.velocity_y_mps)
+        command_speed_mps = math.hypot(current.command_vx_mps,
+                current.command_vy_mps)
+        actual_peak_mps = max(actual_peak_mps, actual_speed_mps)
         distance_integral += math.hypot(current.target_x_m - current.position_x_m,
                 current.target_y_m - current.position_y_m) * dt
+        if command_speed_mps >= cruise_threshold_mps:
+            cruise_seen = True
+            plateau_speeds.append(actual_speed_mps)
+            speed_error_integral += abs(actual_speed_mps - target_speed_mps) * dt
+            last_cruise_timestamp_ms = current.timestamp_ms
+        elif cruise_seen and braking_progress_m is None and target_length > 1e-4:
+            braking_progress_m = ((current.position_x_m - first.position_x_m) *
+                    target_dx + (current.position_y_m - first.position_y_m) *
+                    target_dy) / target_length
+        if rise_timestamp_ms is None and actual_speed_mps >= cruise_threshold_mps:
+            rise_timestamp_ms = current.timestamp_ms
         if target_length > 1e-4:
             progress = ((current.position_x_m - first.position_x_m) * target_dx +
                     (current.position_y_m - first.position_y_m) * target_dy) / target_length
@@ -198,8 +241,28 @@ def score_episode(samples: list[Telemetry]) -> float:
             previous_sign_y = sign_y
     settle_time = (last.timestamp_ms - first.timestamp_ms) * 0.001
     guard_penalty = 1 if last.guarded else 0
-    return (4.0 * target_distance + 1.5 * distance_integral + 0.8 * settle_time +
-            2.5 * overshoot + 2.0 * oscillations + 8.0 * guard_penalty)
+    rise_time_s = settle_time if rise_timestamp_ms is None else \
+            (rise_timestamp_ms - first.timestamp_ms) * 0.001
+    stop_time_s = settle_time if last_cruise_timestamp_ms is None else \
+            (last.timestamp_ms - last_cruise_timestamp_ms) * 0.001
+    plateau_mean_mps = sum(plateau_speeds) / len(plateau_speeds) \
+            if plateau_speeds else 0.0
+    stopping_distance_m = target_length if braking_progress_m is None else \
+            max(0.0, target_length - braking_progress_m)
+    score = (4.0 * target_distance + 1.5 * distance_integral +
+            0.8 * settle_time + 2.5 * overshoot + 2.0 * oscillations +
+            8.0 * guard_penalty + SPEED_ERROR_WEIGHT * speed_error_integral +
+            TIMING_WEIGHT * (rise_time_s + stop_time_s))
+    return EpisodeResult(score, actual_peak_mps, plateau_mean_mps,
+            stopping_distance_m, rise_time_s, stop_time_s, guard_penalty)
+
+
+def result_accepted(result: EpisodeResult, target_speed_mps: float) -> bool:
+    return (result.guarded == 0 and
+            result.actual_peak_mps >= target_speed_mps * SPEED_ACCEPT_MIN_RATIO and
+            result.plateau_mean_mps >= target_speed_mps * PLATEAU_ACCEPT_MIN_RATIO and
+            result.plateau_mean_mps <= target_speed_mps * PLATEAU_ACCEPT_MAX_RATIO and
+            result.stopping_distance_m <= STOP_DISTANCE_MAX_M)
 
 
 def send_parameters(port, parameters: Parameters, sequence: int):
@@ -224,7 +287,7 @@ def main():
             metavar=("X_MM", "Y_MM"))
     parser.add_argument("--point-b", nargs=2, type=float, required=True,
             metavar=("X_MM", "Y_MM"))
-    parser.add_argument("--speed", type=float, default=2.0)
+    parser.add_argument("--speed", type=float, default=1.5)
     parser.add_argument("--iterations", type=int, default=30)
     parser.add_argument("--csv", type=Path, default=Path("ai_tune.csv"))
     parser.add_argument("--telemetry-csv", type=Path)
@@ -235,13 +298,16 @@ def main():
     sequence = 0
     version = 1
     target_index = 0
-    repeats = []
+    repeats: list[EpisodeResult] = []
     active_samples: list[Telemetry] = []
     episode_target = None
     episode_active = False
+    guard_seen = False
+    stop_hold_s = 0.0
     last_telemetry = None
     active_params = Parameters(version, *BASELINE_VALUES)
     best_score = float("inf")
+    best_parameters = active_params
     args.csv.parent.mkdir(parents=True, exist_ok=True)
     telemetry_csv = args.telemetry_csv or args.csv.with_name(
             args.csv.stem + "_telemetry.csv")
@@ -249,7 +315,9 @@ def main():
     with serial.Serial(args.port, BAUDRATE, timeout=0.05) as port, \
             args.csv.open("w", newline="", encoding="utf-8") as csv_file, \
             telemetry_csv.open("w", newline="", encoding="utf-8") as telemetry_file:
-        writer = csv.DictWriter(csv_file, fieldnames=["version", "score", *PARAM_NAMES])
+        writer = csv.DictWriter(csv_file, fieldnames=["version", "score",
+                "actual_peak_mps", "plateau_mean_mps", "stopping_distance_m",
+                "rise_time_s", "stop_time_s", "accepted", *PARAM_NAMES])
         telemetry_writer = csv.DictWriter(telemetry_file, fieldnames=[
                 "version", "timestamp_ms", "target_x_m", "target_y_m",
                 "position_x_m", "position_y_m", "error_x_m", "error_y_m",
@@ -305,8 +373,10 @@ def main():
                         "position_reached": telemetry.position_reached,
                         "guarded": telemetry.guarded})
                 if (telemetry.version != active_params.version and
-                        not telemetry.guarded):
+                        not telemetry.guarded and not guard_seen):
                     continue
+                if telemetry.guarded:
+                    guard_seen = True
                 if (abs(telemetry.target_x_m - episode_target[0] * 0.001) >
                         0.001 or abs(telemetry.target_y_m -
                         episode_target[1] * 0.001) > 0.001):
@@ -315,15 +385,30 @@ def main():
                         telemetry.error_y_m)
                 if distance_to_target >= EPISODE_MIN_DISTANCE_M:
                     episode_active = True
+                if telemetry.guarded:
+                    episode_active = True
                 if not episode_active:
                     continue
                 active_samples.append(telemetry)
-                if not (telemetry.position_reached or telemetry.guarded):
+                speed_mps = math.hypot(telemetry.velocity_x_mps,
+                        telemetry.velocity_y_mps)
+                if len(active_samples) >= 2:
+                    dt = max(0.0, (active_samples[-1].timestamp_ms -
+                            active_samples[-2].timestamp_ms) * 0.001)
+                else:
+                    dt = 0.0
+                if ((telemetry.position_reached or telemetry.guarded) and
+                        speed_mps <= STOP_SPEED_MPS):
+                    stop_hold_s += dt
+                else:
+                    stop_hold_s = 0.0
+                if stop_hold_s < STOP_HOLD_S:
                     continue
 
-                episode_score = score_episode(active_samples)
-                repeats.append(episode_score)
+                episode_result = score_episode(active_samples, args.speed)
+                repeats.append(episode_result)
                 active_samples.clear()
+                stop_hold_s = 0.0
                 if len(repeats) < 3:
                     target_index = 1 - target_index
                     target = args.point_b if target_index else args.point_a
@@ -333,22 +418,37 @@ def main():
                     sequence += 1
                     continue
 
-                score = sorted(repeats)[1]
+                result = sorted(repeats, key=lambda item: item.score)[1]
+                score = result.score
+                accepted = result_accepted(result, args.speed) and \
+                        all(item.guarded == 0 for item in repeats)
                 optimizer.add(Evaluation(active_params, score))
                 writer.writerow({"version": active_params.version, "score": score,
+                        "actual_peak_mps": result.actual_peak_mps,
+                        "plateau_mean_mps": result.plateau_mean_mps,
+                        "stopping_distance_m": result.stopping_distance_m,
+                        "rise_time_s": result.rise_time_s,
+                        "stop_time_s": result.stop_time_s,
+                        "accepted": int(accepted),
                         **dict(zip(PARAM_NAMES, active_params.values()))})
                 csv_file.flush()
                 telemetry_file.flush()
-                if score < best_score:
+                if accepted and score < best_score:
                     best_score = score
+                    best_parameters = active_params
                     send_commit(port, active_params.version, sequence)
                     sequence += 1
-                print(f"version={active_params.version} score={score:.4f} best={best_score:.4f}")
+                print(f"version={active_params.version} score={score:.4f} "
+                        f"peak={result.actual_peak_mps:.3f} "
+                        f"plateau={result.plateau_mean_mps:.3f} "
+                        f"stop={result.stopping_distance_m:.3f} "
+                        f"accepted={int(accepted)} best={best_score:.4f}", flush=True)
                 if len(optimizer.history) >= args.iterations:
                     break
                 repeats.clear()
                 version += 1
                 active_params = optimizer.propose(version)
+                guard_seen = False
                 send_parameters(port, active_params, sequence)
                 sequence += 1
                 time.sleep(0.05)
@@ -360,8 +460,7 @@ def main():
                 sequence += 1
 
         telemetry_file.flush()
-        best_evaluation = min(optimizer.history, key=lambda item: item.score)
-        send_parameters(port, best_evaluation.parameters, sequence)
+        send_parameters(port, best_parameters, sequence)
         sequence += 1
         time.sleep(0.05)
         send_start(port, last_telemetry.position_x_m * 1000.0,

@@ -40,10 +40,10 @@ robocup\control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 robocup\control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 robocup\control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 robocup\control.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\control.o: ../Mymode/ZDT_X42_V2.h
-robocup\control.o: ../Core/Inc/main.h
-robocup\control.o: ../Core/Inc/can.h
+robocup\control.o: ../UserDrivers/Emm_V5.h
 robocup\control.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
+robocup\control.o: ../Core/Inc/can.h
+robocup\control.o: ../Core/Inc/main.h
 robocup\control.o: ../Core/Inc/tim.h
 robocup\control.o: ../Core/Inc/adc.h
 robocup\control.o: ../Mymode/useradc.h
@@ -56,5 +56,4 @@ robocup\control.o: ..\Mymode\odometer.h
 robocup\control.o: ..\Mymode\servo.h
 robocup\control.o: ..\Mymode\graysensor.h
 robocup\control.o: ..\Mymode\userkey.h
-robocup\control.o: ..\Mymode\QAma.h
 robocup\control.o: ..\Mymode\mxcam.h

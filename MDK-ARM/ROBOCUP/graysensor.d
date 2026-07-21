@@ -42,10 +42,10 @@ robocup\graysensor.o: ../UserDrivers/hardware_iic.h
 robocup\graysensor.o: ../Core/Inc/i2c.h
 robocup\graysensor.o: ../Core/Inc/main.h
 robocup\graysensor.o: D:\Keil5\ARM\ARMCC\Bin\..\include\math.h
-robocup\graysensor.o: ../Mymode/ZDT_X42_V2.h
-robocup\graysensor.o: ../Core/Inc/main.h
-robocup\graysensor.o: ../Core/Inc/can.h
+robocup\graysensor.o: ../UserDrivers/Emm_V5.h
 robocup\graysensor.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdbool.h
+robocup\graysensor.o: ../Core/Inc/can.h
+robocup\graysensor.o: ../Core/Inc/main.h
 robocup\graysensor.o: ../Core/Inc/tim.h
 robocup\graysensor.o: ../Core/Inc/adc.h
 robocup\graysensor.o: ../Mymode/useradc.h

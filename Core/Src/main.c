@@ -43,7 +43,6 @@
 #include "graysensor.h"
 #include "mxcam.h"
 #include "QAma.h"
-#include "ai_tune.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -165,7 +164,6 @@ int main(void)
 	odometer_init();
 	/* 控制环模块初始化：视觉、位置、位姿协同和姿态环。 */
 	CamStabilization_Init();
-	ai_tune_init();
 	PositionControl_Init();
 	PoseCoordination_Init();
 	AttitudeStabilization_Init();
@@ -287,42 +285,6 @@ void Robot_RealtimeControl(float dt) {
 		if (is_position_control_enabled) {
 			UpdatePositionControl(dt);
 		}
-		{
-			float target_x_mm;
-			float target_y_mm;
-			float max_speed_mps;
-
-			if (ai_tune_take_start(&target_x_mm, &target_y_mm,
-			        &max_speed_mps)) {
-				task2_start_pending = 0U;
-				task2_state.active = 0U;
-				task2_state.completed = 0U;
-				PoseCoordination_Enable(0U);
-				EnableAttitudeStabilization(1U);
-				SetTargetYaw(0.0f);
-				Start_flag = 1U;
-				PositionControl_SetMaxSpeed(max_speed_mps);
-				SetTargetPosition(target_x_mm, target_y_mm);
-				PositionControl_Enable(1U);
-			}
-		}
-		if (!is_position_control_enabled) {
-			ai_tune_telemetry_t telemetry = {
-			        .time_ms = HAL_GetTick(),
-			        .target_x_m = position_control.target_x * 0.001f,
-			        .target_y_m = position_control.target_y * 0.001f,
-			        .position_x_m = odometer_ctx.pose.pos_x_mm * 0.001f,
-			        .position_y_m = odometer_ctx.pose.pos_y_mm * 0.001f,
-			        .error_x_local_m = control_ctx.error_x_local_m,
-			        .error_y_local_m = control_ctx.error_y_local_m,
-			        .velocity_x_mps = odometer_ctx.motion.vel_x_mps,
-			        .velocity_y_mps = odometer_ctx.motion.vel_y_mps,
-			        .motor_rpm = {motor1.speed_rpm, motor2.speed_rpm,
-			                motor3.speed_rpm, motor4.speed_rpm},
-			        .position_reached = IsPositionReached(raceh),
-			};
-			ai_tune_send_telemetry(&telemetry);
-		}
 		UpdateAttitudeStabilization(dt);
 		Process_usart1_packet();
 		if (cam_stabilization.is_enabled) {
@@ -360,7 +322,7 @@ void Robot_RealtimeControl(float dt) {
 	}
 }
 void Robot_ServiceTick(void) {
-	/* 低频服务任务处理 LCD、按键、舵机和任务状态机。 */
+	/* 低频服务任务处理 LCD、按键和任务一状态机。 */
 	Robot_HandleDebugModeTransition();
 	LCD_DisplayNumber(0, 20, timcount, 6);
 
