@@ -41,9 +41,11 @@ void servo_init(void)
 {
 	
 	HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);		//0	PF7
-    HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);		//1 PF8
+  HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);		//1 PF8
 	HAL_TIM_PWM_Start(&htim14,TIM_CHANNEL_1);		//2 PF9
+	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_2);		//4	PE11
 	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);//打开led灯pwm通道
+	
 //    for (i = 0; i < DJ_NUM; i++)
 //    {
 //        duoji_doing[i].aim = 500;

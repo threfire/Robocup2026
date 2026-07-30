@@ -11,7 +11,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = {2500, 2250, 1960, 1700, 1430},
+        .material_pwm = { 2250, 1960, 1700, 1430, 1130},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -34,6 +34,8 @@ static const Point2D_t task1_targets[] = {
         {0.0f, -10.0f, -90.0f},             /* 索引 12：点 13，起始点。 */
 
 };
+
+static const int Telescopic_ring[] = {500, 650, 750};
 static void MotionState_Reset(void);
 
 void Setmaixcam_mode(uint8_t ch) {
@@ -1260,6 +1262,7 @@ static void task1_go_first_qrcode(void) {
 
 	if (task1_move_target(0, 0.0f, 0.0f)) {
 		Servo_Action_Group(2);
+		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
 		task1_next_step();
 	}
 
@@ -1306,20 +1309,20 @@ static void task1_prepare_material_turnplate(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(-1.0f, 0.0f, -2.47f);
-	HAL_Delay(300);
+	SetTargetVelocity(-1.0f, 0.0f, -2.82f);
+	HAL_Delay(200);
 	Move_to_turnplate(2);
-	HAL_Delay(800);
+	HAL_Delay(500);
 
 	Move_to_turnplate(3);
-	HAL_Delay(250);
-	SetTargetVelocity(-1.0f, 0.0f, -2.18f);
-	HAL_Delay(300);
+	HAL_Delay(200);
+	SetTargetVelocity(-1.0f, 0.0f, -2.00f);
+	HAL_Delay(240);
 
 	Move_to_turnplate(4);
 	HAL_Delay(300);
-	SetTargetVelocity(-1.0f, 0.0f, -2.14f);
-	HAL_Delay(250);
+	SetTargetVelocity(-1.0f, 0.0f, -1.60f);
+	HAL_Delay(550);
 
 	Move_to_turnplate(5);
 	HAL_Delay(200);
@@ -1423,11 +1426,11 @@ static void task1_pick_trophies(void) {
 	Move_to_turnplate(1);
 	HAL_Delay(450);
 
-	HAL_Delay(500);
+	HAL_Delay(100);
 
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1] + 200);
 	MotionState_Reset();
-	HAL_Delay(300);
+	HAL_Delay(100);
 	task1_state.current_step = 31;
 	task1_state.step_start = HAL_GetTick();
 }
