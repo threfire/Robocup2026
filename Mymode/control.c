@@ -7,6 +7,7 @@
 #include "graysensor.h"
 #include "userkey.h"
 #include "mxcam.h"
+#include "QAma.h"
 
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
@@ -43,6 +44,43 @@ void Setmaixcam_mode(uint8_t ch) {
 }
 void Move_to_turnplate(uint8_t num) {
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[num - 1]);
+}
+
+/**
+ * @brief 根据二维码任务顺序选择对应颜色的转盘位置。
+ *
+ * 任务一由二维码颜色序列匹配物料扫描结果，任务二由奖杯序号匹配二维码序列。
+ *
+ * @param material_index 当前需要的物料或奖杯序号，从 1 开始。
+ */
+static void task1_select_material_turnplate(uint8_t material_index) {
+	uint8_t i;
+
+	if (tasknum == 1U) {
+		if (qanum == 0U || qanum > 16U || material_index == 0U ||
+		        material_index > 5U || !is_hasgetcolor) {
+			return;
+		}
+
+		for (i = 0U; i < 5U; i++) {
+			if (task1_scheme[qanum - 1U][material_index - 1U] ==
+			        detected_colors[i]) {
+				Move_to_turnplate(i + 1U);
+				return;
+			}
+		}
+		return;
+	}
+
+	if (tasknum == 2U && qanum > 0U && qanum <= 6U &&
+	        material_index > 0U && material_index <= 3U) {
+		for (i = 0U; i < 3U; i++) {
+			if (task2_scheme[qanum - 1U][i] == material_index) {
+				Move_to_turnplate(i + 1U);
+				return;
+			}
+		}
+	}
 }
 void Pos_moveconctrl(uint8_t dir, uint16_t vel, uint16_t clk) {
 	/* EMM 位置模式用于局部前后微动，clk 单位为脉冲。 */
@@ -738,6 +776,7 @@ uint8_t CamStabilizationToCenter(
 		PositionControl_Enable(0);
 		CamStabilization_Enable(1);
 		is_cam_stabilizing = 1;
+		iscamreached_safecount = 0U;
 		IsLight = 1;
 		return 0;
 	}
@@ -1141,6 +1180,7 @@ void start_task1(void) {
 	task1_state.current_step = 1;
 	task1_state.completed = 0;
 	task1_state.step_start = HAL_GetTick();
+	is_hasgetcolor = 0U;
 }
 
 void run_task1(void) {
@@ -1313,19 +1353,23 @@ static void task1_prepare_material_turnplate(void) {
 	HAL_Delay(200);
 	Move_to_turnplate(2);
 	HAL_Delay(500);
+	Get_Materialcolor(0U);
 
 	Move_to_turnplate(3);
 	HAL_Delay(200);
 	SetTargetVelocity(-1.0f, 0.0f, -2.00f);
 	HAL_Delay(240);
+	Get_Materialcolor(1U);
 
 	Move_to_turnplate(4);
 	HAL_Delay(300);
 	SetTargetVelocity(-1.0f, 0.0f, -1.60f);
 	HAL_Delay(550);
+	Get_Materialcolor(2U);
 
 	Move_to_turnplate(5);
 	HAL_Delay(200);
+	Get_Materialcolor(3U);
 
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 1000);
 	MotionState_Reset();
@@ -1341,6 +1385,8 @@ static void task1_prepare_material_turnplate(void) {
  */
 static void task1_go_first_material_point(void) {
 	EnableAttitudeStabilization(1);
+	Get_Materialcolor(4U);
+	is_hasgetcolor = 1U;
 	task1_go_material_point(1, 1);
 }
 
@@ -1354,7 +1400,7 @@ static void task1_go_material_point(
         uint8_t target_index, uint8_t material_index) {
 	if (task1_move_target(target_index, 0.0f,
 	        task1_targets[target_index].yaw_deg)) {
-		Move_to_turnplate(6U - material_index);
+		task1_select_material_turnplate(material_index);
 		task1_next_step();
 	}
 }
@@ -1376,6 +1422,10 @@ static void task1_wait_vision(uint8_t point_index) {
  * @param delay_after_ms 舵机动作后的等待时间，单位 ms。
  */
 static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) {
+	if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE, max_min_error)) {
+		return;
+	}
+
 	POS_move();
 	if (servo_after != 0U) {
 		Servo_Action_Group(servo_after);
@@ -1473,7 +1523,7 @@ static void task1_go_podium_point(uint8_t target_index, float y_offset_mm,
         float prepare_tolerance_m) {
 	if (task1_move_target(target_index, y_offset_mm, -90.0f)) {
 		Servo_Action_Group(arrive_servo);
-		Move_to_turnplate(turnplate_num);
+		task1_select_material_turnplate(turnplate_num);
 		task1_next_step();
 		return;
 	}
