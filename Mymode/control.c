@@ -1357,7 +1357,7 @@ static void task1_go_first_qrcode(void) {
 /**
  * @brief 按原有运动节奏准备转盘五个物料位。
  *
- * 当前阶段跳过颜色采集，保留底盘运动和转盘动作时序。
+ * 转盘到位后读取 RGB，保存四个实测颜色并在后续推导第五种颜色。
  */
 static void task1_prepare_material_turnplate(void) {
 	Servo_Action_Group(2);
@@ -1368,18 +1368,22 @@ static void task1_prepare_material_turnplate(void) {
 	HAL_Delay(200);
 	Move_to_turnplate(2);
 	HAL_Delay(700);
+	Get_Materialcolor(0U);
 	SetTargetVelocity(-0.8f, 0.0f, -1.40f);
 	Move_to_turnplate(3);
 	HAL_Delay(650);
+	Get_Materialcolor(1U);
 	Move_to_turnplate(4);
 	HAL_Delay(50);
 	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
 	HAL_Delay(650);
+	Get_Materialcolor(2U);
 	Move_to_turnplate(5);
 	HAL_Delay(100);
 	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
 	
 	HAL_Delay(700);
+	Get_Materialcolor(3U);
 
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 800);
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
