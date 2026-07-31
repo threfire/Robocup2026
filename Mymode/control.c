@@ -1474,7 +1474,7 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		return;
 	}
 
-	Move_to_turnplate(5U);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, control_ctx.material_pwm[5]);
 
 	if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE, max_min_error)) {
 		return;
