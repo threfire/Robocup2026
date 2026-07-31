@@ -1445,8 +1445,6 @@ static void task1_go_material_point(
 			return;
 		}
 
-		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1,
-		        control_ctx.material_pwm[material_index - 1U]);
 		task1_next_step();
 	}
 }
@@ -1487,6 +1485,13 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		return;
 	}
 
+	if (task1_state.current_step >= 13U &&
+		        task1_state.current_step <= 25U) {
+		uint8_t material_index =
+		        (uint8_t)((task1_state.current_step - 13U) / 3U + 1U);
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1,
+		        control_ctx.material_pwm[material_index - 1U]);
+	}
 	POS_move();
 	if (servo_after != 0U) {
 		Servo_Action_Group(servo_after);
