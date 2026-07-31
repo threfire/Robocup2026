@@ -13,6 +13,11 @@ Relative_coord Camera_err;
  ********************************************************/
 void Process_usart1_packet(void) {
 	uint8_t camera_packet[9] = {0};
+	Is_coordgot = 0U;
+	if (!recv_end_flag) {
+		return;
+	}
+
 	for (uint8_t i = 0; i < 9; i++) {
 		camera_packet[i] = rx_buffer[i];
 	}
@@ -22,6 +27,7 @@ void Process_usart1_packet(void) {
 			int16_t y_coord = camera_packet[5] + camera_packet[6];
 			Camera_err.x = 158 - x_coord;
 			Camera_err.y = 110 - y_coord;
+			Is_coordgot = 1U;
 		}
 	}
 }

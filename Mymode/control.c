@@ -12,7 +12,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2250, 1960, 1700, 1430, 1130},
+        .material_pwm = { 2470, 2200, 1910, 1600, 1320},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -36,8 +36,10 @@ static const Point2D_t task1_targets[] = {
 
 };
 
-static const int Telescopic_ring[] = {500, 650, 750};
+static const int Telescopic_ring[] = {320, 850, 750};
 static void MotionState_Reset(void);
+static uint8_t task1_vision_timeout;
+static uint32_t cam_stabilize_start_time;
 
 void Setmaixcam_mode(uint8_t ch) {
 	cammode = ch;
@@ -736,6 +738,10 @@ void ErrorQueue_GetFluctuate(int *fluct_x, int *fluct_y) {
 
 uint8_t IsCamReached(
         int tolerance_x, int tolerance_y, int MAX_Fluctuate_error) {
+	if (!Is_coordgot) {
+		return 0;
+	}
+
 	int error_x = Camera_err.x;
 	int error_y = Camera_err.y;
 
@@ -777,8 +783,16 @@ uint8_t CamStabilizationToCenter(
 		CamStabilization_Enable(1);
 		is_cam_stabilizing = 1;
 		iscamreached_safecount = 0U;
+		cam_stabilize_start_time = HAL_GetTick();
 		IsLight = 1;
 		return 0;
+	}
+
+	if (HAL_GetTick() - cam_stabilize_start_time > CAM_STABILIZE_TIMEOUT_MS) {
+		CamStabilization_Enable(0);
+		is_cam_stabilizing = 0;
+		IsLight = 0;
+		return 1;
 	}
 
 	if (IsCamReached(tolerance_x, tolerance_y, MAX_Fluctuate_error)) {
@@ -1180,6 +1194,7 @@ void start_task1(void) {
 	task1_state.current_step = 1;
 	task1_state.completed = 0;
 	task1_state.step_start = HAL_GetTick();
+	task1_vision_timeout = 0U;
 	is_hasgetcolor = 0U;
 }
 
@@ -1308,34 +1323,34 @@ static void task1_go_first_qrcode(void) {
 
 	/* 接近二维码点时逐段下压，减小末端一次动作带来的识别抖动。 */
 	if (IsPositionReached(0.50f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);
 	}
 	if (IsPositionReached(0.45f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1780);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);
 	}
 	if (IsPositionReached(0.40f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1730);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);
 	}
 	if (IsPositionReached(0.35f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1700);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1900);
 	}
 	if (IsPositionReached(0.30f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1680);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);
 	}
 	if (IsPositionReached(0.25f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1660);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);
 	}
 	if (IsPositionReached(0.20f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1640);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);
 	}
 	if (IsPositionReached(0.15f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1620);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1820);
 	}
 	if (IsPositionReached(0.10f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1610);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1810);
 	}
 	if (IsPositionReached(0.04f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1600);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);
 	}
 }
 
@@ -1411,7 +1426,7 @@ static void task1_go_material_point(
  * 当前策略是收到坐标或超时都继续，视觉等待语义集中在这里方便后续改策略。
  */
 static void task1_wait_vision(uint8_t point_index) {
-	(void)Wait_for_uart_with_search(point_index);
+	task1_vision_timeout = (uint8_t)!Wait_for_uart_with_search(point_index);
 	task1_next_step();
 }
 
@@ -1422,6 +1437,19 @@ static void task1_wait_vision(uint8_t point_index) {
  * @param delay_after_ms 舵机动作后的等待时间，单位 ms。
  */
 static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) {
+	if (task1_vision_timeout) {
+		task1_vision_timeout = 0U;
+		POS_move();
+		if (servo_after != 0U) {
+			Servo_Action_Group(servo_after);
+		}
+		if (delay_after_ms > 0U) {
+			HAL_Delay(delay_after_ms);
+		}
+		task1_next_step();
+		return;
+	}
+
 	if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE, max_min_error)) {
 		return;
 	}
