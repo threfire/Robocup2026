@@ -265,6 +265,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>rx_buffer</ItemText>
         </Ww>
+        <Ww>
+          <count>22</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>detected_colors,0x0A</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>

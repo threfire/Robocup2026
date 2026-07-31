@@ -187,7 +187,7 @@ typedef struct {
 
 typedef struct {
 	float race_tolerance_m;             /* 当前任务到点容差，单位 m */
-	uint16_t material_pwm[5];           /* 转盘五个物料位 PWM */
+	uint16_t material_pwm[7];           /* 转盘五个物料位 PWM */
 	TaskState_t task1;                  /* 任务 1 状态机 */
 	TaskState_t task2;                  /* 任务 2 状态机 */
 	uint8_t task_num;                   /* 当前任务编号 */

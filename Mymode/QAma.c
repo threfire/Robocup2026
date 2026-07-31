@@ -110,7 +110,7 @@ void Update_Materialcolor(void)
 	        scan_information.B < 200U) {
 		scan_information.color = 3U;
 	} else if (scan_information.R < 180U && scan_information.G > 240U &&
-	        scan_information.B < 245U) {
+	        scan_information.B > 240U && scan_information.G >scan_information.B) {
 		scan_information.color = 2U;
 	} else if (scan_information.R < 180U && scan_information.G > 240U &&
 	        scan_information.B > 245U) {
