@@ -270,7 +270,6 @@ void USART1_IRQHandler(void)
 		temp = __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
 		rx_len = BUFFER_SIZE - temp;
 		recv_end_flag = 1;
-		Is_coordgot = 1;
 	}
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);

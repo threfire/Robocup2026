@@ -12,7 +12,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2330, 2080, 1760, 1480, 1180, 880, 600},
+        .material_pwm = { 2330, 2060, 1760, 1460, 1180, 880, 600},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -27,7 +27,7 @@ static const Point2D_t task1_targets[] = {
         {471.22f, 615.22f, -68.0f},       /* 索引 4：点 5，物料 d。 */
         {974.56f, 686.34f, -68.0f},       /* 索引 5：点 6，物料 e。 */
         {650.0f, 250.25f, 0.0f},          /* 索引 6：点 7，二维码 2。 */
-        {1021.66f, 348.24f, -145.0f},      /* 索引 7：点 8，二维码 2 至奖杯开环动作过渡位姿。 */
+        {1021.66f + 10.0f, 348.24f, -145.0f},      /* 索引 7：点 8，二维码 2 至奖杯开环动作过渡位姿。 */
         {270.0f-00.0f, 1710.0f, -90.0f},        /* 索引 8：点 9，亚军奖台。 */
         {0.0f-00.0f, 1695.0f, -90.0f},          /* 索引 9：点 10，冠军奖台。 */
         {-270.0f-00.0f, 1715.0f, -90.0f},         /* 索引 10：点 11，季军奖台。 */
@@ -36,7 +36,7 @@ static const Point2D_t task1_targets[] = {
 
 };
 
-const int Telescopic_ring[] = {320, 850, 750};
+const int Telescopic_ring[] = {320, 800, 750};
 static void MotionState_Reset(void);
 static uint8_t task1_vision_timeout;
 static uint32_t cam_stabilize_start_time;
@@ -620,10 +620,10 @@ uint8_t RotateToYaw(float target_yaw, float tolerance) {
 void CamStabilization_Init(void) {
 	/* 视觉稳定环用图像误差生成局部平移校正量。 */
 	PID_Init_cam(
-	        &cam_stabilization.pid_x, 0.20f, 0.0000f, 0.0f, 0.002f, 20.0f);
+	        &cam_stabilization.pid_x, 0.15f, 0.0000f, 0.0f, 0.001f, 20.0f);
 
 	PID_Init_cam(
-	        &cam_stabilization.pid_y, 0.20f, 0.0000f, 0.0f, 0.002f, 20.0f);
+	        &cam_stabilization.pid_y, 0.15f, 0.0000f, 0.0f, 0.001f, 20.0f);
 
 	cam_stabilization.is_enabled = 0;
 	cam_correction_x = 0.0f;
@@ -636,16 +636,14 @@ void CamStabilization_Init(void) {
 void CamStabilization_Enable(uint8_t enable) {
 	cam_stabilization.is_enabled = enable;
 
-	IsLight = 1;
-	if (!enable) {
-		cam_stabilization.pid_x.integral = 0.0f;
-		cam_stabilization.pid_x.prev_error = 0.0f;
-		cam_stabilization.pid_y.integral = 0.0f;
-		cam_stabilization.pid_y.prev_error = 0.0f;
-		cam_correction_x = 0.0f;
-		cam_correction_y = 0.0f;
-		IsLight = 0;
-	}
+	/* 每次切入视觉环清除上一段误差历史，首个校正点从新帧坐标起算。 */
+	cam_stabilization.pid_x.integral = 0.0f;
+	cam_stabilization.pid_x.prev_error = 0.0f;
+	cam_stabilization.pid_y.integral = 0.0f;
+	cam_stabilization.pid_y.prev_error = 0.0f;
+	cam_correction_x = 0.0f;
+	cam_correction_y = 0.0f;
+	IsLight = enable ? 1U : 0U;
 }
 
 void UpdateCamStabilization(float x_err, float y_err, float dt) {
@@ -1224,8 +1222,8 @@ void run_task1(void) {
 	case 22: task1_relative_action(0, 0U); break;
 	case 23: task1_go_material_point(5, 5); break;            /* e 点取第 5 个物料。 */
 	case 24: task1_wait_vision(5); break;
-	case 125: task1_relative_action(0, 0U); break;
-	case 126: task1_go_second_qrcode(); break;                 /* 途经二维码点 2。 */
+	case 25: task1_relative_action(0, 0U); break;
+	case 26: task1_go_second_qrcode(); break;                 /* 途经二维码点 2。 */
 	case 27: task1_go_trophy_transition(); break;              /* 前往奖杯开环动作过渡点。 */
 	case 28: task1_pick_trophies(); break;                    /* 连续拾取三个奖杯。 */
 	case 31: task1_go_second_podium(); break;                 /* 亚军台。 */
@@ -1368,33 +1366,33 @@ static void task1_prepare_material_turnplate(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(-0.8f, 0.0f, -3.080f);
-	HAL_Delay(200);
+	SetTargetVelocity(-0.8f, 0.0f, -3.1450f);
+	HAL_Delay(300);
 	Move_to_turnplate(2);
-	HAL_Delay(700);
+	HAL_Delay(600);
 	
 	SetTargetVelocity(-0.8f, 0.0f, -1.40f);
+	HAL_Delay(100);
 	Move_to_turnplate(3);
 	HAL_Delay(650);
 	
 	Move_to_turnplate(4);
-	HAL_Delay(50);
-	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
-	HAL_Delay(650);
+	SetTargetVelocity(-0.8f, 0.0f, -1.95f);
+	HAL_Delay(550);
 	Get_Materialcolor(0U);
+	HAL_Delay(100);
 	Move_to_turnplate(5);
 	HAL_Delay(100);
-	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
-	HAL_Delay(500);
+	SetTargetVelocity(-0.8f, 0.0f, -1.80);
+	HAL_Delay(600);
 	Get_Materialcolor(1U);
-	HAL_Delay(200);
+	HAL_Delay(100);
 	
 
 	Move_to_turnplate(6);
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 	MotionState_Reset();
-	HAL_Delay(200);
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	HAL_Delay(300);
 	task1_state.current_step = 11;
 	task1_state.step_start = HAL_GetTick();
 }
@@ -1409,6 +1407,7 @@ static void task1_go_first_material_point(void) {
 	Get_Materialcolor(2U);
 	is_hasgetcolor = 1U;
 	task1_go_material_point(1, 1);
+	HAL_Delay (100);
 }
 
 /**
@@ -1430,6 +1429,8 @@ static void task1_go_material_point(
 		        IsPositionReached(0.2f)) {
 			Get_Materialcolor(3U);
 			Get_Materialcolor(4U);
+			__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 760);
 			task1_fourth_color_state = 2U;
 		}
 	}
@@ -1474,20 +1475,23 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		return;
 	}
 
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, control_ctx.material_pwm[5]);
-
 	if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE, max_min_error)) {
 		return;
 	}
-
+	
 	if (task1_state.current_step >= 13U &&
-		        task1_state.current_step <= 25U) {
+	        task1_state.current_step <= 25U) {
 		uint8_t material_index =
-		        (uint8_t)((task1_state.current_step - 13U) / 3U + 1U);
+		        (uint8_t)(5U - (task1_state.current_step - 13U) / 3U);
+		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1,
 		        control_ctx.material_pwm[material_index - 1U]);
+		HAL_Delay(1800- (material_index- 1) * 300);
 	}
+	
 	POS_move();
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 760);
 	if (servo_after != 0U) {
 		Servo_Action_Group(servo_after);
 	}
@@ -1506,6 +1510,7 @@ static void task1_go_second_qrcode(void) {
 	tasknum = 2;
 	if (task1_move_target(6, 0.0f, 0.0f)) {
 		Move_to_turnplate(3);
+		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 		task1_next_step();
 	}
 }
