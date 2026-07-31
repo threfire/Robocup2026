@@ -12,7 +12,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2330, 2080, 1800, 1480, 1200, 950, 700},
+        .material_pwm = { 2330, 2080, 1760, 1480, 1180, 880, 600},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -1208,9 +1208,9 @@ void run_task1(void) {
 	}
 
 	switch (task1_state.current_step) {
-	case 11: task1_go_first_qrcode(); break;                   /* 起步途经二维码点 1。 */
-	case 1: task1_prepare_material_turnplate(); break;         /* 准备物料转盘。 */
-	case 111: task1_go_first_material_point(); break;          /* a 点取第 1 个物料。 */
+	case 1: task1_go_first_qrcode(); break;                   /* 起步途经二维码点 1。 */
+	case 2: task1_prepare_material_turnplate(); break;         /* 准备物料转盘。 */
+	case 11: task1_go_first_material_point(); break;          /* a 点取第 1 个物料。 */
 	case 12: task1_wait_vision(1); break;
 	case 13: task1_relative_action(0, 0U); break;
 	case 14: task1_go_material_point(2, 2); break;            /* b 点取第 2 个物料。 */
@@ -1224,8 +1224,8 @@ void run_task1(void) {
 	case 22: task1_relative_action(0, 0U); break;
 	case 23: task1_go_material_point(5, 5); break;            /* e 点取第 5 个物料。 */
 	case 24: task1_wait_vision(5); break;
-	case 25: task1_relative_action(0, 0U); break;
-	case 26: task1_go_second_qrcode(); break;                 /* 途经二维码点 2。 */
+	case 125: task1_relative_action(0, 0U); break;
+	case 126: task1_go_second_qrcode(); break;                 /* 途经二维码点 2。 */
 	case 27: task1_go_trophy_transition(); break;              /* 前往奖杯开环动作过渡点。 */
 	case 28: task1_pick_trophies(); break;                    /* 连续拾取三个奖杯。 */
 	case 31: task1_go_second_podium(); break;                 /* 亚军台。 */
@@ -1473,6 +1473,8 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		task1_next_step();
 		return;
 	}
+
+	Move_to_turnplate(5U);
 
 	if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE, max_min_error)) {
 		return;
