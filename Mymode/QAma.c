@@ -97,8 +97,28 @@ int task2_scheme[6][3] = {
 //		
 //}
 
-void Get_Materialcolor (uint8_t ch)
+void Update_Materialcolor(void)
 {
+	scan_information.color = 0U;
+	if (scan_information.R < 150U && scan_information.G < 180U &&
+	        scan_information.B < 180U) {
+		scan_information.color = 5U;
+	} else if (scan_information.R > 240U && scan_information.G > 240U &&
+	        scan_information.B > 240U) {
+		scan_information.color = 4U;
+	} else if (scan_information.R > 240U && scan_information.G < 200U &&
+	        scan_information.B < 200U) {
+		scan_information.color = 3U;
+	} else if (scan_information.R < 180U && scan_information.G > 240U &&
+	        scan_information.B < 245U) {
+		scan_information.color = 2U;
+	} else if (scan_information.R < 180U && scan_information.G > 240U &&
+	        scan_information.B > 245U) {
+		scan_information.color = 1U;
+	}
+	return;
+
+#if 0
 	if(ch<4){
 		if(scan_information.R<150&&scan_information.G<180&&scan_information.B<180){
 			detected_colors[ch] = 5;//黑
@@ -125,4 +145,15 @@ void Get_Materialcolor (uint8_t ch)
 	else {
 		detected_colors[ch] = 15 - detected_colors[1]- detected_colors[2]- detected_colors[3]- detected_colors[0];}
 		
+#endif
+}
+
+void Get_Materialcolor(uint8_t ch)
+{
+	if (ch < 4U) {
+		detected_colors[ch] = scan_information.color;
+	} else if (ch == 4U) {
+		detected_colors[ch] = 15 - detected_colors[1] - detected_colors[2] -
+		        detected_colors[3] - detected_colors[0];
+	}
 }

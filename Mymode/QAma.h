@@ -16,6 +16,7 @@ extern int detected_colors[5];
 // 任务 1 二维码到移动方案映射
 extern int task1_scheme[16][5];
 extern int task2_scheme[6][3];
+void Update_Materialcolor(void);
 void Get_Materialcolor (uint8_t ch);
 
 #endif

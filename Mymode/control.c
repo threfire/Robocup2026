@@ -12,7 +12,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2330, 2080, 1800, 1480, 1200},
+        .material_pwm = { 2330, 2080, 1800, 1480, 1200, 950, 700},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -1201,6 +1201,8 @@ void start_task1(void) {
 }
 
 void run_task1(void) {
+	Update_Materialcolor();
+
 	if (!task1_state.active) {
 		return;
 	}
@@ -1388,7 +1390,7 @@ static void task1_prepare_material_turnplate(void) {
 	HAL_Delay(200);
 	
 
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, control_ctx.material_pwm[4]-280);
+	Move_to_turnplate(6);
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
 	MotionState_Reset();
 	HAL_Delay(200);
@@ -1420,7 +1422,7 @@ static void task1_go_material_point(
 	if (target_index == 1U) {
 		if ((task1_fourth_color_state == 0U) &&
 		        IsPositionReached(0.8f)) {
-			Move_to_turnplate(5U);
+			Move_to_turnplate(7U);
 			task1_fourth_color_state = 1U;
 		}
 
