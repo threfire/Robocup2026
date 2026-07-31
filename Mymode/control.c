@@ -1419,6 +1419,10 @@ static void task1_go_first_material_point(void) {
  */
 static void task1_go_material_point(
         uint8_t target_index, uint8_t material_index) {
+	if ((target_index != 1U) && !target_set) {
+		task1_select_material_turnplate(material_index);
+	}
+
 	if (target_index == 1U) {
 		if ((task1_fourth_color_state == 0U) &&
 		        IsPositionReached(0.8f)) {
@@ -1430,6 +1434,7 @@ static void task1_go_material_point(
 		        IsPositionReached(0.2f)) {
 			Get_Materialcolor(3U);
 			Get_Materialcolor(4U);
+			task1_select_material_turnplate(material_index);
 			task1_fourth_color_state = 2U;
 		}
 	}
@@ -1440,7 +1445,8 @@ static void task1_go_material_point(
 			return;
 		}
 
-		task1_select_material_turnplate(material_index);
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1,
+		        control_ctx.material_pwm[material_index - 1U]);
 		task1_next_step();
 	}
 }
