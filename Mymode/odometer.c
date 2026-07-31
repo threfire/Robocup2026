@@ -152,10 +152,8 @@ static void odometer_update_pose(float x_mm, float y_mm, float yaw_deg,
 	float chassis_vel_y_mmps = vel_y_mmps - gyro_rad_s * offset_x_world_mm;
 
 	/* 外部里程计给出传感器中心位姿，旋转安装偏移后换算车体中心并保持清零点不变。 */
-	odometer_ctx.pose.pos_x_mm = x_mm - offset_x_world_mm +
-	        ODOMETER_SENSOR_OFFSET_X_MM;
-	odometer_ctx.pose.pos_y_mm = y_mm - offset_y_world_mm +
-	        ODOMETER_SENSOR_OFFSET_Y_MM;
+	odometer_ctx.pose.pos_x_mm = x_mm - offset_x_world_mm;
+	odometer_ctx.pose.pos_y_mm = y_mm - offset_y_world_mm;
 	odometer_ctx.pose.yaw_deg = yaw_deg;
 	odometer_ctx.pose.yaw_gyro_dps = gyro_dps;
 	odometer_ctx.pose.data_updated = 1U;
