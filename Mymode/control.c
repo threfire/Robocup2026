@@ -40,6 +40,7 @@ const int Telescopic_ring[] = {320, 850, 750};
 static void MotionState_Reset(void);
 static uint8_t task1_vision_timeout;
 static uint32_t cam_stabilize_start_time;
+static uint8_t task1_fourth_color_state;
 
 void Setmaixcam_mode(uint8_t ch) {
 	cammode = ch;
@@ -1195,6 +1196,7 @@ void start_task1(void) {
 	task1_state.completed = 0;
 	task1_state.step_start = HAL_GetTick();
 	task1_vision_timeout = 0U;
+	task1_fourth_color_state = 0U;
 	is_hasgetcolor = 0U;
 }
 
@@ -1368,24 +1370,25 @@ static void task1_prepare_material_turnplate(void) {
 	HAL_Delay(200);
 	Move_to_turnplate(2);
 	HAL_Delay(700);
-	Get_Materialcolor(0U);
+	
 	SetTargetVelocity(-0.8f, 0.0f, -1.40f);
 	Move_to_turnplate(3);
 	HAL_Delay(650);
-	Get_Materialcolor(1U);
+	
 	Move_to_turnplate(4);
 	HAL_Delay(50);
 	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
 	HAL_Delay(650);
-	Get_Materialcolor(2U);
+	Get_Materialcolor(0U);
 	Move_to_turnplate(5);
 	HAL_Delay(100);
 	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
+	HAL_Delay(500);
+	Get_Materialcolor(1U);
+	HAL_Delay(200);
 	
-	HAL_Delay(700);
-	Get_Materialcolor(3U);
 
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 800);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, control_ctx.material_pwm[4]-280);
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
 	MotionState_Reset();
 	HAL_Delay(200);
@@ -1401,7 +1404,7 @@ static void task1_prepare_material_turnplate(void) {
  */
 static void task1_go_first_material_point(void) {
 	EnableAttitudeStabilization(1);
-	Get_Materialcolor(4U);
+	Get_Materialcolor(2U);
 	is_hasgetcolor = 1U;
 	task1_go_material_point(1, 1);
 }
@@ -1414,8 +1417,26 @@ static void task1_go_first_material_point(void) {
  */
 static void task1_go_material_point(
         uint8_t target_index, uint8_t material_index) {
+	if (target_index == 1U) {
+		if ((task1_fourth_color_state == 0U) &&
+		        IsPositionReached(0.8f)) {
+			Move_to_turnplate(5U);
+			task1_fourth_color_state = 1U;
+		}
+
+		if ((task1_fourth_color_state == 1U) &&
+		        IsPositionReached(0.2f)) {
+			Get_Materialcolor(3U);
+			task1_fourth_color_state = 2U;
+		}
+	}
+
 	if (task1_move_target(target_index, 0.0f,
 	        task1_targets[target_index].yaw_deg)) {
+		if ((target_index == 1U) && (task1_fourth_color_state != 2U)) {
+			return;
+		}
+
 		task1_select_material_turnplate(material_index);
 		task1_next_step();
 	}
