@@ -1429,6 +1429,7 @@ static void task1_go_material_point(
 		if ((task1_fourth_color_state == 1U) &&
 		        IsPositionReached(0.2f)) {
 			Get_Materialcolor(3U);
+			Get_Materialcolor(4U);
 			task1_fourth_color_state = 2U;
 		}
 	}
