@@ -25,8 +25,8 @@ void Process_usart1_packet(void) {
 		if (camera_packet[2] == 0x02) {
 			int16_t x_coord = camera_packet[3] + camera_packet[4];
 			int16_t y_coord = camera_packet[5] + camera_packet[6];
-			Camera_err.x = 158 - x_coord;
-			Camera_err.y = 110 - y_coord;
+			Camera_err.x = 174 - x_coord;
+			Camera_err.y = 104 - y_coord;
 			Is_coordgot = 1U;
 		}
 	}

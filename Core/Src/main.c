@@ -171,10 +171,14 @@ int main(void)
 	memset(rx_data, 0, sizeof(rx_data));
 	/* USART3 颜色传感器按字节中断接收。 */
 	HAL_UART_Receive_IT(&huart3, rx_data, 1);
-	HAL_UART_Transmit(&huart3, gy33sendbuffer1, APP_GY33_CMD_LEN, 100U);
+//	HAL_UART_Transmit(&huart3, gy33sendbuffer1, APP_GY33_CMD_LEN, 100U);
 	CamStabilization_Enable(0);
-	servo_init();
+//	servo_init();
 	LCD_DisplayText(48, 0, "Init Success!");
+					HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);		//0	PF7
+					HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_2);		//4	PE11
+					__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[0]);
+					__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
 	HAL_Delay(100);
 	/* 已完成 2 s 里程计稳定等待，补足 8 s 后发送最后一条初始化指令。 */
 	HAL_Delay(ODOMETER_ZERO_FINAL_WAIT_MS);

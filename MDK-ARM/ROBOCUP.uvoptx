@@ -258,7 +258,7 @@
         <Ww>
           <count>20</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Camera_err</ItemText>
+          <ItemText>Camera_err,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>21</count>

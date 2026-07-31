@@ -221,7 +221,7 @@ typedef struct {
 } ControlContext_t;
 
 extern ControlContext_t control_ctx;
-
+extern const int Telescopic_ring[];
 #define raceh control_ctx.race_tolerance_m
 #define Material control_ctx.material_pwm
 #define task1_state control_ctx.task1

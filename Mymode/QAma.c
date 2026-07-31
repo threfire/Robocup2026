@@ -100,23 +100,23 @@ int task2_scheme[6][3] = {
 void Get_Materialcolor (uint8_t ch)
 {
 	if(ch<4){
-		if(scan_information.R<100&&scan_information.G<100&&scan_information.B<100){
+		if(scan_information.R<150&&scan_information.G<180&&scan_information.B<180){
 			detected_colors[ch] = 5;//黑
 			scan_information.color = detected_colors[ch];
 		}
-		else if(scan_information.R>180&&scan_information.G>180&&scan_information.B>180){
+		else if(scan_information.R>240&&scan_information.G>240&&scan_information.B>240){
 			detected_colors[ch] = 4;//白
 			scan_information.color = detected_colors[ch];
 		}
-		else if(scan_information.R>120&&scan_information.G<100&&scan_information.B<100){
+		else if(scan_information.R>240&&scan_information.G<200&&scan_information.B<200){
 			detected_colors[ch] = 3;//红
 			scan_information.color = detected_colors[ch];
 		}
-		else if(scan_information.R<110&&scan_information.G>120&&scan_information.B<140){
+		else if(scan_information.R<180&&scan_information.G>240&&scan_information.B<245){
 			detected_colors[ch] = 2;//绿
 			scan_information.color = detected_colors[ch];
 		}
-		else if(scan_information.R<100&&scan_information.G<170&&scan_information.B>140){
+		else if(scan_information.R<180&&scan_information.G>240&&scan_information.B>245){
 			detected_colors[ch] = 1;//蓝
 			scan_information.color = detected_colors[ch];
 		}

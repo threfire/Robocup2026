@@ -57,3 +57,4 @@ robocup\control.o: ..\Mymode\servo.h
 robocup\control.o: ..\Mymode\graysensor.h
 robocup\control.o: ..\Mymode\userkey.h
 robocup\control.o: ..\Mymode\mxcam.h
+robocup\control.o: ..\Mymode\QAma.h

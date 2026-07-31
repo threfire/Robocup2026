@@ -12,7 +12,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2470, 2200, 1910, 1600, 1320},
+        .material_pwm = { 2330, 2080, 1800, 1480, 1200},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -20,7 +20,7 @@ ControlContext_t control_ctx = {
 
 /* 任务 1 路径点，单位 mm，坐标系与里程计输出一致。 */
 static const Point2D_t task1_targets[] = {
-        {-650.0f, 250.25f, 0.0f},         /* 索引 0：点 1，二维码 1。 */
+        {-650.0f, 255.25f, 0.0f},         /* 索引 0：点 1，二维码 1。 */
         {-416.8f, 941.44f, -54.0f},       /* 索引 1：点 2，物料 a。 */
         {-211.12f, 660.19f, -54.0f},      /* 索引 2：点 3，物料 b。 */
         {354.75f, 898.77f, -68.0f},       /* 索引 3：点 4，物料 c。 */
@@ -36,7 +36,7 @@ static const Point2D_t task1_targets[] = {
 
 };
 
-static const int Telescopic_ring[] = {320, 850, 750};
+const int Telescopic_ring[] = {320, 850, 750};
 static void MotionState_Reset(void);
 static uint8_t task1_vision_timeout;
 static uint32_t cam_stabilize_start_time;
@@ -619,10 +619,10 @@ uint8_t RotateToYaw(float target_yaw, float tolerance) {
 void CamStabilization_Init(void) {
 	/* 视觉稳定环用图像误差生成局部平移校正量。 */
 	PID_Init_cam(
-	        &cam_stabilization.pid_x, 0.26f, 0.0000f, 0.0f, 0.002f, 20.0f);
+	        &cam_stabilization.pid_x, 0.20f, 0.0000f, 0.0f, 0.002f, 20.0f);
 
 	PID_Init_cam(
-	        &cam_stabilization.pid_y, 0.26f, 0.0000f, 0.0f, 0.002f, 20.0f);
+	        &cam_stabilization.pid_y, 0.20f, 0.0000f, 0.0f, 0.002f, 20.0f);
 
 	cam_stabilization.is_enabled = 0;
 	cam_correction_x = 0.0f;
@@ -1204,9 +1204,9 @@ void run_task1(void) {
 	}
 
 	switch (task1_state.current_step) {
-	case 1: task1_go_first_qrcode(); break;                   /* 起步途经二维码点 1。 */
-	case 2: task1_prepare_material_turnplate(); break;         /* 准备物料转盘。 */
-	case 11: task1_go_first_material_point(); break;          /* a 点取第 1 个物料。 */
+	case 11: task1_go_first_qrcode(); break;                   /* 起步途经二维码点 1。 */
+	case 1: task1_prepare_material_turnplate(); break;         /* 准备物料转盘。 */
+	case 111: task1_go_first_material_point(); break;          /* a 点取第 1 个物料。 */
 	case 12: task1_wait_vision(1); break;
 	case 13: task1_relative_action(0, 0U); break;
 	case 14: task1_go_material_point(2, 2); break;            /* b 点取第 2 个物料。 */
@@ -1314,10 +1314,10 @@ static void task1_go_first_qrcode(void) {
 	Servo_Action_Group(1);
 	servo_init();
 	tasknum = 1;
-
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 	if (task1_move_target(0, 0.0f, 0.0f)) {
 		Servo_Action_Group(2);
-		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+		
 		task1_next_step();
 	}
 
@@ -1364,31 +1364,28 @@ static void task1_prepare_material_turnplate(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(-1.0f, 0.0f, -2.82f);
+	SetTargetVelocity(-0.8f, 0.0f, -3.080f);
 	HAL_Delay(200);
 	Move_to_turnplate(2);
-	HAL_Delay(500);
-	Get_Materialcolor(0U);
-
+	HAL_Delay(700);
+	SetTargetVelocity(-0.8f, 0.0f, -1.40f);
 	Move_to_turnplate(3);
-	HAL_Delay(200);
-	SetTargetVelocity(-1.0f, 0.0f, -2.00f);
-	HAL_Delay(240);
-	Get_Materialcolor(1U);
-
+	HAL_Delay(650);
 	Move_to_turnplate(4);
-	HAL_Delay(300);
-	SetTargetVelocity(-1.0f, 0.0f, -1.60f);
-	HAL_Delay(550);
-	Get_Materialcolor(2U);
-
+	HAL_Delay(50);
+	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
+	HAL_Delay(650);
 	Move_to_turnplate(5);
-	HAL_Delay(200);
-	Get_Materialcolor(3U);
+	HAL_Delay(100);
+	SetTargetVelocity(-0.8f, 0.0f, -1.80f);
+	
+	HAL_Delay(700);
 
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 1000);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 800);
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
 	MotionState_Reset();
 	HAL_Delay(200);
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
 	task1_state.current_step = 11;
 	task1_state.step_start = HAL_GetTick();
 }
