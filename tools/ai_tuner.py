@@ -33,6 +33,8 @@ SPEED_ACCEPT_MIN_RATIO = 0.95
 PLATEAU_ACCEPT_MIN_RATIO = 0.90
 PLATEAU_ACCEPT_MAX_RATIO = 1.05
 STOP_DISTANCE_MAX_M = 0.35
+TRAJECTORY_START = (800.0, 0.0)
+TRAJECTORY_END = (0.0, 0.0)
 
 
 def crc16(data: bytes) -> int:
@@ -257,6 +259,40 @@ def score_episode(samples: list[Telemetry], target_speed_mps: float) -> EpisodeR
             stopping_distance_m, rise_time_s, stop_time_s, guard_penalty)
 
 
+def score_trajectory(samples: list[Telemetry], target_speed_mps: float) -> EpisodeResult:
+    segments: list[list[Telemetry]] = []
+    current_segment: list[Telemetry] = []
+    previous_target = None
+
+    for sample in samples:
+        target = (sample.target_x_m, sample.target_y_m)
+        if previous_target is not None and (
+                abs(target[0] - previous_target[0]) > 0.001 or
+                abs(target[1] - previous_target[1]) > 0.001):
+            if current_segment:
+                segments.append(current_segment)
+            current_segment = []
+        current_segment.append(sample)
+        previous_target = target
+    if current_segment:
+        segments.append(current_segment)
+
+    results = [score_episode(segment, target_speed_mps)
+            for segment in segments if len(segment) >= 2]
+    if not results:
+        return score_episode(samples, target_speed_mps)
+
+    count = len(results)
+    return EpisodeResult(
+            sum(result.score for result in results) / count,
+            max(result.actual_peak_mps for result in results),
+            sum(result.plateau_mean_mps for result in results) / count,
+            max(result.stopping_distance_m for result in results),
+            sum(result.rise_time_s for result in results) / count,
+            sum(result.stop_time_s for result in results) / count,
+            max(result.guarded for result in results))
+
+
 def result_accepted(result: EpisodeResult, target_speed_mps: float) -> bool:
     return (result.guarded == 0 and
             result.actual_peak_mps >= target_speed_mps * SPEED_ACCEPT_MIN_RATIO and
@@ -283,10 +319,6 @@ def send_commit(port, version: int, sequence: int):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", required=True)
-    parser.add_argument("--point-a", nargs=2, type=float, required=True,
-            metavar=("X_MM", "Y_MM"))
-    parser.add_argument("--point-b", nargs=2, type=float, required=True,
-            metavar=("X_MM", "Y_MM"))
     parser.add_argument("--speed", type=float, default=1.5)
     parser.add_argument("--iterations", type=int, default=30)
     parser.add_argument("--csv", type=Path, default=Path("ai_tune.csv"))
@@ -297,10 +329,8 @@ def main():
     reader = FrameReader()
     sequence = 0
     version = 1
-    target_index = 0
     repeats: list[EpisodeResult] = []
     active_samples: list[Telemetry] = []
-    episode_target = None
     episode_active = False
     guard_seen = False
     stop_hold_s = 0.0
@@ -334,18 +364,10 @@ def main():
                     initial_telemetry = decode_telemetry(payload)
         if initial_telemetry is None:
             raise RuntimeError("未收到 UART5 遥测帧。")
-        distance_a = math.hypot(initial_telemetry.position_x_m -
-                args.point_a[0] * 0.001, initial_telemetry.position_y_m -
-                args.point_a[1] * 0.001)
-        distance_b = math.hypot(initial_telemetry.position_x_m -
-                args.point_b[0] * 0.001, initial_telemetry.position_y_m -
-                args.point_b[1] * 0.001)
-        target_index = 0 if distance_a > distance_b else 1
-        episode_target = args.point_a if target_index == 0 else args.point_b
         send_parameters(port, active_params, sequence)
         sequence += 1
         time.sleep(0.05)
-        send_start(port, *episode_target, args.speed, sequence)
+        send_start(port, *TRAJECTORY_START, args.speed, sequence)
         sequence += 1
 
         while len(optimizer.history) < args.iterations:
@@ -377,13 +399,12 @@ def main():
                     continue
                 if telemetry.guarded:
                     guard_seen = True
-                if (abs(telemetry.target_x_m - episode_target[0] * 0.001) >
-                        0.001 or abs(telemetry.target_y_m -
-                        episode_target[1] * 0.001) > 0.001):
-                    continue
                 distance_to_target = math.hypot(telemetry.error_x_m,
                         telemetry.error_y_m)
-                if distance_to_target >= EPISODE_MIN_DISTANCE_M:
+                if (abs(telemetry.target_x_m - TRAJECTORY_START[0] * 0.001) <=
+                        0.001 and abs(telemetry.target_y_m -
+                        TRAJECTORY_START[1] * 0.001) <= 0.001 and
+                        distance_to_target >= EPISODE_MIN_DISTANCE_M):
                     episode_active = True
                 if telemetry.guarded:
                     episode_active = True
@@ -397,7 +418,10 @@ def main():
                             active_samples[-2].timestamp_ms) * 0.001)
                 else:
                     dt = 0.0
-                if ((telemetry.position_reached or telemetry.guarded) and
+                if (((abs(telemetry.target_x_m - TRAJECTORY_END[0] * 0.001) <=
+                        0.001 and abs(telemetry.target_y_m -
+                        TRAJECTORY_END[1] * 0.001) <= 0.001 and
+                        telemetry.position_reached) or telemetry.guarded) and
                         speed_mps <= STOP_SPEED_MPS):
                     stop_hold_s += dt
                 else:
@@ -405,16 +429,13 @@ def main():
                 if stop_hold_s < STOP_HOLD_S:
                     continue
 
-                episode_result = score_episode(active_samples, args.speed)
+                episode_result = score_trajectory(active_samples, args.speed)
                 repeats.append(episode_result)
                 active_samples.clear()
                 stop_hold_s = 0.0
                 if len(repeats) < 3:
-                    target_index = 1 - target_index
-                    target = args.point_b if target_index else args.point_a
-                    episode_target = target
                     episode_active = False
-                    send_start(port, *target, args.speed, sequence)
+                    send_start(port, *TRAJECTORY_START, args.speed, sequence)
                     sequence += 1
                     continue
 
@@ -452,19 +473,12 @@ def main():
                 send_parameters(port, active_params, sequence)
                 sequence += 1
                 time.sleep(0.05)
-                target_index = 1 - target_index
-                target = args.point_b if target_index else args.point_a
-                episode_target = target
                 episode_active = False
-                send_start(port, *target, args.speed, sequence)
+                send_start(port, *TRAJECTORY_START, args.speed, sequence)
                 sequence += 1
 
         telemetry_file.flush()
         send_parameters(port, best_parameters, sequence)
-        sequence += 1
-        time.sleep(0.05)
-        send_start(port, last_telemetry.position_x_m * 1000.0,
-                last_telemetry.position_y_m * 1000.0, args.speed, sequence)
         subprocess.run([sys.executable, str(Path(__file__).with_name(
                 "plot_ai_tune.py")), str(telemetry_csv)], check=False)
 

@@ -43,15 +43,23 @@
 #include "graysensor.h"
 #include "mxcam.h"
 #include "QAma.h"
+#include "ai_tune.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct {
+	float x_mm;
+	float y_mm;
+	float yaw_deg;
+} ai_tune_pose_t;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define AI_TUNE_TRAJECTORY_COUNT 3U
+#define AI_TUNE_TRAJECTORY_HOLD_MS 300U
 
 /* USER CODE END PD */
 
@@ -70,6 +78,14 @@ AppContext_t app_ctx = {
         .chassis_velocity_mode = 1,
 				.debug_enable = 0,
 };
+static const ai_tune_pose_t ai_tune_trajectory[AI_TUNE_TRAJECTORY_COUNT] = {
+		{800.0f, 0.0f, 0.0f},
+		{800.0f, -800.0f, -90.0f},
+		{0.0f, 0.0f, 0.0f},
+};
+static uint8_t ai_tune_trajectory_active;
+static uint8_t ai_tune_trajectory_index;
+static uint32_t ai_tune_trajectory_hold_start_ms;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,6 +97,52 @@ void Robot_ServiceTick(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+static void ai_tune_start_trajectory(float max_speed_mps)
+{
+	ai_tune_trajectory_active = 1U;
+	ai_tune_trajectory_index = 0U;
+	ai_tune_trajectory_hold_start_ms = 0U;
+	PositionControl_SetMaxSpeed(max_speed_mps);
+	SetTargetPose(ai_tune_trajectory[0].x_mm, ai_tune_trajectory[0].y_mm,
+	        ai_tune_trajectory[0].yaw_deg);
+}
+
+static void ai_tune_update_trajectory(void)
+{
+	if (ai_tune_trajectory_active == 0U) {
+		return;
+	}
+
+	if (ai_tune_is_guarded()) {
+		ai_tune_trajectory_active = 0U;
+		return;
+	}
+
+	if (!IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG)) {
+		return;
+	}
+
+	if (ai_tune_trajectory_index >= (AI_TUNE_TRAJECTORY_COUNT - 1U)) {
+		ai_tune_trajectory_active = 0U;
+		return;
+	}
+
+	if (ai_tune_trajectory_hold_start_ms == 0U) {
+		ai_tune_trajectory_hold_start_ms = HAL_GetTick();
+		return;
+	}
+
+	if ((HAL_GetTick() - ai_tune_trajectory_hold_start_ms) <
+	        AI_TUNE_TRAJECTORY_HOLD_MS) {
+		return;
+	}
+
+	ai_tune_trajectory_index++;
+	ai_tune_trajectory_hold_start_ms = 0U;
+	SetTargetPose(ai_tune_trajectory[ai_tune_trajectory_index].x_mm,
+	        ai_tune_trajectory[ai_tune_trajectory_index].y_mm,
+	        ai_tune_trajectory[ai_tune_trajectory_index].yaw_deg);
+}
 /* USER CODE END 0 */
 
 /**
@@ -165,6 +227,7 @@ int main(void)
 	odometer_init();
 	/* 控制环模块初始化：视觉、位置、位姿协同和姿态环。 */
 	CamStabilization_Init();
+	ai_tune_init();
 	PositionControl_Init();
 	PoseCoordination_Init();
 	AttitudeStabilization_Init();
@@ -290,6 +353,43 @@ void Robot_RealtimeControl(float dt) {
 		UpdatePoseCoordination(dt);
 		if (is_position_control_enabled) {
 			UpdatePositionControl(dt);
+		}
+		ai_tune_update_trajectory();
+		{
+			float target_x_mm;
+			float target_y_mm;
+			float max_speed_mps;
+
+			if (ai_tune_take_start(&target_x_mm, &target_y_mm,
+			        &max_speed_mps)) {
+				(void)target_x_mm;
+				(void)target_y_mm;
+				task2_start_pending = 0U;
+				task1_state.active = 0U;
+				task1_state.completed = 0U;
+				task2_state.active = 0U;
+				task2_state.completed = 0U;
+				Start_flag = 1U;
+				ai_tune_start_trajectory(max_speed_mps);
+			}
+		}
+		if (!is_position_control_enabled) {
+			ai_tune_telemetry_t telemetry = {
+			        .time_ms = HAL_GetTick(),
+			        .target_x_m = position_control.target_x * 0.001f,
+			        .target_y_m = position_control.target_y * 0.001f,
+			        .position_x_m = odometer_ctx.pose.pos_x_mm * 0.001f,
+			        .position_y_m = odometer_ctx.pose.pos_y_mm * 0.001f,
+			        .error_x_local_m = control_ctx.error_x_local_m,
+			        .error_y_local_m = control_ctx.error_y_local_m,
+			        .velocity_x_mps = odometer_ctx.motion.vel_x_mps,
+			        .velocity_y_mps = odometer_ctx.motion.vel_y_mps,
+			        .motor_rpm = {motor1.speed_rpm, motor2.speed_rpm,
+			                motor3.speed_rpm, motor4.speed_rpm},
+			        .position_reached = IsPositionReached(raceh),
+			};
+
+			ai_tune_send_telemetry(&telemetry);
 		}
 		UpdateAttitudeStabilization(dt);
 		Process_usart1_packet();

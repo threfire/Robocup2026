@@ -8,6 +8,7 @@
 #include "userkey.h"
 #include "mxcam.h"
 #include "QAma.h"
+#include "ai_tune.h"
 
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
@@ -27,15 +28,15 @@ static const Point2D_t task1_targets[] = {
         {471.22f, 615.22f, -68.0f},       /* 索引 4：点 5，物料 d。 */
         {974.56f, 686.34f, -68.0f},       /* 索引 5：点 6，物料 e。 */
         {650.0f, 250.25f, 0.0f},          /* 索引 6：点 7，二维码 2。 */
-        {1021.66f + 80.0f, 348.24f, -145.0f},      /* 索引 7：点 8，二维码 2 至奖杯开环动作过渡位姿。 */
+        {1021.66f + 75.0f, 348.24f, -145.0f},      /* 索引 7：点 8，二维码 2 至奖杯开环动作过渡位姿。 */
         {270.0f-25.0f, 1710.0f + 20.0f, -90.0f},        /* 索引 8：点 9，亚军奖台。 */
-        {0.0f-25.0f, 1695.0f + 20.0f, -90.0f},          /* 索引 9：点 10，冠军奖台。 */
-        {-270.0f-25.0f, 1715.0f + 20.0f, -90.0f},         /* 索引 10：点 11，季军奖台。 */
+        {0.0f-20.0f, 1695.0f + 25.0f, -90.0f},          /* 索引 9：点 10，冠军奖台。 */
+        {-270.0f-20.0f, 1715.0f + 25.0f, -90.0f},         /* 索引 10：点 11，季军奖台。 */
         {0.0f, -20.0f, -90.0f},             /* 索引 11：起始点。 */
 
 };
 
-const int Telescopic_ring[] = {320, 800, 750};
+const int Telescopic_ring[] = {320, 750, 750};
 static void MotionState_Reset(void);
 static uint8_t task1_vision_timeout;
 static uint32_t cam_stabilize_start_time;
@@ -146,6 +147,10 @@ static float position_feedback_last_vel_y_mps;
 static float position_feedback_accel_x_mps2;
 static float position_feedback_accel_y_mps2;
 static uint8_t position_feedback_accel_valid;
+static ChassisConfig_t chassis_config;
+static float k_omega;
+static float attitude_last_pid_output;
+static uint8_t attitude_pid_output_valid;
 
 static float NormalizeYawError(float error) {
 	while (error > 180.0f)
@@ -192,6 +197,51 @@ static void PositionAccelerationFeedback_Update(float dt) {
 	        (accel_y_mps2 - position_feedback_accel_y_mps2);
 	position_feedback_last_vel_x_mps = vel_x_mps;
 	position_feedback_last_vel_y_mps = vel_y_mps;
+}
+
+/**
+ * @brief 计算偏航加速度前馈。
+ *
+ * 车体转动惯量由质量和轮距计算，角加速度使用里程计滤波后的陀螺仪微分值。
+ *
+ * @param pid_output 姿态 PID 输出，单位 rad/s。
+ * @param dt 控制周期，单位 s。
+ * @return 偏航前馈角速度，单位 rad/s。
+ */
+static float AttitudeFeedforward_Update(float pid_output, float dt) {
+	float desired_accel_rad_s2;
+	float actual_accel_rad_s2;
+	float yaw_inertia_kg_m2;
+	float torque_nm;
+	float torque_to_omega;
+
+	if (!attitude_pid_output_valid) {
+		attitude_last_pid_output = pid_output;
+		attitude_pid_output_valid = 1U;
+		return 0.0f;
+	}
+
+	desired_accel_rad_s2 =
+	        (pid_output - attitude_last_pid_output) / dt;
+	desired_accel_rad_s2 = ClampFloat(desired_accel_rad_s2,
+	        -ATTITUDE_FF_MAX_ACCEL_RAD_S2, ATTITUDE_FF_MAX_ACCEL_RAD_S2);
+	actual_accel_rad_s2 = odometer_ctx.motion.yaw_accel_dps2 *
+	        0.017453292519943295f;
+	yaw_inertia_kg_m2 = CHASSIS_MASS_KG *
+	        (chassis_config.wheel_dist_x * chassis_config.wheel_dist_x +
+	         chassis_config.wheel_dist_y * chassis_config.wheel_dist_y) /
+	        3.0f + CHASSIS_MASS_KG *
+	        (CHASSIS_CENTER_OF_MASS_X_M * CHASSIS_CENTER_OF_MASS_X_M +
+	         CHASSIS_CENTER_OF_MASS_Y_M * CHASSIS_CENTER_OF_MASS_Y_M);
+	torque_nm = yaw_inertia_kg_m2 * (desired_accel_rad_s2 +
+	        ATTITUDE_ACCEL_FEEDBACK_GAIN *
+	                (desired_accel_rad_s2 - actual_accel_rad_s2));
+	torque_to_omega = POSITION_FORCE_TO_SPEED_FF_MPS_PER_N /
+	        (k_omega * k_omega);
+	attitude_last_pid_output = pid_output;
+
+	return ClampFloat(torque_nm * torque_to_omega,
+	        -ATTITUDE_FF_MAX_OMEGA_RAD_S, ATTITUDE_FF_MAX_OMEGA_RAD_S);
 }
 
 static float PositionSpeedPlan_Update(float distance_error_m, float dt) {
@@ -291,6 +341,15 @@ void PositionControl_SetMaxSpeed(float max_speed_mps) {
 }
 
 void SetTargetPosition(float x, float y) {
+	if (ai_tune_apply_pending()) {
+		const ai_tune_param_t *param = ai_tune_get_active();
+
+		position_control.pid_x.Kp = param->kp;
+		position_control.pid_x.Kd = param->kd;
+		position_control.pid_y.Kp = param->kp;
+		position_control.pid_y.Kd = param->kd;
+	}
+	ai_tune_segment_start();
 	/* 目标点单位 mm，来自任务路径表；控制计算内部统一换算为 m。 */
 	Is_vel_mode = 1;
 	position_control.target_x = x;
@@ -356,6 +415,7 @@ void UpdatePositionControl(float dt) {
 	/* 规划速度沿目标方向进入速度命令，加速度前馈补偿动态跟踪误差。 */
 	float plan_speed = PositionSpeedPlan_Update(distance_error, dt);
 	PositionAccelerationFeedback_Update(dt);
+	const ai_tune_param_t *param = ai_tune_get_active();
 	float plan_vx = 0.0f;
 	float plan_vy = 0.0f;
 	float feedforward_vx = 0.0f;
@@ -368,6 +428,15 @@ void UpdatePositionControl(float dt) {
 	                              sinf(current_yaw_rad) +
 	                      position_feedback_accel_y_mps2 *
 	                              cosf(current_yaw_rad);
+	float yaw_rate_rad_s = odometer_ctx.motion.yaw_rate_dps *
+	        0.017453292519943295f;
+	float yaw_accel_rad_s2 = odometer_ctx.motion.yaw_accel_dps2 *
+	        0.017453292519943295f;
+	/* 质心偏置在转动时产生切向和向心加速度，叠加到车体中心的平移期望加速度。 */
+	float com_accel_x_local = -yaw_accel_rad_s2 * CHASSIS_CENTER_OF_MASS_Y_M -
+	        yaw_rate_rad_s * yaw_rate_rad_s * CHASSIS_CENTER_OF_MASS_X_M;
+	float com_accel_y_local = yaw_accel_rad_s2 * CHASSIS_CENTER_OF_MASS_X_M -
+	        yaw_rate_rad_s * yaw_rate_rad_s * CHASSIS_CENTER_OF_MASS_Y_M;
 	if (distance_error > raceh) {
 		plan_vx = error_x_local * plan_speed / distance_error;
 		plan_vy = error_y_local * plan_speed / distance_error;
@@ -376,13 +445,15 @@ void UpdatePositionControl(float dt) {
 		float desired_accel_y_local = error_y_local *
 		        position_plan_accel_mps2 / distance_error;
 		float force_x_n = CHASSIS_MASS_KG *
-		        (desired_accel_x_local + POSITION_ACCEL_FEEDBACK_GAIN *
+		        (desired_accel_x_local + com_accel_x_local +
+		                param->accel_feedback_gain *
 		                (desired_accel_x_local - accel_x_local));
 		float force_y_n = CHASSIS_MASS_KG *
-		        (desired_accel_y_local + POSITION_ACCEL_FEEDBACK_GAIN *
+		        (desired_accel_y_local + com_accel_y_local +
+		                param->accel_feedback_gain *
 		                (desired_accel_y_local - accel_y_local));
-		feedforward_vx = force_x_n * POSITION_FORCE_TO_SPEED_FF_MPS_PER_N;
-		feedforward_vy = force_y_n * POSITION_FORCE_TO_SPEED_FF_MPS_PER_N;
+		feedforward_vx = force_x_n * param->force_to_speed_ff;
+		feedforward_vy = force_y_n * param->force_to_speed_ff;
 	}
 	float feedback_vx =
 	        PID_Update(&position_control.pid_x, error_x_local, dt);
@@ -400,10 +471,10 @@ void UpdatePositionControl(float dt) {
 	}
 	if ((distance_error > raceh) &&
 	        (distance_error <= POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M) &&
-	        (feedback_speed < POSITION_STATIC_FRICTION_SPEED_MPS)) {
+	        (feedback_speed < param->static_friction_speed_mps)) {
 		/* 近点误差沿目标方向叠加最小有效速度，克服底盘静摩擦。 */
 		float static_friction_scale =
-		        POSITION_STATIC_FRICTION_SPEED_MPS / distance_error;
+		        param->static_friction_speed_mps / distance_error;
 		feedforward_vx += error_x_local * static_friction_scale;
 		feedforward_vy += error_y_local * static_friction_scale;
 	}
@@ -425,8 +496,43 @@ void UpdatePositionControl(float dt) {
 
 	vx_local *= pose_coordination.sync_scale;
 	vy_local *= pose_coordination.sync_scale;
+	if (ai_tune_guard_update(distance_error, linear_speed, dt)) {
+		vx_local = 0.0f;
+		vy_local = 0.0f;
+	}
+	{
+		ai_tune_telemetry_t telemetry = {
+		        .time_ms = HAL_GetTick(),
+		        .target_x_m = target_x_global,
+		        .target_y_m = target_y_global,
+		        .position_x_m = current_x_global,
+		        .position_y_m = current_y_global,
+		        .error_x_local_m = error_x_local,
+		        .error_y_local_m = error_y_local,
+		        .velocity_x_mps = odometer_ctx.motion.vel_x_mps,
+		        .velocity_y_mps = odometer_ctx.motion.vel_y_mps,
+		        .plan_accel_mps2 = position_plan_accel_mps2,
+		        .accel_x_mps2 = accel_x_local,
+		        .accel_y_mps2 = accel_y_local,
+		        .feedforward_vx_mps = feedforward_vx,
+		        .feedforward_vy_mps = feedforward_vy,
+		        .feedback_vx_mps = feedback_vx,
+		        .feedback_vy_mps = feedback_vy,
+		        .command_vx_mps = vx_local,
+		        .command_vy_mps = vy_local,
+		        .motor_rpm = {motor1.speed_rpm, motor2.speed_rpm,
+		                motor3.speed_rpm, motor4.speed_rpm},
+		        .position_reached = IsPositionControlFinished(raceh),
+		};
+
+		ai_tune_send_telemetry(&telemetry);
+	}
 	/* 世界系误差经 yaw 旋转后，局部 vx/vy 按同名轴传入麦轮逆解。 */
 	SetTargetLinearVelocity(vx_local, vy_local);
+	if (ai_tune_is_guarded()) {
+		PositionControl_Enable(0U);
+		return;
+	}
 
 	if (IsPositionControlFinished(raceh)) {
 		testflag = 1;
@@ -452,6 +558,7 @@ void AttitudeStabilization_Init(void) {
 	PID_Init(&attitude_control.yaw_pid, ATTITUDE_PID_DEFAULT_KP,
 	        ATTITUDE_PID_DEFAULT_KI, ATTITUDE_PID_DEFAULT_KD,
 	        ATTITUDE_PID_MAX_OUTPUT);
+	attitude_pid_output_valid = 0U;
 
 	isPosture_correction = 0;
 
@@ -470,6 +577,7 @@ void SetTargetYaw(float target) {
 
 	attitude_control.yaw_pid.integral = 0.0f;
 	attitude_control.yaw_pid.prev_error = 0.0f;
+	attitude_pid_output_valid = 0U;
 }
 uint8_t IsYawReached(float target_yaw, float tolerance_degrees) {
 	float current_yaw = odometer_get_yaw_deg();
@@ -496,12 +604,14 @@ void EnableAttitudeStabilization(uint8_t enable) {
 
 		attitude_control.yaw_pid.integral = 0.0f;
 		attitude_control.yaw_pid.prev_error = 0.0f;
+		attitude_pid_output_valid = 0U;
 	}
 }
 
 void UpdateAttitudeStabilization(float dt) {
 	if (!attitude_control.is_enabled || dt <= 0) {
 		attitude_correction = 0.0f;
+		attitude_pid_output_valid = 0U;
 		return;
 	}
 
@@ -520,11 +630,14 @@ void UpdateAttitudeStabilization(float dt) {
 		error = 0.0f;
 		attitude_control.yaw_pid.integral = 0.0f;
 		attitude_correction = 0.0f;
+		attitude_pid_output_valid = 0U;
 		return;
 	}
 
-	attitude_correction =
-	        PID_Update_angle(&attitude_control.yaw_pid, error, dt);
+	float pid_output = PID_Update_angle(&attitude_control.yaw_pid, error, dt);
+	attitude_correction = ClampFloat(pid_output +
+	        AttitudeFeedforward_Update(pid_output, dt),
+	        -ATTITUDE_PID_MAX_OUTPUT, ATTITUDE_PID_MAX_OUTPUT);
 	attitude_correction *= pose_coordination.sync_scale;
 }
 
@@ -812,9 +925,6 @@ uint8_t CamStabilizationToCenter(
 
 	return 0;
 }
-static ChassisConfig_t chassis_config;
-static float k_omega;
-
 void SetTargetVelocity(float vx, float vy, float omega) {
 	/* 实时任务只写目标速度，实际电机输出在固定周期里统一发送。 */
 	target_velocity.vx = vx;
@@ -1230,7 +1340,7 @@ void run_task1(void) {
 	case 23: task1_go_material_point(5, 5); break;            /* e 点取第 5 个物料。 */
 	case 24: task1_wait_vision(5); break;
 	case 25: task1_relative_action(0, 0U); break;
-	case 26: task1_go_second_qrcode(); break;                 /* 途经二维码点 2。 */
+	case 126: task1_go_second_qrcode(); break;                 /* 途经二维码点 2。 */
 	case 27: task1_go_trophy_transition(); break;              /* 前往奖杯开环动作过渡点。 */
 	case 28: task1_pick_trophies(); break;                    /* 连续拾取三个奖杯。 */
 	case 31: task1_go_second_podium(); break;                 /* 亚军台。 */
@@ -1375,12 +1485,12 @@ static void task1_prepare_material_turnplate(void) {
 	HAL_Delay(550);
 	
 	Move_to_turnplate(4);
-	SetTargetVelocity(-0.8f, 0.0f, -1.928f);
+	SetTargetVelocity(-0.8f, 0.0f, -1.924f);
 	HAL_Delay(600);
 	Get_Materialcolor(0U);
 	HAL_Delay(300);
 	Move_to_turnplate(5);
-	SetTargetVelocity(-0.8f, 0.0f, -1.748);
+	SetTargetVelocity(-0.8f, 0.0f, -1.730);
 	HAL_Delay(600);
 	Get_Materialcolor(1U);
 	HAL_Delay(100);
@@ -1555,11 +1665,11 @@ static void task1_pick_trophies(void) {
 	HAL_Delay(300);
 	Move_to_turnplate(4);
 	HAL_Delay(300);
-	SetTargetVelocity(-0.8f, 0.0f, 1.6f);
-	HAL_Delay(700);
+	SetTargetVelocity(-0.8f, 0.0f, 1.64f);
+	HAL_Delay(400);
 
 	Move_to_turnplate(3);
-		HAL_Delay(200);
+		HAL_Delay(500);
 
 	HAL_Delay(250);
 
