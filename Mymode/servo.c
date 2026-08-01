@@ -236,9 +236,9 @@ void Servo_Action_Group(uint8_t num){
 		uint16_t pwm13last = 1460;
 		uint16_t pwm14last = 1880;
 
-		for(uint8_t i = 1;i<=100;i++){
-			__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, pwm13last-i*(pwm13last-1380)/100);
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, pwm14last-i*(pwm14last-1520)/100);
+		for(uint8_t i = 1;i<=200;i++){
+			__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, pwm13last-i*(pwm13last-1380)/200);
+			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, pwm14last-i*(pwm14last-1520)/200);
 			HAL_Delay(2);
 		}
 	}
@@ -250,9 +250,9 @@ void Servo_Action_Group(uint8_t num){
 		uint16_t pwm13last = 1390;
 		uint16_t pwm14last = 1860;
 
-		for(uint8_t i = 1;i<=100;i++){
-			__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, pwm13last-i*(pwm13last-1260)/100);
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, pwm14last-i*(pwm14last-1700)/100);
+		for(uint8_t i = 1;i<=200;i++){
+			__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, pwm13last-i*(pwm13last-1260)/200);
+			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, pwm14last-i*(pwm14last-1700)/200);
 			HAL_Delay(2);
 		}
 	}

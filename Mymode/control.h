@@ -10,7 +10,7 @@
 
 /* 姿态控制参数 */
 #define ATTITUDE_DEAD_ZONE_DEG 0.1f    /* 姿态闭环死区，单位 deg */
-#define ATTITUDE_PID_DEFAULT_KP 0.76f  /* 姿态角度环比例系数 */
+#define ATTITUDE_PID_DEFAULT_KP 0.36f  /* 姿态角度环比例系数 */
 #define ATTITUDE_PID_DEFAULT_KI 0.0f   /* 姿态角度环积分系数 */
 #define ATTITUDE_PID_DEFAULT_KD 0.0151f /* 姿态角度环微分系数 */
 #define ATTITUDE_PID_MAX_OUTPUT 6.0f   /* 姿态角度环输出上限，单位 rad/s */

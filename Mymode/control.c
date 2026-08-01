@@ -1364,23 +1364,23 @@ static void task1_prepare_material_turnplate(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(-0.8f, 0.0f, -3.123f);
+	SetTargetVelocity(-0.8f, 0.0f, -3.121f);
 	HAL_Delay(300);
 	Move_to_turnplate(2);
 	HAL_Delay(600);
 	
-	SetTargetVelocity(-0.8f, 0.0f, -1.56f);
+	SetTargetVelocity(-0.8f, 0.0f, -1.55f);
 	HAL_Delay(200);
 	Move_to_turnplate(3);
 	HAL_Delay(550);
 	
 	Move_to_turnplate(4);
-	SetTargetVelocity(-0.8f, 0.0f, -1.94f);
+	SetTargetVelocity(-0.8f, 0.0f, -1.928f);
 	HAL_Delay(600);
 	Get_Materialcolor(0U);
-	HAL_Delay(200);
+	HAL_Delay(300);
 	Move_to_turnplate(5);
-	SetTargetVelocity(-0.8f, 0.0f, -1.770);
+	SetTargetVelocity(-0.8f, 0.0f, -1.748);
 	HAL_Delay(600);
 	Get_Materialcolor(1U);
 	HAL_Delay(100);
@@ -1465,20 +1465,8 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 
 	if (task1_vision_timeout) {
 		task1_vision_timeout = 0U;
-		if (!skip_pos_move) {
-			POS_move();
-		}
-		if (servo_after != 0U) {
-			Servo_Action_Group(servo_after);
-		}
-		if (delay_after_ms > 0U) {
-			HAL_Delay(delay_after_ms);
-		}
-		task1_next_step();
-		return;
-	}
-
-	if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE, max_min_error)) {
+	} else if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE,
+	        max_min_error)) {
 		return;
 	}
 
@@ -1508,14 +1496,20 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1,
 		        control_ctx.material_pwm[material_index - 1U]);
-		HAL_Delay(1800- (material_index- 1) * 300);
+		HAL_Delay(1900- (material_index- 1) * 300);
 	}
 	
 	if (!skip_pos_move) {
 		POS_move();
 	}
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
+	
+	if (task1_state.current_step != 25U){
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
+	}else{
+		Move_to_turnplate(5);
+	}
+	
 	if (servo_after != 0U) {
 		Servo_Action_Group(servo_after);
 	}
@@ -1559,17 +1553,16 @@ static void task1_pick_trophies(void) {
 
 	SetTargetVelocity(-0.8f, 0.0f, 1.85f);
 	HAL_Delay(300);
-	Move_to_turnplate(3);
+	Move_to_turnplate(4);
 	HAL_Delay(300);
-	SetTargetVelocity(-0.8f, 0.0f, 1.65f);
-	HAL_Delay(600);
-	HAL_Delay(300);
+	SetTargetVelocity(-0.8f, 0.0f, 1.6f);
+	HAL_Delay(700);
+
 	Move_to_turnplate(3);
-	
+		HAL_Delay(200);
 
 	HAL_Delay(250);
 
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 2500);
 	MotionState_Reset();
 	HAL_Delay(100);
 	task1_state.current_step = 31;
