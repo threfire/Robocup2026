@@ -12,7 +12,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2330, 2060, 1760, 1460, 1180, 880, 600},
+        .material_pwm = { 2390, 2430-290*1, 2430-290*2, 2430-290*3, 2430-290*4 +10, 2430-290*5, 2430-290*6},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -27,12 +27,11 @@ static const Point2D_t task1_targets[] = {
         {471.22f, 615.22f, -68.0f},       /* 索引 4：点 5，物料 d。 */
         {974.56f, 686.34f, -68.0f},       /* 索引 5：点 6，物料 e。 */
         {650.0f, 250.25f, 0.0f},          /* 索引 6：点 7，二维码 2。 */
-        {1021.66f + 10.0f, 348.24f, -145.0f},      /* 索引 7：点 8，二维码 2 至奖杯开环动作过渡位姿。 */
-        {270.0f-00.0f, 1710.0f, -90.0f},        /* 索引 8：点 9，亚军奖台。 */
-        {0.0f-00.0f, 1695.0f, -90.0f},          /* 索引 9：点 10，冠军奖台。 */
-        {-270.0f-00.0f, 1715.0f, -90.0f},         /* 索引 10：点 11，季军奖台。 */
-        {0.0f, 1000.0f, -90.0f},            /* 索引 11：点 12，返航过渡点。 */
-        {0.0f, -10.0f, -90.0f},             /* 索引 12：点 13，起始点。 */
+        {1021.66f + 80.0f, 348.24f, -145.0f},      /* 索引 7：点 8，二维码 2 至奖杯开环动作过渡位姿。 */
+        {270.0f-25.0f, 1710.0f + 20.0f, -90.0f},        /* 索引 8：点 9，亚军奖台。 */
+        {0.0f-25.0f, 1695.0f + 20.0f, -90.0f},          /* 索引 9：点 10，冠军奖台。 */
+        {-270.0f-25.0f, 1715.0f + 20.0f, -90.0f},         /* 索引 10：点 11，季军奖台。 */
+        {0.0f, -20.0f, -90.0f},             /* 索引 11：起始点。 */
 
 };
 
@@ -56,34 +55,37 @@ void Move_to_turnplate(uint8_t num) {
  *
  * @param material_index 当前需要的物料或奖杯序号，从 1 开始。
  */
-static void task1_select_material_turnplate(uint8_t material_index) {
+static uint8_t task1_select_material_turnplate(uint8_t material_index) {
 	uint8_t i;
 
 	if (tasknum == 1U) {
 		if (qanum == 0U || qanum > 16U || material_index == 0U ||
 		        material_index > 5U || !is_hasgetcolor) {
-			return;
+			return 0U;
 		}
 
 		for (i = 0U; i < 5U; i++) {
 			if (task1_scheme[qanum - 1U][material_index - 1U] ==
 			        detected_colors[i]) {
 				Move_to_turnplate(i + 1U);
-				return;
+				return (uint8_t)(i + 1U);
 			}
 		}
-		return;
+		return 0U;
 	}
 
 	if (tasknum == 2U && qanum > 0U && qanum <= 6U &&
 	        material_index > 0U && material_index <= 3U) {
 		for (i = 0U; i < 3U; i++) {
 			if (task2_scheme[qanum - 1U][i] == material_index) {
-				Move_to_turnplate(i + 1U);
-				return;
+				uint8_t target_slot = (uint8_t)(i + 3U);
+				Move_to_turnplate(target_slot);
+				return target_slot;
 			}
 		}
 	}
+
+	return 0U;
 }
 void Pos_moveconctrl(uint8_t dir, uint16_t vel, uint16_t clk) {
 	/* EMM 位置模式用于局部前后微动，clk 单位为脉冲。 */
@@ -246,10 +248,10 @@ static float PositionSpeedPlan_Update(float distance_error_m, float dt) {
 void PositionControl_Init(void) {
 	/* 位置环只控制 x/y 平移，yaw 由姿态环单独闭环。 */
 	PID_Init(&position_control.pid_x, POSITION_PID_DEFAULT_KP, 0.00f,
-	        POSITION_PID_DEFAULT_KD, HIGHSPEED);
+	        POSITION_PID_DEFAULT_KD, HIGHESTSPEED);
 
 	PID_Init(&position_control.pid_y, POSITION_PID_DEFAULT_KP, 0.00f,
-	        POSITION_PID_DEFAULT_KD, HIGHSPEED);
+	        POSITION_PID_DEFAULT_KD, HIGHESTSPEED);
 
 	position_control.is_enabled = 0;
 	position_control.target_x = 0.0f;
@@ -445,7 +447,7 @@ float GetAttitudeCorrection(void) {
 }
 void AttitudeStabilization_Init(void) {
 	/* 姿态环使用里程计融合后的世界系 yaw，输出叠加到麦轮 omega。 */
-	PID_Init(&attitude_control.yaw_pid, 0.26f, 0.0f, 0.0051f, 6.0f);
+	PID_Init(&attitude_control.yaw_pid, 0.46f, 0.0f, 0.0051f, 6.0f);
 
 	isPosture_correction = 0;
 
@@ -1181,10 +1183,9 @@ static void task1_pick_trophies(void);
 static void task1_go_second_podium(void);
 static void task1_go_champion_podium(void);
 static void task1_go_third_podium(void);
-static void task1_go_podium_point(uint8_t target_index, float y_offset_mm,
-        uint8_t arrive_servo, uint8_t turnplate_num, uint8_t prepare_servo,
+static void task1_go_podium_point(uint8_t target_index,
+        uint8_t arrive_servo, uint8_t prepare_servo,
         float prepare_tolerance_m);
-static void task1_go_return_transition(void);
 static void task1_go_home(void);
 
 void start_task1(void) {
@@ -1235,8 +1236,7 @@ void run_task1(void) {
 	case 37: task1_go_third_podium(); break;                 /* 季军台。 */
 	case 38: task1_wait_vision(10); break;
 	case 39: task1_relative_action(0, 0U); break;
-	case 40: task1_go_return_transition(); break;             /* 返航过渡点。 */
-	case 41: task1_go_home(); break;                          /* 回起始点。 */
+	case 40: task1_go_home(); break;                          /* 直接回起始点。 */
 	default: task1_finish(); break;
 	}
 }
@@ -1319,7 +1319,10 @@ static void task1_go_first_qrcode(void) {
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 	if (task1_move_target(0, 0.0f, 0.0f)) {
 		Servo_Action_Group(2);
-		
+		if (qanum == 0U) {
+			return;
+		}
+
 		task1_next_step();
 	}
 
@@ -1366,24 +1369,23 @@ static void task1_prepare_material_turnplate(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(-0.8f, 0.0f, -3.1450f);
+	SetTargetVelocity(-0.8f, 0.0f, -3.2f);
 	HAL_Delay(300);
 	Move_to_turnplate(2);
 	HAL_Delay(600);
 	
-	SetTargetVelocity(-0.8f, 0.0f, -1.40f);
-	HAL_Delay(100);
+	SetTargetVelocity(-0.8f, 0.0f, -1.47f);
+	HAL_Delay(200);
 	Move_to_turnplate(3);
-	HAL_Delay(650);
+	HAL_Delay(550);
 	
 	Move_to_turnplate(4);
-	SetTargetVelocity(-0.8f, 0.0f, -1.95f);
-	HAL_Delay(550);
+	SetTargetVelocity(-0.8f, 0.0f, -1.97f);
+	HAL_Delay(600);
 	Get_Materialcolor(0U);
-	HAL_Delay(100);
+	HAL_Delay(200);
 	Move_to_turnplate(5);
-	HAL_Delay(100);
-	SetTargetVelocity(-0.8f, 0.0f, -1.80);
+	SetTargetVelocity(-0.8f, 0.0f, -1.82);
 	HAL_Delay(600);
 	Get_Materialcolor(1U);
 	HAL_Delay(100);
@@ -1430,7 +1432,7 @@ static void task1_go_material_point(
 			Get_Materialcolor(3U);
 			Get_Materialcolor(4U);
 			__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
-			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 760);
+			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
 			task1_fourth_color_state = 2U;
 		}
 	}
@@ -1462,9 +1464,15 @@ static void task1_wait_vision(uint8_t point_index) {
  * @param delay_after_ms 舵机动作后的等待时间，单位 ms。
  */
 static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) {
+	uint8_t skip_pos_move =
+	        (task1_state.current_step == 13U ||
+	         task1_state.current_step == 19U);
+
 	if (task1_vision_timeout) {
 		task1_vision_timeout = 0U;
-		POS_move();
+		if (!skip_pos_move) {
+			POS_move();
+		}
 		if (servo_after != 0U) {
 			Servo_Action_Group(servo_after);
 		}
@@ -1478,6 +1486,25 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 	if (!CamStabilizationToCenter(TOLERANCE, TOLERANCE, max_min_error)) {
 		return;
 	}
+
+	if ((task1_state.current_step == 33U) ||
+	        (task1_state.current_step == 36U) ||
+	        (task1_state.current_step == 39U)) {
+		static const uint8_t podium_table_index[3] = {2U, 0U, 1U};
+		uint8_t podium_order =
+		        (uint8_t)((task1_state.current_step - 33U) / 3U);
+		uint8_t material_index = 0U;
+		if (qanum > 0U && qanum <= 6U && podium_order < 3U) {
+			material_index = (uint8_t)task2_scheme[qanum - 1U]
+			        [podium_table_index[podium_order]];
+		}
+		uint8_t target_slot =
+		        task1_select_material_turnplate(material_index);
+		if (target_slot != 0U) {
+			uint8_t slot_distance = (uint8_t)(6U - target_slot);
+			HAL_Delay((uint32_t)slot_distance * 300U);
+		}
+	}
 	
 	if (task1_state.current_step >= 13U &&
 	        task1_state.current_step <= 25U) {
@@ -1489,9 +1516,11 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		HAL_Delay(1800- (material_index- 1) * 300);
 	}
 	
-	POS_move();
+	if (!skip_pos_move) {
+		POS_move();
+	}
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 760);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
 	if (servo_after != 0U) {
 		Servo_Action_Group(servo_after);
 	}
@@ -1509,7 +1538,7 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 static void task1_go_second_qrcode(void) {
 	tasknum = 2;
 	if (task1_move_target(6, 0.0f, 0.0f)) {
-		Move_to_turnplate(3);
+		Move_to_turnplate(5);
 		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 		task1_next_step();
 	}
@@ -1533,18 +1562,19 @@ static void task1_pick_trophies(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(-1.0f, 0.0f, 2.27f);
-	HAL_Delay(500);
-	Move_to_turnplate(2);
-	SetTargetVelocity(-1.0f, 0.0f, 2.08f);
-	HAL_Delay(500);
+	SetTargetVelocity(-0.8f, 0.0f, 1.85f);
+	HAL_Delay(300);
+	Move_to_turnplate(3);
+	HAL_Delay(300);
+	SetTargetVelocity(-0.8f, 0.0f, 1.65f);
+	HAL_Delay(600);
+	HAL_Delay(300);
+	Move_to_turnplate(3);
+	
 
-	Move_to_turnplate(1);
-	HAL_Delay(450);
+	HAL_Delay(250);
 
-	HAL_Delay(100);
-
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[1] + 200);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 2500);
 	MotionState_Reset();
 	HAL_Delay(100);
 	task1_state.current_step = 31;
@@ -1554,69 +1584,60 @@ static void task1_pick_trophies(void) {
 /**
  * @brief 前往亚军台。
  *
- * 接近途中先展开舵机 5，到点后执行舵机 6 并切第 1 个奖杯位。
+ * 接近途中先展开舵机 5，到点后执行舵机 6 。
  */
 static void task1_go_second_podium(void) {
-	task1_go_podium_point(8, 15.0f, 6, 1, 5, 0.6f);
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	task1_go_podium_point(8, 6, 5, 0.6f);
 }
 
 /**
- * @brief 前往冠军台，到点后执行舵机 4 并切第 2 个奖杯位。
+ * @brief 前往冠军台，到点后执行舵机 4 。
  */
 static void task1_go_champion_podium(void) {
-	task1_go_podium_point(9, 15.0f, 4, 2, 0, 0.0f);
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	task1_go_podium_point(9, 4, 0, 0.0f);
 }
 
 /**
- * @brief 前往季军台，到点后执行舵机 7 并切第 3 个奖杯位。
+ * @brief 前往季军台，到点后执行舵机 7 。
  */
 static void task1_go_third_podium(void) {
-	task1_go_podium_point(10, 25.0f, 7, 3, 0, 0.0f);
+	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	task1_go_podium_point(10, 7, 0, 0.0f);
 }
 
 /**
  * @brief 移动到奖台点。
  *
  * @param target_index task1_targets 下标。
- * @param y_offset_mm Y 方向附加偏移，单位 mm。
  * @param arrive_servo 到点后的舵机动作组。
  * @param turnplate_num 到点后切换的奖杯转盘位。
  * @param prepare_servo 接近途中提前执行的舵机动作组，0 表示不执行。
  * @param prepare_tolerance_m 提前动作触发容差，单位 m。
  */
-static void task1_go_podium_point(uint8_t target_index, float y_offset_mm,
-        uint8_t arrive_servo, uint8_t turnplate_num, uint8_t prepare_servo,
+static void task1_go_podium_point(uint8_t target_index,
+        uint8_t arrive_servo, uint8_t prepare_servo,
         float prepare_tolerance_m) {
-	if (task1_move_target(target_index, y_offset_mm, -90.0f)) {
+	if (task1_move_target(target_index, 0.0f, -90.0f)) {
 		Servo_Action_Group(arrive_servo);
-		task1_select_material_turnplate(turnplate_num);
 		task1_next_step();
 		return;
 	}
 
 	if (prepare_servo != 0U && IsPositionReached(prepare_tolerance_m)) {
 		Servo_Action_Group(prepare_servo);
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
 	}
 }
 
 /**
- * @brief 返回起点前的过渡点。
- */
-static void task1_go_return_transition(void) {
-	raceh = POSITION_RETURN_REACHED_TOLERANCE_M;
-	if (task1_move_target(11, 0.0f, -90.0f)) {
-		task1_state.current_step = 41;
-		task1_state.step_start = HAL_GetTick();
-	}
-}
-
-/**
- * @brief 返回起始点并恢复精细到达容差。
+ * @brief 直接返回起始点并恢复精细到达容差。
  */
 static void task1_go_home(void) {
 	raceh = POSITION_FINE_REACHED_TOLERANCE_M;
-	if (task1_move_target(12, 0.0f, -90.0f)) {
-		task1_next_step();
+	if (task1_move_target(11, 0.0f, -90.0f)) {
+		task1_finish();
 	}
 }
 /***********Task1***************/

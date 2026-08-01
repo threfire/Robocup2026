@@ -25,7 +25,7 @@ void Process_usart1_packet(void) {
 			int16_t x_coord = camera_packet[3] + camera_packet[4];
 			int16_t y_coord = camera_packet[5] + camera_packet[6];
 			Camera_err.x = 180 - x_coord;	//加是目标点往右
-			Camera_err.y = 124 - y_coord;	//加是目标点往前
+			Camera_err.y = 125 - y_coord;	//加是目标点往前
 			Is_coordgot = 1U;
 		}
 	}
