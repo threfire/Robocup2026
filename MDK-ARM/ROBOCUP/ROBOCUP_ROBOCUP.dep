@@ -72,11 +72,11 @@ I (../UserDrivers/key.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_spi_154.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_fonts.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_image.h)(0x6A2FCA62)
-I (../Mymode/control.h)(0x6A6D32CC)
+I (../Mymode/control.h)(0x6A6D5D5E)
 I (../Mymode/woniudonghua.h)(0x67E82D2E)
 I (../Mymode/usart_manager.h)(0x6A4F0727)
 I (../Mymode/userkey.h)(0x67E93B4A)
-I (../Mymode/servo.h)(0x6A2FCA62)
+I (../Mymode/servo.h)(0x6A6D42E2)
 I (../Mymode/odometer.h)(0x6A6C384F)
 I (../Mymode/graysensor.h)(0x6885E90C)
 I (../Mymode/mxcam.h)(0x6A4F0727)
@@ -565,7 +565,7 @@ I (../Core/Inc/stm32f4xx_it.h)(0x6A6B7754)
 I (../Core/Inc/usart.h)(0x6A6B7753)
 I (../Mymode/QAma.h)(0x6A6C7BA4)
 I (../Mymode/odometer.h)(0x6A6C384F)
-I (../Mymode/control.h)(0x6A6D32CC)
+I (../Mymode/control.h)(0x6A6D5D5E)
 F (../Core/Src/stm32f4xx_hal_msp.c)(0x6A5763D7)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\stm32f4xx_hal_msp.o --omf_browse robocup\stm32f4xx_hal_msp.crf --depend robocup\stm32f4xx_hal_msp.d)
 I (../Core/Inc/main.h)(0x6A6B7754)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x67CFC4DC)
@@ -1777,7 +1777,7 @@ I (../Core/Inc/can.h)(0x6A583783)
 I (../Core/Inc/tim.h)(0x6A6B7753)
 I (../Core/Inc/adc.h)(0x68CA95A8)
 I (../Mymode/useradc.h)(0x68D260C6)
-I (..\Mymode\control.h)(0x6A6D32CC)
+I (..\Mymode\control.h)(0x6A6D5D5E)
 F (..\Mymode\mxcam.h)(0x6A4F0727)()
 F (..\Mymode\usart_manager.c)(0x6A2FCA62)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\usart_manager.o --omf_browse robocup\usart_manager.crf --depend robocup\usart_manager.d)
 I (..\Mymode\usart_manager.h)(0x6A4F0727)
@@ -1832,8 +1832,8 @@ I (../UserDrivers/lcd_fonts.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_image.h)(0x6A2FCA62)
 I (..\Mymode\mxcam.h)(0x6A4F0727)
 I (D:\Keil5\ARM\ARMCC\include\string.h)(0x588B8344)
-F (..\Mymode\control.c)(0x6A6D3BC6)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\control.o --omf_browse robocup\control.crf --depend robocup\control.d)
-I (..\Mymode\control.h)(0x6A6D32CC)
+F (..\Mymode\control.c)(0x6A6D5D1D)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\control.o --omf_browse robocup\control.crf --depend robocup\control.d)
+I (..\Mymode\control.h)(0x6A6D5D5E)
 I (../Core/Inc/main.h)(0x6A6B7754)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x67CFC4DC)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x6A5763D7)
@@ -1885,17 +1885,17 @@ I (../Core/Inc/usart.h)(0x6A6B7753)
 I (../UserDrivers/lcd_fonts.h)(0x6A2FCA62)
 I (../UserDrivers/lcd_image.h)(0x6A2FCA62)
 I (..\Mymode\odometer.h)(0x6A6C384F)
-I (..\Mymode\servo.h)(0x6A2FCA62)
+I (..\Mymode\servo.h)(0x6A6D42E2)
 I (..\Mymode\graysensor.h)(0x6885E90C)
 I (..\Mymode\userkey.h)(0x67E93B4A)
 I (..\Mymode\mxcam.h)(0x6A4F0727)
 I (..\Mymode\QAma.h)(0x6A6C7BA4)
-F (..\Mymode\control.h)(0x6A6D32CC)()
+F (..\Mymode\control.h)(0x6A6D5D5E)()
 F (..\Mymode\ai_tune.c)(0x6A585971)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\ai_tune.o --omf_browse robocup\ai_tune.crf --depend robocup\ai_tune.d)
 I (..\Mymode\ai_tune.h)(0x6A583D1B)
 I (D:\Keil5\ARM\ARMCC\include\stdint.h)(0x691DDF33)
 I (D:\Keil5\ARM\ARMCC\include\string.h)(0x588B8344)
-I (..\Mymode\control.h)(0x6A6D32CC)
+I (..\Mymode\control.h)(0x6A6D5D5E)
 I (../Core/Inc/main.h)(0x6A6B7754)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x67CFC4DC)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x6A5763D7)
@@ -2042,7 +2042,7 @@ I (../Core/Inc/tim.h)(0x6A6B7753)
 I (../Core/Inc/adc.h)(0x68CA95A8)
 I (../Mymode/useradc.h)(0x68D260C6)
 F (..\Mymode\userkey.h)(0x67E93B4A)()
-F (..\Mymode\servo.c)(0x6A6D1FD3)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\servo.o --omf_browse robocup\servo.crf --depend robocup\servo.d)
+F (..\Mymode\servo.c)(0x6A6D4F4A)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\servo.o --omf_browse robocup\servo.crf --depend robocup\servo.d)
 I (../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h)(0x67CFC4DC)
 I (../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h)(0x67CFC4DC)
 I (../Drivers/CMSIS/Include/core_cm4.h)(0x67CFC48D)
@@ -2080,7 +2080,7 @@ I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h)(0x67CFC4DC)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h)(0x67CFC4DC)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h)(0x67CFC4DC)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h)(0x67CFC4DC)
-I (..\Mymode\servo.h)(0x6A2FCA62)
+I (..\Mymode\servo.h)(0x6A6D42E2)
 I (../Core/Inc/main.h)(0x6A6B7754)
 I (D:\Keil5\ARM\ARMCC\include\math.h)(0x588B8344)
 I (../UserDrivers/Emm_V5.h)(0x6A2FCA62)
@@ -2089,7 +2089,7 @@ I (../Core/Inc/can.h)(0x6A583783)
 I (../Core/Inc/tim.h)(0x6A6B7753)
 I (../Core/Inc/adc.h)(0x68CA95A8)
 I (../Mymode/useradc.h)(0x68D260C6)
-F (..\Mymode\servo.h)(0x6A2FCA62)()
+F (..\Mymode\servo.h)(0x6A6D42E2)()
 F (..\Mymode\QAma.c)(0x6A6C7E95)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../UserDrivers -I ../Mymode -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F-I.\RTE\_ROBOCUP-ID:\Keil5\ARM\PACK\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o robocup\qama.o --omf_browse robocup\qama.crf --depend robocup\qama.d)
 I (..\Mymode\QAma.h)(0x6A6C7BA4)
 I (../Core/Inc/main.h)(0x6A6B7754)

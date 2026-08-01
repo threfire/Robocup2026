@@ -63,6 +63,67 @@ void servo_init(void)
 //	duoji_doing_set(2,550,5000);
 }
 
+void servo_smooth_move_start(servo_smooth_move_t *move,
+        TIM_HandleTypeDef *htim, uint32_t channel, uint16_t start_pwm,
+        uint16_t target_pwm, uint32_t duration_ms)
+{
+    if (move == NULL || htim == NULL)
+    {
+        return;
+    }
+
+    move->htim = htim;
+    move->channel = channel;
+    move->start_pwm = start_pwm;
+    move->target_pwm = target_pwm;
+    move->start_time_ms = HAL_GetTick();
+    move->duration_ms = duration_ms;
+    move->active = (duration_ms > 0U);
+
+    __HAL_TIM_SetCompare(htim, channel, start_pwm);
+
+    if (!move->active)
+    {
+        __HAL_TIM_SetCompare(htim, channel, target_pwm);
+    }
+}
+
+void servo_smooth_move_update(servo_smooth_move_t *move)
+{
+    uint32_t elapsed_ms;
+    float progress;
+    float curve;
+    uint16_t pwm;
+
+    if (move == NULL || move->htim == NULL)
+    {
+        return;
+    }
+
+    if (!move->active)
+    {
+        __HAL_TIM_SetCompare(move->htim, move->channel,
+                move->target_pwm);
+        return;
+    }
+
+    elapsed_ms = HAL_GetTick() - move->start_time_ms;
+    if (elapsed_ms >= move->duration_ms)
+    {
+        __HAL_TIM_SetCompare(move->htim, move->channel, move->target_pwm);
+        move->active = 0U;
+        return;
+    }
+
+    progress = (float)elapsed_ms / (float)move->duration_ms;
+    /* 三次缓出曲线使 PWM 变化速率随时间逐步减小。 */
+    curve = 1.0f - (1.0f - progress) * (1.0f - progress) *
+            (1.0f - progress);
+    pwm = (uint16_t)((float)move->start_pwm +
+            ((float)move->target_pwm - (float)move->start_pwm) * curve);
+    __HAL_TIM_SetCompare(move->htim, move->channel, pwm);
+}
+
 /***********************************************
     功能介绍：	设置舵机控制参数函数
     函数参数：	index 舵机编号 aim 执行目标 time 执行时间(如果aim 执行目标==0，视为舵机停止)
@@ -159,7 +220,7 @@ void wuliaopanxuanzhuan(void)
 void Servo_Action_Group(uint8_t num){
 	if(num == 1){
 		__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1100);
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2260);
+		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2460);
 //		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 575);
 	}
 	if(num == 2){

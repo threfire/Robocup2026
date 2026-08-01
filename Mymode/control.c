@@ -12,7 +12,7 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2390, 2430-290*1, 2430-290*2, 2430-290*3, 2430-290*4 +10, 2430-290*5, 2430-290*6},
+        .material_pwm = { 2340, 2340-290*1, 2340-290*2, 2340-290*3, 2340-290*4 +10, 2340-290*5, 2340-290*6},
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,
@@ -40,6 +40,8 @@ static void MotionState_Reset(void);
 static uint8_t task1_vision_timeout;
 static uint32_t cam_stabilize_start_time;
 static uint8_t task1_fourth_color_state;
+static servo_smooth_move_t task1_qrcode_servo_move;
+static uint8_t task1_qrcode_servo_move_started;
 
 void Setmaixcam_mode(uint8_t ch) {
 	cammode = ch;
@@ -447,7 +449,9 @@ float GetAttitudeCorrection(void) {
 }
 void AttitudeStabilization_Init(void) {
 	/* 姿态环使用里程计融合后的世界系 yaw，输出叠加到麦轮 omega。 */
-	PID_Init(&attitude_control.yaw_pid, 0.46f, 0.0f, 0.0051f, 6.0f);
+	PID_Init(&attitude_control.yaw_pid, ATTITUDE_PID_DEFAULT_KP,
+	        ATTITUDE_PID_DEFAULT_KI, ATTITUDE_PID_DEFAULT_KD,
+	        ATTITUDE_PID_MAX_OUTPUT);
 
 	isPosture_correction = 0;
 
@@ -1196,6 +1200,8 @@ void start_task1(void) {
 	task1_state.step_start = HAL_GetTick();
 	task1_vision_timeout = 0U;
 	task1_fourth_color_state = 0U;
+	memset(&task1_qrcode_servo_move, 0, sizeof(task1_qrcode_servo_move));
+	task1_qrcode_servo_move_started = 0U;
 	is_hasgetcolor = 0U;
 }
 
@@ -1304,16 +1310,33 @@ static uint8_t task1_move_target(
 }
 
 /**
+ * @brief 二维码接近阶段平滑下压舵机。
+ *
+ * 剩余距离进入 0.50 m 时启动 500 ms 轨迹，PWM 由 2460 平滑减小至 1820。
+ */
+static void task1_qrcode_servo_slowdown(void) {
+	if (!task1_qrcode_servo_move_started && IsPositionReached(0.60f)) {
+		servo_smooth_move_start(&task1_qrcode_servo_move, &htim14,
+		        TIM_CHANNEL_1, 2460U, 1820U, 500);
+		task1_qrcode_servo_move_started = 1U;
+	}
+
+	servo_smooth_move_update(&task1_qrcode_servo_move);
+}
+
+/**
  * @brief 起步到第一个二维码点。
  *
- * 这里保留接近二维码点时的舵机分段下压，现场调动作只改本函数。
+ * 接近二维码点时启动 500 ms 的舵机缓出轨迹。
  */
 static void task1_go_first_qrcode(void) {
 
 	EnableAttitudeStabilization(1);
 	SetTargetYaw(0.0f);
 	Move_to_turnplate(1);
-	Servo_Action_Group(1);
+	if (!task1_qrcode_servo_move_started) {
+		Servo_Action_Group(1);
+	}
 	servo_init();
 	tasknum = 1;
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
@@ -1324,39 +1347,11 @@ static void task1_go_first_qrcode(void) {
 		}
 
 		task1_next_step();
+		HAL_Delay (50);
+		return;
 	}
 
-	/* 接近二维码点时逐段下压，减小末端一次动作带来的识别抖动。 */
-	if (IsPositionReached(0.50f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2060);
-	}
-	if (IsPositionReached(0.45f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1980);
-	}
-	if (IsPositionReached(0.40f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1930);
-	}
-	if (IsPositionReached(0.35f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1900);
-	}
-	if (IsPositionReached(0.30f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);
-	}
-	if (IsPositionReached(0.25f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);
-	}
-	if (IsPositionReached(0.20f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);
-	}
-	if (IsPositionReached(0.15f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1820);
-	}
-	if (IsPositionReached(0.10f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1810);
-	}
-	if (IsPositionReached(0.04f)) {
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);
-	}
+	task1_qrcode_servo_slowdown();
 }
 
 /**
@@ -1369,23 +1364,23 @@ static void task1_prepare_material_turnplate(void) {
 	PositionControl_Enable(0);
 	EnableAttitudeStabilization(0);
 
-	SetTargetVelocity(-0.8f, 0.0f, -3.2f);
+	SetTargetVelocity(-0.8f, 0.0f, -3.123f);
 	HAL_Delay(300);
 	Move_to_turnplate(2);
 	HAL_Delay(600);
 	
-	SetTargetVelocity(-0.8f, 0.0f, -1.47f);
+	SetTargetVelocity(-0.8f, 0.0f, -1.56f);
 	HAL_Delay(200);
 	Move_to_turnplate(3);
 	HAL_Delay(550);
 	
 	Move_to_turnplate(4);
-	SetTargetVelocity(-0.8f, 0.0f, -1.97f);
+	SetTargetVelocity(-0.8f, 0.0f, -1.94f);
 	HAL_Delay(600);
 	Get_Materialcolor(0U);
 	HAL_Delay(200);
 	Move_to_turnplate(5);
-	SetTargetVelocity(-0.8f, 0.0f, -1.82);
+	SetTargetVelocity(-0.8f, 0.0f, -1.770);
 	HAL_Delay(600);
 	Get_Materialcolor(1U);
 	HAL_Delay(100);

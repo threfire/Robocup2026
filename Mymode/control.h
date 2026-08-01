@@ -1,90 +1,94 @@
 #ifndef CONTROL_H
-#define CONTROL_H
+#define CONTROL_H /* 控制模块头文件保护宏 */
 
 #include "main.h"
 
 /* 转盘和视觉识别参数 */
-#define MATERIAL_RING_MODE 0x03U
-#define MATERIAL_CROSS_MODE 0x02U
-#define MATERIAL_LOOKING_ANGLE 700U
+#define MATERIAL_RING_MODE 0x03U       /* 转盘环形识别模式编号 */
+#define MATERIAL_CROSS_MODE 0x02U      /* 转盘十字识别模式编号 */
+#define MATERIAL_LOOKING_ANGLE 700U    /* 视觉搜索角度命令 */
 
 /* 姿态控制参数 */
-#define ATTITUDE_DEAD_ZONE_DEG 0.1f
+#define ATTITUDE_DEAD_ZONE_DEG 0.1f    /* 姿态闭环死区，单位 deg */
+#define ATTITUDE_PID_DEFAULT_KP 0.76f  /* 姿态角度环比例系数 */
+#define ATTITUDE_PID_DEFAULT_KI 0.0f   /* 姿态角度环积分系数 */
+#define ATTITUDE_PID_DEFAULT_KD 0.0151f /* 姿态角度环微分系数 */
+#define ATTITUDE_PID_MAX_OUTPUT 6.0f   /* 姿态角度环输出上限，单位 rad/s */
 
 /* 位置控制速度参数，单位 m/s */
-#define POSITION_SPEED_HIGHEST_MPS 6.3f
-#define POSITION_SPEED_HIGH_MPS 3.80f
-#define POSITION_SPEED_MID_MPS 2.0f
-#define POSITION_SPEED_LOW_MPS 1.5f
-#define POSITION_SPEED_LOWEST_MPS 0.55f
-#define TASK1_EMM_BACKWARD_SPEED_RPM 100U
-#define TASK1_EMM_BACKWARD_PULSES 1442U
-#define TASK1_EMM_BACKWARD_WAIT_MS 500U
-#define TASK2_TEST_SPEED_MPS 0.5f
+#define POSITION_SPEED_HIGHEST_MPS 7.3f /* 最高位置控制速度，单位 m/s */
+#define POSITION_SPEED_HIGH_MPS 3.80f   /* 高速位置控制速度，单位 m/s */
+#define POSITION_SPEED_MID_MPS 2.0f     /* 中速位置控制速度，单位 m/s */
+#define POSITION_SPEED_LOW_MPS 1.5f     /* 低速位置控制速度，单位 m/s */
+#define POSITION_SPEED_LOWEST_MPS 0.55f /* 最低位置控制速度，单位 m/s */
+#define TASK1_EMM_BACKWARD_SPEED_RPM 100U /* 任务一 EMM 后退转速，单位 RPM */
+#define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
+#define TASK1_EMM_BACKWARD_WAIT_MS 500U  /* 任务一 EMM 后退等待时间，单位 ms */
+#define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 /* 位置控制 PID 和轨迹规划参数 */
-#define POSITION_PID_DEFAULT_KP 7.05814f
-#define POSITION_PID_DEFAULT_KD 0.0555565f
-#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.5f
-#define POSITION_PLANNER_MAX_ACCEL_MPS2 8.0f
-#define POSITION_PLANNER_MAX_DECEL_MPS2 10.0f
-#define POSITION_PLANNER_MAX_JERK_MPS3 60.0f
-#define POSITION_COMMAND_BRAKE_DECEL_MPS2 1.5f /* 总速度命令的制动包络，单位 m/s² */
-#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f
-#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.015f
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f
-#define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f
-#define POSITION_STATIC_FRICTION_SPEED_MPS 0.0500433f
-#define CHASSIS_MASS_KG 3.4f
-#define POSITION_ACCEL_FEEDBACK_GAIN 0.274512f
-#define POSITION_FORCE_TO_SPEED_FF_MPS_PER_N 0.0103671f
-#define POSITION_ACCEL_FEEDBACK_FILTER_ALPHA 0.15f
-#define POSITION_REACHED_TOLERANCE_M 0.002f
-#define POSITION_FINE_REACHED_TOLERANCE_M 0.002f
-#define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f
+#define POSITION_PID_DEFAULT_KP 7.55814f /* 位置 PID 比例系数 */
+#define POSITION_PID_DEFAULT_KD 0.0555565f /* 位置 PID 微分系数 */
+#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f /* 速度规划器最小速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.8f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_MAX_ACCEL_MPS2 8.0f /* 速度规划器最大加速度，单位 m/s² */
+#define POSITION_PLANNER_MAX_DECEL_MPS2 10.0f /* 速度规划器最大减速度，单位 m/s² */
+#define POSITION_PLANNER_MAX_JERK_MPS3 60.0f /* 速度规划器最大加加速度，单位 m/s³ */
+#define POSITION_COMMAND_BRAKE_DECEL_MPS2 2.0f /* 总速度命令制动包络，单位 m/s² */
+#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
+#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.015f /* 近目标距离阈值，单位 m */
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
+#define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f /* 静摩擦补偿启用距离，单位 m */
+#define POSITION_STATIC_FRICTION_SPEED_MPS 0.0800433f /* 静摩擦补偿速度，单位 m/s */
+#define CHASSIS_MASS_KG 5.4f /* 底盘质量，单位 kg */
+#define POSITION_ACCEL_FEEDBACK_GAIN 0.274512f /* 位置环加速度反馈增益 */
+#define POSITION_FORCE_TO_SPEED_FF_MPS_PER_N 0.0103671f /* 作用力前馈转速度系数，单位 m/(s·N) */
+#define POSITION_ACCEL_FEEDBACK_FILTER_ALPHA 0.15f /* 加速度反馈低通滤波系数 */
+#define POSITION_REACHED_TOLERANCE_M 0.002f /* 常规到点容差，单位 m */
+#define POSITION_FINE_REACHED_TOLERANCE_M 0.002f /* 精确到点容差，单位 m */
+#define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f /* 回程到点容差，单位 m */
 
 /* 姿态协同参数 */
-#define POSE_SYNC_SLOW_DISTANCE_M 0.25f
-#define POSE_SYNC_SLOW_YAW_DEG 34.0f
-#define POSE_SYNC_MIN_SCALE 0.60f
-#define POSE_YAW_TOLERANCE_DEG 0.5f
-#define POSE_YAW_DEAD_ZONE_DEG 0.1f
-#define MAKEUP_FOR_ANGLE 2.0f
+#define POSE_SYNC_SLOW_DISTANCE_M 0.25f /* 位姿协同降速距离，单位 m */
+#define POSE_SYNC_SLOW_YAW_DEG 34.0f    /* 位姿协同降速偏航误差，单位 deg */
+#define POSE_SYNC_MIN_SCALE 0.60f       /* 位姿协同最小速度缩放系数 */
+#define POSE_YAW_TOLERANCE_DEG 0.5f     /* 位姿到点偏航容差，单位 deg */
+#define POSE_YAW_DEAD_ZONE_DEG 0.1f     /* 位姿偏航死区，单位 deg */
+#define MAKEUP_FOR_ANGLE 2.0f           /* 偏航角补偿量，单位 deg */
 
 /* 视觉稳定参数 */
-#define CAM_REACHED_TOLERANCE 3
-#define CAM_MAX_MIN_ERROR 3
-#define ERROR_QUEUE_SIZE 10U
-#define UART_WAIT_TIMEOUT_MS 800U
-#define CAM_STABILIZE_TIMEOUT_MS 1200U
+#define CAM_REACHED_TOLERANCE 3         /* 视觉到位像素容差 */
+#define CAM_MAX_MIN_ERROR 3             /* 视觉误差波动上限 */
+#define ERROR_QUEUE_SIZE 10U            /* 视觉误差队列长度 */
+#define UART_WAIT_TIMEOUT_MS 800U       /* 串口等待超时，单位 ms */
+#define CAM_STABILIZE_TIMEOUT_MS 1200U  /* 视觉稳定超时，单位 ms */
 
 /* EMM 速度与位置模式参数。 */
 /* EMM 输出轴相对轮速模型存在约 1.8 倍的速度换算比例。 */
-#define CHASSIS_WHEEL_SPEED_SCALE 1.80f
-#define CHASSIS_SPEED_MAX_RPM 700.0f
+#define CHASSIS_WHEEL_SPEED_SCALE 1.80f /* EMM 转速到轮速换算系数 */
+#define CHASSIS_SPEED_MAX_RPM 700.0f    /* EMM 最大转速，单位 RPM */
 /* 速度斜坡由位置规划器生成，EMM 采用 0 以避免内部 RPM 斜坡叠加延迟。 */
-#define CHASSIS_VELOCITY_ACCEL 0U
-#define CHASSIS_POS_FORWARD_ACCEL 100U
-#define CHASSIS_POS_BACKWARD_ACCEL 10U
-#define POSITION_MAX_LINEAR_SPEED_MPS 7.0f
-#define ATTITUDE_MAX_OMEGA 20.0f
-#define CAM_DEAD_ZONE 0.0f
-#define CAM_ERROR_ABS_LIMIT 480
-#define TROPHY_PLACE_PWM 830U
+#define CHASSIS_VELOCITY_ACCEL 0U       /* EMM 速度模式内部加速度 */
+#define CHASSIS_POS_FORWARD_ACCEL 100U  /* EMM 前进位置模式加速度 */
+#define CHASSIS_POS_BACKWARD_ACCEL 10U  /* EMM 后退位置模式加速度 */
+#define POSITION_MAX_LINEAR_SPEED_MPS 7.0f /* 位置控制最大线速度，单位 m/s */
+#define ATTITUDE_MAX_OMEGA 20.0f        /* 姿态控制最大角速度，单位 rad/s */
+#define CAM_DEAD_ZONE 0.0f              /* 视觉控制死区 */
+#define CAM_ERROR_ABS_LIMIT 480         /* 视觉误差绝对值上限 */
+#define TROPHY_PLACE_PWM 820U           /* 奖杯放置舵机 PWM */
 
 /* 兼容旧任务代码的速度宏 */
-#define HIGHESTSPEED POSITION_SPEED_HIGHEST_MPS
-#define HIGHSPEED POSITION_SPEED_HIGH_MPS
-#define MIDSPEED POSITION_SPEED_MID_MPS
-#define LOWSPEED POSITION_SPEED_LOW_MPS
-#define LOWESTSPEED POSITION_SPEED_LOWEST_MPS
-#define DEAD_ZONE ATTITUDE_DEAD_ZONE_DEG
-#define TOLERANCE CAM_REACHED_TOLERANCE
-#define max_min_error CAM_MAX_MIN_ERROR
-#define g 0.06f
-#define yuanhuan MATERIAL_RING_MODE
-#define shizi MATERIAL_CROSS_MODE
-#define lookingangle MATERIAL_LOOKING_ANGLE
+#define HIGHESTSPEED POSITION_SPEED_HIGHEST_MPS /* 兼容旧代码的最高速度 */
+#define HIGHSPEED POSITION_SPEED_HIGH_MPS       /* 兼容旧代码的高速速度 */
+#define MIDSPEED POSITION_SPEED_MID_MPS         /* 兼容旧代码的中速速度 */
+#define LOWSPEED POSITION_SPEED_LOW_MPS         /* 兼容旧代码的低速速度 */
+#define LOWESTSPEED POSITION_SPEED_LOWEST_MPS   /* 兼容旧代码的最低速度 */
+#define DEAD_ZONE ATTITUDE_DEAD_ZONE_DEG        /* 兼容旧代码的姿态死区 */
+#define TOLERANCE CAM_REACHED_TOLERANCE         /* 兼容旧代码的视觉容差 */
+#define max_min_error CAM_MAX_MIN_ERROR          /* 兼容旧代码的视觉误差上限 */
+#define g 0.06f                                  /* 旧姿态补偿比例系数 */
+#define yuanhuan MATERIAL_RING_MODE              /* 兼容旧代码的环形识别模式 */
+#define shizi MATERIAL_CROSS_MODE                /* 兼容旧代码的十字识别模式 */
+#define lookingangle MATERIAL_LOOKING_ANGLE      /* 兼容旧代码的视觉搜索角度 */
 
 typedef struct {
 	float Kp;         /* 比例系数 */
@@ -223,36 +227,36 @@ typedef struct {
 
 extern ControlContext_t control_ctx;
 extern const int Telescopic_ring[];
-#define raceh control_ctx.race_tolerance_m
-#define Material control_ctx.material_pwm
-#define task1_state control_ctx.task1
-#define task2_state control_ctx.task2
-#define tasknum control_ctx.task_num
-#define cammode control_ctx.cam_mode
-#define lookmode_centrl control_ctx.look_mode_control
-#define position_control control_ctx.position
-#define is_position_control_enabled control_ctx.position_enabled
-#define pose_coordination control_ctx.pose
-#define attitude_control control_ctx.attitude
-#define attitude_correction control_ctx.attitude_correction
-#define isPosture_correction control_ctx.posture_correction_enabled
-#define testflag control_ctx.position_test_flag
-#define is_rotating control_ctx.rotating
-#define cam_stabilization control_ctx.cam
-#define cam_correction_x control_ctx.cam_correction_x
-#define cam_correction_y control_ctx.cam_correction_y
-#define is_cam_stabilizing control_ctx.cam_stabilizing
-#define Is_coordgot control_ctx.coord_ready
-#define iscamreached_safecount control_ctx.cam_reached_count
-#define target_velocity control_ctx.target_velocity
-#define motor1 control_ctx.motor[0]
-#define motor2 control_ctx.motor[1]
-#define motor3 control_ctx.motor[2]
-#define motor4 control_ctx.motor[3]
-#define IsRun control_ctx.run_enabled
-#define is_line_follow_enabled control_ctx.line_follow_enabled
-#define target_set control_ctx.target_set
-#define is_hasgetcolor control_ctx.color_ready
+#define raceh control_ctx.race_tolerance_m /* 当前任务到点容差 */
+#define Material control_ctx.material_pwm /* 物料转盘 PWM 表 */
+#define task1_state control_ctx.task1 /* 任务一状态机 */
+#define task2_state control_ctx.task2 /* 任务二状态机 */
+#define tasknum control_ctx.task_num /* 当前任务编号 */
+#define cammode control_ctx.cam_mode /* MaixCam 工作模式 */
+#define lookmode_centrl control_ctx.look_mode_control /* 视觉搜索模式控制标志 */
+#define position_control control_ctx.position /* 位置控制状态 */
+#define is_position_control_enabled control_ctx.position_enabled /* 位置控制外部使能 */
+#define pose_coordination control_ctx.pose /* 位姿协同状态 */
+#define attitude_control control_ctx.attitude /* 姿态控制状态 */
+#define attitude_correction control_ctx.attitude_correction /* 姿态角速度修正量 */
+#define isPosture_correction control_ctx.posture_correction_enabled /* 姿态校正使能 */
+#define testflag control_ctx.position_test_flag /* 位置测试到点标志 */
+#define is_rotating control_ctx.rotating /* 非阻塞转向状态 */
+#define cam_stabilization control_ctx.cam /* 视觉稳定控制状态 */
+#define cam_correction_x control_ctx.cam_correction_x /* 视觉 X 轴修正量 */
+#define cam_correction_y control_ctx.cam_correction_y /* 视觉 Y 轴修正量 */
+#define is_cam_stabilizing control_ctx.cam_stabilizing /* 视觉稳定过程标志 */
+#define Is_coordgot control_ctx.coord_ready /* 视觉坐标有效标志 */
+#define iscamreached_safecount control_ctx.cam_reached_count /* 视觉连续到点计数 */
+#define target_velocity control_ctx.target_velocity /* 底盘目标速度 */
+#define motor1 control_ctx.motor[0] /* 1 号 X42 电机状态 */
+#define motor2 control_ctx.motor[1] /* 2 号 X42 电机状态 */
+#define motor3 control_ctx.motor[2] /* 3 号 X42 电机状态 */
+#define motor4 control_ctx.motor[3] /* 4 号 X42 电机状态 */
+#define IsRun control_ctx.run_enabled /* 底盘运行使能 */
+#define is_line_follow_enabled control_ctx.line_follow_enabled /* 循迹控制使能 */
+#define target_set control_ctx.target_set /* 非阻塞目标已下发标志 */
+#define is_hasgetcolor control_ctx.color_ready /* 颜色传感器数据有效标志 */
 
 float GetAttitudeCorrection(void);
 void Setmaixcam_mode(uint8_t ch);
