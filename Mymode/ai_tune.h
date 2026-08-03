@@ -25,6 +25,8 @@ typedef struct {
     float target_y_m;                 /* 目标世界坐标 Y，单位 m */
     float position_x_m;               /* 实际世界坐标 X，单位 m */
     float position_y_m;               /* 实际世界坐标 Y，单位 m */
+    float target_yaw_deg;             /* 目标偏航角，单位 deg */
+    float yaw_deg;                    /* 实际偏航角，单位 deg */
     float error_x_local_m;            /* 车体系 X 误差，单位 m */
     float error_y_local_m;            /* 车体系 Y 误差，单位 m */
     float velocity_x_mps;             /* 里程计车体系 X 速度，单位 m/s */
@@ -46,6 +48,8 @@ typedef struct {
 void ai_tune_init(void);
 /** @brief 处理 UART5 空闲中断中的 DMA 接收数据。 */
 void ai_tune_uart_idle_irq(void);
+/** @brief 轮询 UART5 IDLE 标志，作为中断接收路径的运行时补偿。*/
+void ai_tune_poll(void);
 /** @brief 在新坐标运动段起点应用待生效参数。 */
 uint8_t ai_tune_apply_pending(void);
 /** @brief 标记新坐标运动段开始，复位保护计时状态。 */

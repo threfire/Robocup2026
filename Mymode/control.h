@@ -2,6 +2,7 @@
 #define CONTROL_H /* 控制模块头文件保护宏 */
 
 #include "main.h"
+#include "pid.h"
 
 /* 转盘和视觉识别参数 */
 #define MATERIAL_RING_MODE 0x03U       /* 转盘环形识别模式编号 */
@@ -10,13 +11,26 @@
 
 /* 姿态控制参数 */
 #define ATTITUDE_DEAD_ZONE_DEG 0.1f    /* 姿态闭环死区，单位 deg */
-#define ATTITUDE_PID_DEFAULT_KP 0.96f  /* 姿态角度环比例系数 */
+#define ATTITUDE_PID_DEFAULT_KP 11.50f /* 姿态角度环比例系数，单位 rad/s/rad */
 #define ATTITUDE_PID_DEFAULT_KI 0.0f   /* 姿态角度环积分系数 */
-#define ATTITUDE_PID_DEFAULT_KD 0.1551f /* 姿态角度环微分系数 */
-#define ATTITUDE_PID_MAX_OUTPUT 6.0f   /* 姿态角度环输出上限，单位 rad/s */
+#define ATTITUDE_PID_DEFAULT_KD 0.45f /* 姿态角度环角速度阻尼系数，单位 s */
+#define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
+#define ATTITUDE_ACCEL_FEEDFORWARD_GAIN 1.0f /* 偏航 J·α 加速度前馈系数 */
 #define ATTITUDE_ACCEL_FEEDBACK_GAIN 0.15f /* 偏航加速度反馈增益 */
-#define ATTITUDE_FF_MAX_ACCEL_RAD_S2 10.0f /* 偏航前馈最大角加速度，单位 rad/s² */
-#define ATTITUDE_FF_MAX_OMEGA_RAD_S 0.8f /* 偏航前馈最大角速度，单位 rad/s */
+#define ATTITUDE_FF_MAX_ACCEL_RAD_S2 50.0f /* 偏航前馈最大角加速度，单位 rad/s² */
+#define ATTITUDE_FF_MAX_OMEGA_RAD_S 3.8f /* 偏航前馈最大角速度，单位 rad/s */
+#define ATTITUDE_PLANNER_MAX_ACCEL_RAD_S2 65.0f /* 偏航规划最大角加速度，单位 rad/s² */
+#define ATTITUDE_PLANNER_MAX_DECEL_RAD_S2 50.0f /* 偏航规划最大角减速度，单位 rad/s² */
+#define ATTITUDE_PLANNER_MAX_JERK_RAD_S3 120.0f /* 偏航规划最大角加加速度，单位 rad/s³ */
+#define FUZZY_PID_ENABLE 1U /* 模糊自适应 PID 使能标志 */
+#define ATTITUDE_FUZZY_ERROR_FULL_DEG 15.0f /* 偏航误差达到最高隶属度的阈值，单位 deg */
+#define ATTITUDE_FUZZY_RATE_FULL_DPS 60.0f /* 偏航误差变化率达到最高隶属度的阈值，单位 deg/s */
+#define ATTITUDE_FUZZY_KP_MIN_SCALE 0.90f /* 偏航小误差时 Kp 缩放系数 */
+#define ATTITUDE_FUZZY_KP_MAX_SCALE 1.15f /* 偏航大误差时 Kp 缩放系数 */
+#define ATTITUDE_FUZZY_KD_MIN_SCALE 0.90f /* 偏航平稳时 Kd 缩放系数 */
+#define ATTITUDE_FUZZY_KD_MAX_SCALE 1.20f /* 偏航快速变化时 Kd 缩放系数 */
+#define ATTITUDE_FUZZY_RATE_FILTER_ALPHA 0.20f /* 偏航误差变化率滤波系数 */
+#define ATTITUDE_FF_ACCEL_FILTER_ALPHA 0.20f /* 偏航期望角加速度滤波系数 */
 
 /* 位置控制速度参数，单位 m/s */
 #define POSITION_SPEED_HIGHEST_MPS 6.3f /* 最高位置控制速度，单位 m/s */
@@ -29,19 +43,31 @@
 #define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 /* 位置控制 PID 和轨迹规划参数 */
-#define POSITION_PID_DEFAULT_KP 5.55814f /* 位置 PID 比例系数 */
+#define POSITION_PID_DEFAULT_KP 6.50f /* 位置 PID 比例系数 */
 #define POSITION_PID_DEFAULT_KD 0.0555565f /* 位置 PID 微分系数 */
+#define POSITION_FUZZY_ERROR_FULL_M 0.30f /* 位置误差达到最高隶属度的阈值，单位 m */
+#define POSITION_FUZZY_RATE_FULL_MPS 1.00f /* 位置误差变化率达到最高隶属度的阈值，单位 m/s */
+#define POSITION_FUZZY_KP_MIN_SCALE 0.70f /* 位置小误差时 Kp 缩放系数 */
+#define POSITION_FUZZY_KP_MAX_SCALE 1.20f /* 位置大误差时 Kp 缩放系数 */
+#define POSITION_FUZZY_KD_MIN_SCALE 0.80f /* 位置平稳时 Kd 缩放系数 */
+#define POSITION_FUZZY_KD_MAX_SCALE 1.40f /* 位置快速变化时 Kd 缩放系数 */
+#define POSITION_FUZZY_RATE_FILTER_ALPHA 0.35f /* 位置误差变化率滤波系数 */
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.20f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.5f /* 速度规划器巡航速度，单位 m/s */
-#define POSITION_PLANNER_MAX_ACCEL_MPS2 8.0f /* 速度规划器最大加速度，单位 m/s² */
-#define POSITION_PLANNER_MAX_DECEL_MPS2 10.0f /* 速度规划器最大减速度，单位 m/s² */
-#define POSITION_PLANNER_MAX_JERK_MPS3 60.0f /* 速度规划器最大加加速度，单位 m/s³ */
-#define POSITION_COMMAND_BRAKE_DECEL_MPS2 1.5f /* 总速度命令制动包络，单位 m/s² */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.8f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_MAX_ACCEL_MPS2 12.0f /* 速度规划器最大加速度，单位 m/s² */
+#define POSITION_PLANNER_MAX_DECEL_MPS2 18.0f /* 速度规划器最大减速度，单位 m/s² */
+#define POSITION_PLANNER_MAX_JERK_MPS3 220.0f /* 速度规划器最大加加速度，单位 m/s³ */
+#define POSITION_COMMAND_BRAKE_DECEL_MPS2 7.20f /* 总速度命令制动包络，单位 m/s² */
+#define MOTION_OBSERVER_ALPHA 0.25f /* 车体状态观测器低通系数 */
+#define MOTION_MPC_HORIZON_STEPS 20U /* MPC 预测步数 */
+#define MOTION_MPC_STEP_S 0.01f /* MPC 预测步长，单位 s */
+#define MOTION_MPC_MAX_ACCEL_MPS2 12.0f /* MPC 线加速度约束，单位 m/s² */
+#define MOTION_MPC_MAX_ANG_ACCEL_RAD_S2 20.0f /* MPC 角加速度约束，单位 rad/s² */
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
-#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.015f /* 近目标距离阈值，单位 m */
+#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.005f /* 近目标距离阈值，单位 m */
 #define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f /* 静摩擦补偿启用距离，单位 m */
-#define POSITION_STATIC_FRICTION_SPEED_MPS 0.0500433f /* 静摩擦补偿速度，单位 m/s */
+#define POSITION_STATIC_FRICTION_SPEED_MPS 0.0700433f /* 静摩擦补偿速度，单位 m/s */
 #define CHASSIS_MASS_KG 5.4f /* 底盘质量，单位 kg */
 #define CHASSIS_CENTER_OF_MASS_X_M 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
@@ -56,8 +82,8 @@
 /* 姿态协同参数 */
 #define POSE_SYNC_SLOW_DISTANCE_M 0.25f /* 位姿协同降速距离，单位 m */
 #define POSE_SYNC_SLOW_YAW_DEG 34.0f    /* 位姿协同降速偏航误差，单位 deg */
-#define POSE_SYNC_MIN_SCALE 0.60f       /* 位姿协同最小速度缩放系数 */
-#define POSE_YAW_TOLERANCE_DEG 1.0f     /* 位姿到点偏航容差，单位 deg */
+#define POSE_SYNC_MIN_SCALE 0.75f       /* 位姿协同最小速度缩放系数 */
+#define POSE_YAW_TOLERANCE_DEG 2.0f     /* 位姿到点偏航容差，单位 deg */
 #define POSE_YAW_DEAD_ZONE_DEG 0.1f     /* 位姿偏航死区，单位 deg */
 #define MAKEUP_FOR_ANGLE 2.0f           /* 偏航角补偿量，单位 deg */
 
@@ -97,16 +123,6 @@
 #define lookingangle MATERIAL_LOOKING_ANGLE      /* 兼容旧代码的视觉搜索角度 */
 
 typedef struct {
-	float Kp;         /* 比例系数 */
-	float Kp2;        /* 备用比例系数，用于视觉环分段参数 */
-	float Ki;         /* 积分系数 */
-	float Kd;         /* 微分系数 */
-	float integral;   /* 积分项 */
-	float prev_error; /* 上一次误差 */
-	float max_output; /* 输出限幅 */
-} PID_Controller;
-
-typedef struct {
 	PID_Controller pid_x;   /* X 轴位置 PID */
 	PID_Controller pid_y;   /* Y 轴位置 PID */
 	uint8_t is_enabled;     /* 位置环使能标志 */
@@ -132,14 +148,6 @@ typedef struct {
 	uint8_t is_enabled;      /* 姿态环使能标志 */
 	uint32_t last_update_time; /* 最后更新时间，单位 ms */
 } AttitudeStabilization_t;
-
-typedef struct {
-	int errors_x[ERROR_QUEUE_SIZE]; /* 视觉 X 误差队列 */
-	int errors_y[ERROR_QUEUE_SIZE]; /* 视觉 Y 误差队列 */
-	uint8_t index;                  /* 当前写入位置 */
-	uint8_t count;                  /* 已缓存数据个数 */
-	uint8_t is_full;                /* 队列满标志 */
-} ErrorQueue_t;
 
 typedef struct {
 	PID_Controller pid_x; /* 视觉 X 轴 PID */
@@ -265,14 +273,6 @@ extern const int Telescopic_ring[];
 #define is_hasgetcolor control_ctx.color_ready /* 颜色传感器数据有效标志 */
 
 float GetAttitudeCorrection(void);
-void Setmaixcam_mode(uint8_t ch);
-void PID_Init(
-        PID_Controller *pid, float Kp, float Ki, float Kd, float max_output);
-void PID_Init_cam(PID_Controller *pid, float Kp, float Kp2, float Ki, float Kd,
-        float max_output);
-float PID_Update(PID_Controller *pid, float error, float dt);
-float PID_Update_cam(PID_Controller *pid, float error, float dt);
-float PID_Update_angle(PID_Controller *pid, float error, float dt);
 void Line_Follow_Init(void);
 void Follow_line_task(void);
 void AttitudeStabilization_Init(void);
@@ -293,9 +293,6 @@ void UpdatePoseCoordination(float dt);
 uint8_t IsPoseReached(float tolerance_xy, float tolerance_yaw_degrees);
 uint8_t move_to_pose_target(float x, float y, float yaw);
 uint8_t move_to_target(float x, float y);
-void CamStabilization_Init(void);
-void CamStabilization_Enable(uint8_t enable);
-void UpdateCamStabilization(float x_err, float y_err, float dt);
 void ArcTracking_Init(void);
 uint8_t MoveAlongArc(float center_x, float center_y, float radius,
         float start_angle, float end_angle, uint8_t direction, float speed);

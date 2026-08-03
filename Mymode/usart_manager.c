@@ -2,7 +2,7 @@
 #include "usart_manager.h"
 #include "lcd_spi_154.h"
 #include "usart.h"
-#include "mxcam.h" 
+#include "vision.h"
 #include<string.h> 	// 包含各串口处理模块
   // 其他串口
 

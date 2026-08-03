@@ -1155,14 +1155,84 @@
           <GroupName>Mymode</GroupName>
           <Files>
             <File>
-              <FileName>mxcam.c</FileName>
+              <FileName>vision.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Mymode\mxcam.c</FilePath>
+              <FilePath>..\Mymode\vision.c</FilePath>
             </File>
             <File>
-              <FileName>mxcam.h</FileName>
+              <FileName>vision.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Mymode\mxcam.h</FilePath>
+              <FilePath>..\Mymode\vision.h</FilePath>
+            </File>
+            <File>
+              <FileName>pid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\pid.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\pid.h</FilePath>
+            </File>
+            <File>
+              <FileName>fuzzy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\fuzzy.c</FilePath>
+            </File>
+            <File>
+              <FileName>fuzzy.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\fuzzy.h</FilePath>
+            </File>
+            <File>
+              <FileName>motion_plan.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\motion_plan.c</FilePath>
+            </File>
+            <File>
+              <FileName>motion_plan.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\motion_plan.h</FilePath>
+            </File>
+            <File>
+              <FileName>feedforward.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\feedforward.c</FilePath>
+            </File>
+            <File>
+              <FileName>feedforward.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\feedforward.h</FilePath>
+            </File>
+            <File>
+              <FileName>motion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\motion.c</FilePath>
+            </File>
+            <File>
+              <FileName>motion.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\motion.h</FilePath>
+            </File>
+            <File>
+              <FileName>task1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\task1.c</FilePath>
+            </File>
+            <File>
+              <FileName>task1.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\task1.h</FilePath>
+            </File>
+            <File>
+              <FileName>task2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mymode\task2.c</FilePath>
+            </File>
+            <File>
+              <FileName>task2.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Mymode\task2.h</FilePath>
             </File>
             <File>
               <FileName>usart_manager.c</FileName>

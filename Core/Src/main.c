@@ -41,7 +41,7 @@
 #include "servo.h"
 #include "odometer.h"
 #include "graysensor.h"
-#include "mxcam.h"
+#include "vision.h"
 #include "QAma.h"
 #include "ai_tune.h"
 /* USER CODE END Includes */
@@ -58,8 +58,8 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define AI_TUNE_TRAJECTORY_COUNT 3U
-#define AI_TUNE_TRAJECTORY_HOLD_MS 300U
+#define AI_TUNE_TRAJECTORY_COUNT 5U
+#define AI_TUNE_TRAJECTORY_HOLD_MS 1U
 
 /* USER CODE END PD */
 
@@ -79,13 +79,17 @@ AppContext_t app_ctx = {
 				.debug_enable = 0,
 };
 static const ai_tune_pose_t ai_tune_trajectory[AI_TUNE_TRAJECTORY_COUNT] = {
-		{800.0f, 0.0f, 0.0f},
-		{800.0f, -800.0f, -90.0f},
+		{-800.0f, 0.0f, 0.0f},
+		{-800.0f, 800.0f, 0.0f},
+		{-800.0f, 800.0f, -90.0f},
+		{0.0f, 0.0f, -90.0f},
 		{0.0f, 0.0f, 0.0f},
 };
 static uint8_t ai_tune_trajectory_active;
 static uint8_t ai_tune_trajectory_index;
 static uint32_t ai_tune_trajectory_hold_start_ms;
+static uint8_t ai_tune_servo_initialized;
+static uint8_t manual_trajectory_pending;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -124,6 +128,10 @@ static void ai_tune_update_trajectory(void)
 
 	if (ai_tune_trajectory_index >= (AI_TUNE_TRAJECTORY_COUNT - 1U)) {
 		ai_tune_trajectory_active = 0U;
+		Start_flag = 0U;
+		PositionControl_Enable(0U);
+		EnableAttitudeStabilization(0U);
+		stop();
 		return;
 	}
 
@@ -226,7 +234,7 @@ int main(void)
 	HAL_Delay(2000);
 	odometer_init();
 	/* 控制环模块初始化：视觉、位置、位姿协同和姿态环。 */
-	CamStabilization_Init();
+	vision_init();
 	ai_tune_init();
 	PositionControl_Init();
 	PoseCoordination_Init();
@@ -235,7 +243,7 @@ int main(void)
 	/* USART3 颜色传感器按字节中断接收。 */
 	HAL_UART_Receive_IT(&huart3, rx_data, 1);
 //	HAL_UART_Transmit(&huart3, gy33sendbuffer1, APP_GY33_CMD_LEN, 100U);
-	CamStabilization_Enable(0);
+	vision_enable(0U);
 //	servo_init();
 	LCD_DisplayText(48, 0, "Init Success!");
 					HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);		//0	PF7
@@ -330,13 +338,14 @@ static void Robot_HandleDebugModeTransition(void) {
 
 	previous_debug = debug;
 	Start_flag = 0U;
+	manual_trajectory_pending = 0U;
 	task2_start_pending = 0U;
 	task2_zero_confirm_time_ms = 0U;
 	task1_state.active = 0U;
 	task2_state.active = 0U;
 	PositionControl_Enable(0U);
 	EnableAttitudeStabilization(0U);
-	CamStabilization_Enable(0U);
+	vision_enable(0U);
 	stop();
 	Mecanum_SendVelocity();
 }
@@ -344,6 +353,7 @@ static void Robot_HandleDebugModeTransition(void) {
 void Robot_RealtimeControl(float dt) {
 	if (dt > 0.0f) {
 		/* FreeRTOS 固定周期任务调用本函数，dt 为控制周期秒数。 */
+		ai_tune_poll();
 		Robot_HandleDebugModeTransition();
 		led_count++;
 		timcount++;
@@ -364,6 +374,12 @@ void Robot_RealtimeControl(float dt) {
 			        &max_speed_mps)) {
 				(void)target_x_mm;
 				(void)target_y_mm;
+				if (ai_tune_servo_initialized == 0U) {
+					servo_init();
+					ai_tune_servo_initialized = 1U;
+				}
+				__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1100U);
+				__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840U);
 				task2_start_pending = 0U;
 				task1_state.active = 0U;
 				task1_state.completed = 0U;
@@ -380,6 +396,8 @@ void Robot_RealtimeControl(float dt) {
 			        .target_y_m = position_control.target_y * 0.001f,
 			        .position_x_m = odometer_ctx.pose.pos_x_mm * 0.001f,
 			        .position_y_m = odometer_ctx.pose.pos_y_mm * 0.001f,
+			        .target_yaw_deg = attitude_control.target_yaw,
+			        .yaw_deg = odometer_get_yaw_deg(),
 			        .error_x_local_m = control_ctx.error_x_local_m,
 			        .error_y_local_m = control_ctx.error_y_local_m,
 			        .velocity_x_mps = odometer_ctx.motion.vel_x_mps,
@@ -392,10 +410,10 @@ void Robot_RealtimeControl(float dt) {
 			ai_tune_send_telemetry(&telemetry);
 		}
 		UpdateAttitudeStabilization(dt);
-		Process_usart1_packet();
+		vision_process_usart1_packet();
 		if (cam_stabilization.is_enabled) {
 
-			UpdateCamStabilization(Camera_err.x, Camera_err.y, dt);
+			vision_update(dt);
 		}
 		TargetVelocity_t current_target = target_velocity;
 		if (!Start_flag) {
@@ -436,6 +454,7 @@ void Robot_ServiceTick(void) {
 	if (Key_Num == 1) {
 		Key_Num = 0U;
 		Start_flag = 0U;
+		manual_trajectory_pending = 1U;
 		task2_start_pending = odometer_request_zero();
 		task2_zero_confirm_time_ms = 0U;
 		tasknum = 1U;
@@ -454,8 +473,14 @@ void Robot_ServiceTick(void) {
 	        ((HAL_GetTick() - task2_zero_confirm_time_ms) >=
 	                TASK2_ZERO_SETTLE_MS)) {
 		task2_start_pending = 0U;
-		Start_flag = 1U;
-		start_task1();
+		if (manual_trajectory_pending != 0U) {
+			manual_trajectory_pending = 0U;
+			Start_flag = 1U;
+			ai_tune_start_trajectory(POSITION_PLANNER_CRUISE_SPEED_MPS);
+		} else {
+			Start_flag = 1U;
+			start_task1();
+		}
 	}
 	run_task1();
 }

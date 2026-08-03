@@ -18,10 +18,11 @@
 #define AI_TUNE_CMD_COMMIT 0x02U
 #define AI_TUNE_CMD_START 0x03U
 #define AI_TUNE_TELEMETRY 0x81U
+#define AI_TUNE_ACK 0x82U
 #define AI_TUNE_RX_BUFFER_SIZE 64U
-#define AI_TUNE_TX_BUFFER_SIZE 48U
-#define AI_TUNE_TELEMETRY_PERIOD_MS 1U
-#define AI_TUNE_TELEMETRY_PAYLOAD_SIZE 36U
+#define AI_TUNE_TX_BUFFER_SIZE 56U
+#define AI_TUNE_TELEMETRY_PERIOD_MS 5U
+#define AI_TUNE_TELEMETRY_PAYLOAD_SIZE 44U
 #define AI_TUNE_PARAM_PAYLOAD_SIZE 24U
 #define AI_TUNE_START_PAYLOAD_SIZE 12U
 #define AI_TUNE_INCREASE_GUARD_MS 150U
@@ -58,6 +59,11 @@ static float ai_tune_saturation_time_s;
 static uint32_t ai_tune_segment_start_ms;
 static uint32_t ai_tune_last_telemetry_ms;
 static uint16_t ai_tune_tx_sequence;
+static volatile uint8_t ai_tune_ack_pending;
+static volatile uint8_t ai_tune_ack_command;
+static volatile uint8_t ai_tune_ack_status;
+static volatile uint16_t ai_tune_ack_sequence;
+static volatile uint32_t ai_tune_ack_version;
 static uint8_t ai_tune_rx_buffer[AI_TUNE_RX_BUFFER_SIZE];
 static uint8_t ai_tune_tx_buffer[AI_TUNE_TX_BUFFER_SIZE];
 
@@ -111,6 +117,16 @@ static void ai_tune_write_u32(uint8_t *data, uint16_t *index, uint32_t value)
     data[(*index)++] = (uint8_t)(value >> 24U);
 }
 
+static void ai_tune_queue_ack(uint8_t command, uint8_t status,
+        uint16_t sequence, uint32_t version)
+{
+    ai_tune_ack_command = command;
+    ai_tune_ack_status = status;
+    ai_tune_ack_sequence = sequence;
+    ai_tune_ack_version = version;
+    ai_tune_ack_pending = 1U;
+}
+
 static uint8_t ai_tune_param_valid(const ai_tune_param_t *param)
 {
     if ((param->kp != param->kp) || (param->kd != param->kd) ||
@@ -136,6 +152,8 @@ static uint8_t ai_tune_param_valid(const ai_tune_param_t *param)
 static void ai_tune_parse_frame(const uint8_t *frame, uint8_t payload_length)
 {
     const uint8_t *payload = &frame[6];
+    uint16_t sequence = (uint16_t)frame[4] |
+            ((uint16_t)frame[5] << 8U);
 
     if ((frame[2] == AI_TUNE_CMD_PARAM) &&
             (payload_length == AI_TUNE_PARAM_PAYLOAD_SIZE)) {
@@ -150,12 +168,22 @@ static void ai_tune_parse_frame(const uint8_t *frame, uint8_t payload_length)
         if (ai_tune_param_valid(&param)) {
             ai_tune_pending_param = param;
             ai_tune_pending_valid = 1U;
+            ai_tune_queue_ack(AI_TUNE_CMD_PARAM, 0U, sequence,
+                    ai_tune_active_param.version);
+        } else {
+            ai_tune_queue_ack(AI_TUNE_CMD_PARAM, 1U, sequence,
+                    ai_tune_active_param.version);
         }
         return;
     }
     if ((frame[2] == AI_TUNE_CMD_COMMIT) && (payload_length == 4U)) {
         if (ai_tune_read_u32(payload) == ai_tune_active_param.version) {
             ai_tune_verified_param = ai_tune_active_param;
+            ai_tune_queue_ack(AI_TUNE_CMD_COMMIT, 0U, sequence,
+                    ai_tune_active_param.version);
+        } else {
+            ai_tune_queue_ack(AI_TUNE_CMD_COMMIT, 1U, sequence,
+                    ai_tune_active_param.version);
         }
         return;
     }
@@ -172,6 +200,11 @@ static void ai_tune_parse_frame(const uint8_t *frame, uint8_t payload_length)
             ai_tune_start_y_mm = target_y_mm;
             ai_tune_start_speed_mps = max_speed_mps;
             ai_tune_start_pending = 1U;
+            ai_tune_queue_ack(AI_TUNE_CMD_START, 0U, sequence,
+                    ai_tune_active_param.version);
+        } else {
+            ai_tune_queue_ack(AI_TUNE_CMD_START, 1U, sequence,
+                    ai_tune_active_param.version);
         }
     }
 }
@@ -217,6 +250,7 @@ void ai_tune_init(void)
     ai_tune_segment_active = 0U;
     ai_tune_start_pending = 0U;
     ai_tune_tx_sequence = 0U;
+    ai_tune_ack_pending = 0U;
     ai_tune_last_telemetry_ms = HAL_GetTick();
     memset(ai_tune_rx_buffer, 0, sizeof(ai_tune_rx_buffer));
     __HAL_UART_ENABLE_IT(&huart5, UART_IT_IDLE);
@@ -238,6 +272,14 @@ void ai_tune_uart_idle_irq(void)
         ai_tune_parse_rx(received_length);
     }
     HAL_UART_Receive_DMA(&huart5, ai_tune_rx_buffer, sizeof(ai_tune_rx_buffer));
+    __HAL_UART_ENABLE_IT(&huart5, UART_IT_IDLE);
+}
+
+void ai_tune_poll(void)
+{
+    if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_IDLE) != RESET) {
+        ai_tune_uart_idle_irq();
+    }
 }
 
 uint8_t ai_tune_apply_pending(void)
@@ -329,10 +371,27 @@ void ai_tune_send_telemetry(const ai_tune_telemetry_t *telemetry)
         return;
     }
     now_ms = HAL_GetTick();
-    if ((now_ms - ai_tune_last_telemetry_ms) < AI_TUNE_TELEMETRY_PERIOD_MS) {
+    if (huart5.gState != HAL_UART_STATE_READY) {
         return;
     }
-    if (huart5.gState != HAL_UART_STATE_READY) {
+    if (ai_tune_ack_pending != 0U) {
+        index = 0U;
+        ai_tune_tx_buffer[index++] = AI_TUNE_FRAME_HEAD0;
+        ai_tune_tx_buffer[index++] = AI_TUNE_FRAME_HEAD1;
+        ai_tune_tx_buffer[index++] = AI_TUNE_ACK;
+        ai_tune_tx_buffer[index++] = 6U;
+        ai_tune_write_u16(ai_tune_tx_buffer, &index,
+                ai_tune_ack_sequence);
+        ai_tune_tx_buffer[index++] = ai_tune_ack_command;
+        ai_tune_tx_buffer[index++] = ai_tune_ack_status;
+        ai_tune_write_u32(ai_tune_tx_buffer, &index, ai_tune_ack_version);
+        crc = ai_tune_crc16(&ai_tune_tx_buffer[2], index - 2U);
+        ai_tune_write_u16(ai_tune_tx_buffer, &index, crc);
+        ai_tune_ack_pending = 0U;
+        HAL_UART_Transmit_DMA(&huart5, ai_tune_tx_buffer, index);
+        return;
+    }
+    if ((now_ms - ai_tune_last_telemetry_ms) < AI_TUNE_TELEMETRY_PERIOD_MS) {
         return;
     }
     ai_tune_last_telemetry_ms = now_ms;
@@ -351,6 +410,10 @@ void ai_tune_send_telemetry(const ai_tune_telemetry_t *telemetry)
             (uint32_t)((int32_t)(telemetry->position_x_m * 1000.0f)));
     ai_tune_write_u32(ai_tune_tx_buffer, &index,
             (uint32_t)((int32_t)(telemetry->position_y_m * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->target_yaw_deg * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->yaw_deg * 1000.0f)));
     ai_tune_write_u16(ai_tune_tx_buffer, &index,
             (uint16_t)((int16_t)(telemetry->velocity_x_mps * 1000.0f)));
     ai_tune_write_u16(ai_tune_tx_buffer, &index,
