@@ -10,10 +10,10 @@
 #define MATERIAL_LOOKING_ANGLE 700U    /* 视觉搜索角度命令 */
 
 /* 姿态控制参数 */
-#define ATTITUDE_DEAD_ZONE_DEG 0.1f    /* 姿态闭环死区，单位 deg */
-#define ATTITUDE_PID_DEFAULT_KP 11.50f /* 姿态角度环比例系数，单位 rad/s/rad */
-#define ATTITUDE_PID_DEFAULT_KI 0.0f   /* 姿态角度环积分系数 */
-#define ATTITUDE_PID_DEFAULT_KD 0.85f /* 姿态角度环角速度阻尼系数，单位 s */
+#define ATTITUDE_DEAD_ZONE_DEG 0.05f    /* 姿态闭环死区，单位 deg */
+#define ATTITUDE_PID_DEFAULT_KP 15.50f /* 姿态角度环比例系数，单位 rad/s/rad */
+#define ATTITUDE_PID_DEFAULT_KI 0.05f   /* 姿态角度环积分系数 */
+#define ATTITUDE_PID_DEFAULT_KD 1.05f /* 姿态角度环角速度阻尼系数，单位 s */
 #define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
 #define ATTITUDE_ACCEL_FEEDFORWARD_GAIN 1.0f /* 偏航 J·α 加速度前馈系数 */
 #define ATTITUDE_ACCEL_FEEDBACK_GAIN 0.15f /* 偏航加速度反馈增益 */
@@ -37,23 +37,23 @@
 #define POSITION_SPEED_HIGH_MPS 3.80f   /* 高速位置控制速度，单位 m/s */
 #define POSITION_SPEED_MID_MPS 2.0f     /* 中速位置控制速度，单位 m/s */
 #define POSITION_SPEED_LOW_MPS 1.5f     /* 低速位置控制速度，单位 m/s */
-#define POSITION_SPEED_LOWEST_MPS 0.55f /* 最低位置控制速度，单位 m/s */
+#define POSITION_SPEED_LOWEST_MPS 0.65f /* 最低位置控制速度，单位 m/s */
 #define TASK1_EMM_BACKWARD_SPEED_RPM 200U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
 #define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 /* 位置控制 PID 和轨迹规划参数 */
-#define POSITION_PID_DEFAULT_KP 9.50f /* 位置 PID 比例系数 */
-#define POSITION_PID_DEFAULT_KD 1.1555565f /* 位置 PID 微分系数 */
+#define POSITION_PID_DEFAULT_KP 10.50f /* 位置 PID 比例系数 */
+#define POSITION_PID_DEFAULT_KD 1.4555565f /* 位置 PID 微分系数 */
 #define POSITION_FUZZY_ERROR_FULL_M 0.30f /* 位置误差达到最高隶属度的阈值，单位 m */
 #define POSITION_FUZZY_RATE_FULL_MPS 1.00f /* 位置误差变化率达到最高隶属度的阈值，单位 m/s */
-#define POSITION_FUZZY_KP_MIN_SCALE 0.70f /* 位置小误差时 Kp 缩放系数 */
-#define POSITION_FUZZY_KP_MAX_SCALE 1.20f /* 位置大误差时 Kp 缩放系数 */
+#define POSITION_FUZZY_KP_MIN_SCALE 0.90f /* 位置小误差时 Kp 缩放系数 */
+#define POSITION_FUZZY_KP_MAX_SCALE 1.50f /* 位置大误差时 Kp 缩放系数 */
 #define POSITION_FUZZY_KD_MIN_SCALE 0.80f /* 位置平稳时 Kd 缩放系数 */
-#define POSITION_FUZZY_KD_MAX_SCALE 1.40f /* 位置快速变化时 Kd 缩放系数 */
+#define POSITION_FUZZY_KD_MAX_SCALE 1.50f /* 位置快速变化时 Kd 缩放系数 */
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.35f /* 位置误差变化率滤波系数 */
-#define POSITION_PLANNER_MIN_SPEED_MPS 0.20f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 2.0f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_MIN_SPEED_MPS 0.45f /* 速度规划器最小速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 2.05f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 12.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 18.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 3000.0f /* 速度规划器最大加加速度，单位 m/s³ */
@@ -69,15 +69,15 @@
 #define MOTION_MPC_CRUISE_PREFERENCE_DISTANCE_M 0.25f /* 巡航候选偏好距离 */
 #define MOTION_MPC_CRUISE_PREFERENCE_GAIN 300.0f /* 巡航候选偏好增益 */
 #define MOTION_MPC_LOW_SPEED_PREFERENCE_DISTANCE_M 0.08f /* 低速候选偏好启用距离，单位 m */
-#define MOTION_MPC_LOW_SPEED_PREFERENCE_SPEED_MPS 0.45f /* 低速候选偏好速度基准，单位 m/s */
+#define MOTION_MPC_LOW_SPEED_PREFERENCE_SPEED_MPS 0.4f /* 低速候选偏好速度基准，单位 m/s */
 #define MOTION_MPC_LOW_SPEED_PREFERENCE_GAIN 8.0f /* 低速候选代价增益 */
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.005f /* 近目标距离阈值，单位 m */
 #define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f /* 静摩擦补偿启用距离，单位 m */
 #define POSITION_STATIC_FRICTION_SPEED_MPS 0.0700433f /* 静摩擦补偿速度，单位 m/s */
-#define CHASSIS_MASS_KG 5.4f /* 底盘质量，单位 kg */
-#define CHASSIS_CENTER_OF_MASS_X_M - 0.060f /* 质心相对车体中心的前向偏移，单位 m */
+#define CHASSIS_MASS_KG 5.0f /* 底盘质量，单位 kg */
+#define CHASSIS_CENTER_OF_MASS_X_M - 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
 #define POSITION_ACCEL_FEEDBACK_GAIN 0.274512f /* 位置环加速度反馈增益 */
 #define POSITION_FORCE_TO_SPEED_FF_MPS_PER_N 0.0103671f /* 作用力前馈转速度系数，单位 m/(s·N) */
@@ -93,8 +93,8 @@
 #define POSE_SYNC_MIN_SCALE 1.00f       /* 位姿协同最小速度缩放系数 */
 #define POSE_SYNC_YAW_RATE_FULL_RAD_S 3.0f /* 偏航角速度满量程，单位 rad/s */
 #define POSE_SYNC_YAW_RATE_MIN_SCALE 0.50f /* 偏航运动时平移最低缩放系数 */
-#define POSE_YAW_TOLERANCE_DEG 2.0f     /* 位姿到点偏航容差，单位 deg */
-#define POSE_YAW_DEAD_ZONE_DEG 0.1f     /* 位姿偏航死区，单位 deg */
+#define POSE_YAW_TOLERANCE_DEG 1.0f     /* 位姿到点偏航容差，单位 deg */
+#define POSE_YAW_DEAD_ZONE_DEG 0.05f     /* 位姿偏航死区，单位 deg */
 #define MAKEUP_FOR_ANGLE 2.0f           /* 偏航角补偿量，单位 deg */
 
 /* 视觉稳定参数 */
