@@ -119,6 +119,9 @@ int abs_int(int int1);
 float abs_float(float value);
 void Robot_RealtimeControl(float dt);
 void Robot_ServiceTick(void);
+extern volatile uint32_t robot_control_current_us;
+extern volatile uint32_t robot_control_max_us;
+extern volatile uint32_t robot_control_overrun_count;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

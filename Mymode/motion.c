@@ -219,9 +219,9 @@ static float mpc_linear_speed_limit(float distance_m, float speed_mps,
 	}
 	cruise_speed_mps = ClampFloat(cruise_speed_mps, 0.0f,
 	        POSITION_MAX_LINEAR_SPEED_MPS);
-	for (candidate_index = 0U; candidate_index < 5U; candidate_index++) {
+	for (candidate_index = 0U; candidate_index < 9U; candidate_index++) {
 		float target_speed = cruise_speed_mps *
-		        (float)candidate_index * 0.25f;
+		        (float)candidate_index * 0.125f;
 		float predicted_distance = distance_m;
 		float predicted_speed = ClampFloat(speed_mps, 0.0f,
 		        POSITION_MAX_LINEAR_SPEED_MPS);
@@ -237,11 +237,26 @@ static float mpc_linear_speed_limit(float distance_m, float speed_mps,
 			predicted_distance -= predicted_speed * MOTION_MPC_STEP_S;
 			cost += 0.02f * speed_delta * speed_delta;
 			if (predicted_distance < 0.0f) {
-				cost += 200.0f * predicted_distance * predicted_distance;
+				cost += MOTION_MPC_OVERSHOOT_WEIGHT *
+				        predicted_distance * predicted_distance;
 			}
 		}
-		cost += 120.0f * predicted_distance * predicted_distance +
-		        2.0f * predicted_speed * predicted_speed;
+		cost += MOTION_MPC_TERMINAL_DISTANCE_WEIGHT *
+		        predicted_distance * predicted_distance +
+		        MOTION_MPC_TERMINAL_SPEED_WEIGHT * predicted_speed *
+		        predicted_speed;
+		if (distance_m > MOTION_MPC_CRUISE_PREFERENCE_DISTANCE_M) {
+			float cruise_speed_error = cruise_speed_mps - target_speed;
+			cost += MOTION_MPC_CRUISE_PREFERENCE_GAIN *
+			        cruise_speed_error * cruise_speed_error;
+		}
+		if ((distance_m > MOTION_MPC_LOW_SPEED_PREFERENCE_DISTANCE_M) &&
+		        (target_speed < MOTION_MPC_LOW_SPEED_PREFERENCE_SPEED_MPS)) {
+			float low_speed_error =
+			        MOTION_MPC_LOW_SPEED_PREFERENCE_SPEED_MPS - target_speed;
+			cost += MOTION_MPC_LOW_SPEED_PREFERENCE_GAIN *
+			        low_speed_error * low_speed_error;
+		}
 		if (cost < best_cost) {
 			best_cost = cost;
 			best_speed = target_speed;
@@ -486,16 +501,20 @@ void UpdatePositionControl(float dt) {
 		feedforward_vx = force_x_n * param->force_to_speed_ff;
 		feedforward_vy = force_y_n * param->force_to_speed_ff;
 	}
-	float feedback_vx =
-	        fuzzy_pid_calc(&position_control.pid_x, error_x_local, dt,
+	float feedback_vx_global =
+	        fuzzy_pid_calc(&position_control.pid_x, error_x_global, dt,
 				POSITION_FUZZY_ERROR_FULL_M, POSITION_FUZZY_RATE_FULL_MPS,
 				POSITION_FUZZY_KP_MIN_SCALE, POSITION_FUZZY_KP_MAX_SCALE,
 				POSITION_FUZZY_KD_MIN_SCALE, POSITION_FUZZY_KD_MAX_SCALE, 0U);
-	float feedback_vy =
-	        fuzzy_pid_calc(&position_control.pid_y, error_y_local, dt,
+	float feedback_vy_global =
+	        fuzzy_pid_calc(&position_control.pid_y, error_y_global, dt,
 				POSITION_FUZZY_ERROR_FULL_M, POSITION_FUZZY_RATE_FULL_MPS,
 				POSITION_FUZZY_KP_MIN_SCALE, POSITION_FUZZY_KP_MAX_SCALE,
 				POSITION_FUZZY_KD_MIN_SCALE, POSITION_FUZZY_KD_MAX_SCALE, 0U);
+	float feedback_vx = feedback_vx_global * cosf(current_yaw_rad) +
+	        feedback_vy_global * sinf(current_yaw_rad);
+	float feedback_vy = -feedback_vx_global * sinf(current_yaw_rad) +
+	        feedback_vy_global * cosf(current_yaw_rad);
 	float feedback_speed =
 	        sqrtf(feedback_vx * feedback_vx + feedback_vy * feedback_vy);
 
@@ -746,6 +765,7 @@ void UpdatePoseCoordination(float dt) {
 	float yaw_error_deg;
 	float pos_scale;
 	float yaw_scale;
+	float yaw_rate_scale;
 
 	if (!pose_coordination.is_enabled || dt <= 0.0f) {
 		pose_coordination.sync_scale = 1.0f;
@@ -770,6 +790,11 @@ void UpdatePoseCoordination(float dt) {
 	pose_coordination.sync_scale =
 	        ClampFloat((pos_scale < yaw_scale) ? pos_scale : yaw_scale,
 	                pose_coordination.min_scale, 1.0f);
+	yaw_rate_scale = 1.0f - fabsf(motion_observer.yaw_rate_rad_s) /
+	        POSE_SYNC_YAW_RATE_FULL_RAD_S;
+	yaw_rate_scale = ClampFloat(yaw_rate_scale,
+	        POSE_SYNC_YAW_RATE_MIN_SCALE, 1.0f);
+	pose_coordination.sync_scale *= yaw_rate_scale;
 }
 
 uint8_t move_to_pose_target(float x, float y, float yaw) {
@@ -820,7 +845,7 @@ void Mecanum_Init(ChassisConfig_t config) {
 
 	chassis_config = config;
 	if (chassis_config.max_rpm <= 0.0f) {
-		chassis_config.max_rpm = CHASSIS_SPEED_MAX_RPM;
+		chassis_config.max_rpm = CHASSIS_OPEN_LOOP_MAX_RPM;
 	}
 	k_omega = (config.wheel_dist_x + config.wheel_dist_y) / 2.0f;
 	memset(control_ctx.motor, 0, sizeof(control_ctx.motor));
@@ -828,6 +853,7 @@ void Mecanum_Init(ChassisConfig_t config) {
 
 void Mecanum_Kinematics(float vx, float vy, float omega) {
 	float actual_omega = omega;
+	float max_rpm;
 
 	if (attitude_control.is_enabled) {
 
@@ -848,35 +874,45 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 	vy = -vy;
 
 
-	float v4 = vx - vy - k_omega * actual_omega;
-	float v2 = vx + vy + k_omega * actual_omega;
-	float v3 = vx + vy - k_omega * actual_omega;
-	float v1 = vx - vy + k_omega * actual_omega;
-
-
 	const float linear_to_rpm = 60.0f /
 	        (2.0f * 3.1415926f * chassis_config.wheel_radius) *
 	        CHASSIS_WHEEL_SPEED_SCALE;
-	float rpm4 = v4 * linear_to_rpm;
-	float rpm2 = v2 * linear_to_rpm;
-	float rpm3 = v3 * linear_to_rpm;
-	float rpm1 = v1 * linear_to_rpm;
-	float max_abs_rpm = fabsf(rpm4);
-	float scale = 1.0f;
+	float translation_speed[4] = {vx - vy, vx + vy, vx + vy, vx - vy};
+	float rotation_speed[4] = {-k_omega * actual_omega,
+	        k_omega * actual_omega, -k_omega * actual_omega,
+	        k_omega * actual_omega};
+	float translation_scale = 1.0f;
+	uint8_t wheel_index;
 
-	if (fabsf(rpm2) > max_abs_rpm)
-		max_abs_rpm = fabsf(rpm2);
-	if (fabsf(rpm3) > max_abs_rpm)
-		max_abs_rpm = fabsf(rpm3);
-	if (fabsf(rpm1) > max_abs_rpm)
-		max_abs_rpm = fabsf(rpm1);
-	if (max_abs_rpm > chassis_config.max_rpm) {
-		scale = chassis_config.max_rpm / max_abs_rpm;
-		rpm4 *= scale;
-		rpm2 *= scale;
-		rpm3 *= scale;
-		rpm1 *= scale;
+	max_rpm = ((is_position_control_enabled != 0U) ||
+	        (attitude_control.is_enabled != 0U)) ?
+	        CHASSIS_CLOSED_LOOP_MAX_RPM : chassis_config.max_rpm;
+	for (wheel_index = 0U; wheel_index < 4U; wheel_index++) {
+		if (translation_speed[wheel_index] > 0.0f) {
+			float scale = (max_rpm / linear_to_rpm -
+			        rotation_speed[wheel_index]) /
+			        translation_speed[wheel_index];
+			if (scale < translation_scale) {
+				translation_scale = scale;
+			}
+		} else if (translation_speed[wheel_index] < 0.0f) {
+			float scale = (-max_rpm / linear_to_rpm -
+			        rotation_speed[wheel_index]) /
+			        translation_speed[wheel_index];
+			if (scale < translation_scale) {
+				translation_scale = scale;
+			}
+		}
 	}
+	translation_scale = ClampFloat(translation_scale, 0.0f, 1.0f);
+	float rpm4 = (translation_speed[0] * translation_scale +
+	        rotation_speed[0]) * linear_to_rpm;
+	float rpm2 = (translation_speed[1] * translation_scale +
+	        rotation_speed[1]) * linear_to_rpm;
+	float rpm3 = (translation_speed[2] * translation_scale +
+	        rotation_speed[2]) * linear_to_rpm;
+	float rpm1 = (translation_speed[3] * translation_scale +
+	        rotation_speed[3]) * linear_to_rpm;
 
 
 	motor4.speed_rpm = (int16_t)rpm4;

@@ -58,8 +58,9 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define AI_TUNE_TRAJECTORY_COUNT 5U
-#define AI_TUNE_TRAJECTORY_HOLD_MS 1U
+#define AI_TUNE_TRAJECTORY_COUNT 4U
+#define AI_TUNE_TRAJECTORY_HOLD_MS 300U
+#define ROBOT_CONTROL_BUDGET_US 1000U
 
 /* USER CODE END PD */
 
@@ -79,9 +80,8 @@ AppContext_t app_ctx = {
 				.debug_enable = 0,
 };
 static const ai_tune_pose_t ai_tune_trajectory[AI_TUNE_TRAJECTORY_COUNT] = {
-		{-800.0f, 0.0f, 0.0f},
-		{-800.0f, 800.0f, 0.0f},
-		{-800.0f, 800.0f, -90.0f},
+		{-1200.0f, 0.0f, 0.0f},
+		{-1200.0f, 800.0f, -90.0f},
 		{0.0f, 0.0f, -90.0f},
 		{0.0f, 0.0f, 0.0f},
 };
@@ -90,6 +90,10 @@ static uint8_t ai_tune_trajectory_index;
 static uint32_t ai_tune_trajectory_hold_start_ms;
 static uint8_t ai_tune_servo_initialized;
 static uint8_t manual_trajectory_pending;
+volatile uint32_t robot_control_current_us;
+volatile uint32_t robot_control_max_us;
+volatile uint32_t robot_control_overrun_count;
+static uint32_t robot_control_cycles_per_us;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,6 +105,39 @@ void Robot_ServiceTick(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+static void Robot_ControlTiming_Reset(void)
+{
+	robot_control_current_us = 0U;
+	robot_control_max_us = 0U;
+	robot_control_overrun_count = 0U;
+}
+
+static void Robot_ControlTiming_Init(void)
+{
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CYCCNT = 0U;
+	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+	robot_control_cycles_per_us = SystemCoreClock / 1000000U;
+	if (robot_control_cycles_per_us == 0U) {
+		robot_control_cycles_per_us = 1U;
+	}
+	Robot_ControlTiming_Reset();
+}
+
+static void Robot_ControlTiming_Update(uint32_t start_cycle)
+{
+	uint32_t elapsed_us = (DWT->CYCCNT - start_cycle) /
+	        robot_control_cycles_per_us;
+
+	robot_control_current_us = elapsed_us;
+	if (elapsed_us > robot_control_max_us) {
+		robot_control_max_us = elapsed_us;
+	}
+	if (elapsed_us > ROBOT_CONTROL_BUDGET_US) {
+		robot_control_overrun_count++;
+	}
+}
+
 static void ai_tune_start_trajectory(float max_speed_mps)
 {
 	ai_tune_trajectory_active = 1U;
@@ -122,7 +159,8 @@ static void ai_tune_update_trajectory(void)
 		return;
 	}
 
-	if (!IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG)) {
+	if ((ai_tune_trajectory_hold_start_ms == 0U) &&
+			(!IsPoseReached(raceh, POSE_YAW_TOLERANCE_DEG))) {
 		return;
 	}
 
@@ -177,6 +215,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+	Robot_ControlTiming_Init();
 
   /* USER CODE END SysInit */
 
@@ -226,7 +265,7 @@ int main(void)
 	ChassisConfig_t config = {.wheel_radius = 0.077f,
 	        .wheel_dist_x = 0.0759f,
 	        .wheel_dist_y = 0.085f,
-	        .max_rpm = CHASSIS_SPEED_MAX_RPM};
+	        .max_rpm = CHASSIS_OPEN_LOOP_MAX_RPM};
 	Mecanum_Init(config);
 	/* 复位后立即下发四轮 0 RPM，清除电机保留的上一条速度指令。 */
 	Mecanum_SendVelocity();
@@ -342,7 +381,7 @@ static void Robot_HandleDebugModeTransition(void) {
 	task2_start_pending = 0U;
 	task2_zero_confirm_time_ms = 0U;
 	task1_state.active = 0U;
-	task2_state.active = 0U;
+				 task2_state.active = 0U;
 	PositionControl_Enable(0U);
 	EnableAttitudeStabilization(0U);
 	vision_enable(0U);
@@ -352,6 +391,8 @@ static void Robot_HandleDebugModeTransition(void) {
 
 void Robot_RealtimeControl(float dt) {
 	if (dt > 0.0f) {
+		uint32_t control_start_cycle = DWT->CYCCNT;
+
 		/* FreeRTOS 固定周期任务调用本函数，dt 为控制周期秒数。 */
 		ai_tune_poll();
 		Robot_HandleDebugModeTransition();
@@ -378,13 +419,14 @@ void Robot_RealtimeControl(float dt) {
 					servo_init();
 					ai_tune_servo_initialized = 1U;
 				}
-				__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1100U);
-				__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840U);
+				__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1070U);
+				__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800U);
 				task2_start_pending = 0U;
 				task1_state.active = 0U;
 				task1_state.completed = 0U;
 				task2_state.active = 0U;
 				task2_state.completed = 0U;
+				Robot_ControlTiming_Reset();
 				Start_flag = 1U;
 				ai_tune_start_trajectory(max_speed_mps);
 			}
@@ -443,6 +485,7 @@ void Robot_RealtimeControl(float dt) {
 			__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 200);
 		else
 			__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 0);
+		Robot_ControlTiming_Update(control_start_cycle);
 	}
 }
 void Robot_ServiceTick(void) {

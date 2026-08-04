@@ -48,16 +48,22 @@ void motion_plan_set_cruise(float cruise_speed_mps)
 /** 依据剩余距离执行带加加速度限制的减速规划。 */
 float motion_plan_update(float distance_error_m, float dt)
 {
+	if (dt <= 0.0f) {
+		return plan_speed_mps;
+	}
+
     float cruise_speed = motion_plan_limit(plan_cruise_speed_mps, 0.0f,
             POSITION_MAX_LINEAR_SPEED_MPS);
     float brake_speed = sqrtf(2.0f * POSITION_COMMAND_BRAKE_DECEL_MPS2 *
             distance_error_m);
     float target_speed = motion_plan_limit(cruise_speed, 0.0f, brake_speed);
     float target_accel;
-    float accel_delta;
+	float accel_delta;
 
-    if (plan_speed_mps > target_speed) {
-        target_accel = -POSITION_PLANNER_MAX_DECEL_MPS2;
+	if (plan_speed_mps > target_speed) {
+		target_accel = (target_speed - plan_speed_mps) / dt;
+		target_accel = motion_plan_limit(target_accel,
+		        -POSITION_PLANNER_MAX_DECEL_MPS2, 0.0f);
     } else if (plan_speed_mps < target_speed) {
         target_accel = POSITION_PLANNER_MAX_ACCEL_MPS2;
     } else {
@@ -74,12 +80,7 @@ float motion_plan_update(float distance_error_m, float dt)
     plan_speed_mps += plan_accel_mps2 * dt;
     plan_speed_mps = motion_plan_limit(plan_speed_mps, 0.0f, cruise_speed);
 
-    if (plan_speed_mps > target_speed) {
-        plan_speed_mps = target_speed;
-        plan_accel_mps2 = 0.0f;
-    }
-
-    if (plan_speed_mps < POSITION_PLANNER_MIN_SPEED_MPS &&
+	if (plan_speed_mps < POSITION_PLANNER_MIN_SPEED_MPS &&
             target_speed > POSITION_PLANNER_MIN_SPEED_MPS) {
         plan_speed_mps = POSITION_PLANNER_MIN_SPEED_MPS;
     }
