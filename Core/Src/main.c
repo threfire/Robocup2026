@@ -89,7 +89,6 @@ static uint8_t ai_tune_trajectory_active;
 static uint8_t ai_tune_trajectory_index;
 static uint32_t ai_tune_trajectory_hold_start_ms;
 static uint8_t ai_tune_servo_initialized;
-static uint8_t manual_trajectory_pending;
 volatile uint32_t robot_control_current_us;
 volatile uint32_t robot_control_max_us;
 volatile uint32_t robot_control_overrun_count;
@@ -377,7 +376,6 @@ static void Robot_HandleDebugModeTransition(void) {
 
 	previous_debug = debug;
 	Start_flag = 0U;
-	manual_trajectory_pending = 0U;
 	task2_start_pending = 0U;
 	task2_zero_confirm_time_ms = 0U;
 	task1_state.active = 0U;
@@ -411,7 +409,7 @@ void Robot_RealtimeControl(float dt) {
 			float target_y_mm;
 			float max_speed_mps;
 
-			if (ai_tune_take_start(&target_x_mm, &target_y_mm,
+			if ((debug != 0U) && ai_tune_take_start(&target_x_mm, &target_y_mm,
 			        &max_speed_mps)) {
 				(void)target_x_mm;
 				(void)target_y_mm;
@@ -497,7 +495,7 @@ void Robot_ServiceTick(void) {
 	if (Key_Num == 1) {
 		Key_Num = 0U;
 		Start_flag = 0U;
-		manual_trajectory_pending = 1U;
+		ai_tune_trajectory_active = 0U;
 		task2_start_pending = odometer_request_zero();
 		task2_zero_confirm_time_ms = 0U;
 		tasknum = 1U;
@@ -516,14 +514,8 @@ void Robot_ServiceTick(void) {
 	        ((HAL_GetTick() - task2_zero_confirm_time_ms) >=
 	                TASK2_ZERO_SETTLE_MS)) {
 		task2_start_pending = 0U;
-		if (manual_trajectory_pending != 0U) {
-			manual_trajectory_pending = 0U;
-			Start_flag = 1U;
-			ai_tune_start_trajectory(POSITION_PLANNER_CRUISE_SPEED_MPS);
-		} else {
-			Start_flag = 1U;
-			start_task1();
-		}
+		Start_flag = 1U;
+		start_task1();
 	}
 	run_task1();
 }

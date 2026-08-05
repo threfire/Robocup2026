@@ -41,6 +41,9 @@
 #define TASK1_EMM_BACKWARD_SPEED_RPM 200U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
 #define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
+#define TASK1_HOME_CRUISE_SPEED_MPS 2.20f /* 回家巡航速度，单位 m/s */
+#define TASK1_HOME_APPROACH_SPEED_MPS 1.50f /* 回家接近速度，单位 m/s */
+#define TASK1_HOME_APPROACH_DISTANCE_M 0.50f /* 回家降速距离，单位 m */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 /* 位置控制 PID 和轨迹规划参数 */
 #define POSITION_PID_DEFAULT_KP 10.50f /* 位置 PID 比例系数 */
@@ -52,8 +55,8 @@
 #define POSITION_FUZZY_KD_MIN_SCALE 0.80f /* 位置平稳时 Kd 缩放系数 */
 #define POSITION_FUZZY_KD_MAX_SCALE 1.50f /* 位置快速变化时 Kd 缩放系数 */
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.35f /* 位置误差变化率滤波系数 */
-#define POSITION_PLANNER_MIN_SPEED_MPS 0.45f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 2.05f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_MIN_SPEED_MPS 0.40f /* 速度规划器最小速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.95f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 12.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 18.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 3000.0f /* 速度规划器最大加加速度，单位 m/s³ */
@@ -106,11 +109,13 @@
 
 /* EMM 速度与位置模式参数。 */
 /* EMM 输出轴相对轮速模型存在约 1.8 倍的速度换算比例。 */
-#define CHASSIS_WHEEL_SPEED_SCALE 2.00f /* EMM 转速到轮速换算系数 */
+#define CHASSIS_OPEN_LOOP_WHEEL_SPEED_SCALE 1.80f   /* 开环 EMM 转速到轮速换算系数 */
+#define CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE 2.00f /* 闭环 EMM 转速到轮速换算系数 */
 #define CHASSIS_OPEN_LOOP_MAX_RPM 700.0f    /* 开环速度模式最大转速，单位 RPM */
 #define CHASSIS_CLOSED_LOOP_MAX_RPM 1000.0f /* 闭环控制最大转速，单位 RPM */
 /* 速度斜坡由位置规划器生成，EMM 采用 0 以避免内部 RPM 斜坡叠加延迟。 */
-#define CHASSIS_VELOCITY_ACCEL 0U       /* EMM 速度模式内部加速度 */
+#define CHASSIS_OPEN_LOOP_VELOCITY_ACCEL 0U  /* 开环 EMM 速度模式内部加速度 */
+#define CHASSIS_CLOSED_LOOP_VELOCITY_ACCEL 0U /* 闭环 EMM 速度模式内部加速度 */
 #define CHASSIS_POS_FORWARD_ACCEL 100U  /* EMM 前进位置模式加速度 */
 #define CHASSIS_POS_BACKWARD_ACCEL 100U  /* EMM 后退位置模式加速度 */
 #define POSITION_MAX_LINEAR_SPEED_MPS 7.0f /* 位置控制最大线速度，单位 m/s */

@@ -874,9 +874,14 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 	vy = -vy;
 
 
+	uint8_t is_closed_loop_enabled = (is_position_control_enabled != 0U) ||
+	        (attitude_control.is_enabled != 0U);
+	float wheel_speed_scale = (is_closed_loop_enabled != 0U) ?
+	        CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE :
+	        CHASSIS_OPEN_LOOP_WHEEL_SPEED_SCALE;
 	const float linear_to_rpm = 60.0f /
 	        (2.0f * 3.1415926f * chassis_config.wheel_radius) *
-	        CHASSIS_WHEEL_SPEED_SCALE;
+	        wheel_speed_scale;
 	float translation_speed[4] = {vx - vy, vx + vy, vx + vy, vx - vy};
 	float rotation_speed[4] = {-k_omega * actual_omega,
 	        k_omega * actual_omega, -k_omega * actual_omega,
@@ -884,8 +889,7 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 	float translation_scale = 1.0f;
 	uint8_t wheel_index;
 
-	max_rpm = ((is_position_control_enabled != 0U) ||
-	        (attitude_control.is_enabled != 0U)) ?
+	max_rpm = (is_closed_loop_enabled != 0U) ?
 	        CHASSIS_CLOSED_LOOP_MAX_RPM : chassis_config.max_rpm;
 	for (wheel_index = 0U; wheel_index < 4U; wheel_index++) {
 		if (translation_speed[wheel_index] > 0.0f) {
@@ -926,15 +930,21 @@ void Mecanum_Kinematics(float vx, float vy, float omega) {
 }
 
 void Mecanum_SendVelocity(void) {
+	const uint8_t is_closed_loop_enabled =
+	        (is_position_control_enabled != 0U) ||
+	        (attitude_control.is_enabled != 0U);
+	const uint8_t velocity_accel = (is_closed_loop_enabled != 0U) ?
+	        CHASSIS_CLOSED_LOOP_VELOCITY_ACCEL :
+	        CHASSIS_OPEN_LOOP_VELOCITY_ACCEL;
 
 	Emm_V5_Vel_Control(1, motor1.direction,
-	        (uint16_t)abs_int(motor1.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
+	        (uint16_t)abs_int(motor1.speed_rpm), velocity_accel, 0);
 	Emm_V5_Vel_Control(2, motor2.direction,
-	        (uint16_t)abs_int(motor2.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
+	        (uint16_t)abs_int(motor2.speed_rpm), velocity_accel, 0);
 	Emm_V5_Vel_Control(3, motor3.direction,
-	        (uint16_t)abs_int(motor3.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
+	        (uint16_t)abs_int(motor3.speed_rpm), velocity_accel, 0);
 	Emm_V5_Vel_Control(4, motor4.direction,
-	        (uint16_t)abs_int(motor4.speed_rpm), CHASSIS_VELOCITY_ACCEL, 0);
+	        (uint16_t)abs_int(motor4.speed_rpm), velocity_accel, 0);
 }
 
 void stop(void) {

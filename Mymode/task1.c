@@ -110,6 +110,7 @@ void start_task1(void) {
 	task1_state.step_start = HAL_GetTick();
 	task1_vision_timeout = 0U;
 	task1_fourth_color_state = 0U;
+	PositionControl_SetMaxSpeed(1.80f);
 	memset(&task1_qrcode_servo_move, 0, sizeof(task1_qrcode_servo_move));
 	task1_qrcode_servo_move_started = 0U;
 	is_hasgetcolor = 0U;
@@ -141,7 +142,7 @@ void run_task1(void) {
 	case 23: task1_go_material_point(5, 5); break;
 	case 24: task1_wait_vision(5); break;
 	case 25: task1_relative_action(0, 0U); break;
-	case 126: task1_go_second_qrcode(); break;
+	case 26: task1_go_second_qrcode(); break;
 	case 27: task1_go_trophy_transition(); break;
 	case 28: task1_pick_trophies(); break;
 	case 31: task1_go_second_podium(); break;
@@ -192,7 +193,7 @@ static uint8_t task1_move_target(
 static void task1_qrcode_servo_slowdown(void) {
 	if (!task1_qrcode_servo_move_started && IsPositionReached(0.60f)) {
 		servo_smooth_move_start(&task1_qrcode_servo_move, &htim14,
-		        TIM_CHANNEL_1, 2460U, 1820U, 500);
+		        TIM_CHANNEL_1, 2460U, 1800U, 600);
 		task1_qrcode_servo_move_started = 1U;
 	}
 
@@ -213,6 +214,7 @@ static void task1_go_first_qrcode(void) {
 	tasknum = 1;
 	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
 	if (task1_move_target(0, 0.0f, 0.0f)) {
+		PositionControl_SetMaxSpeed(1.95f);
 		Servo_Action_Group(2);
 		if (qanum == 0U) {
 			return;
@@ -250,7 +252,7 @@ static void task1_prepare_material_turnplate(void) {
 	HAL_Delay(300);
 	Move_to_turnplate(5);
 	SetTargetVelocity(-0.8f, 0.0f, -1.730);
-	HAL_Delay(600);
+	HAL_Delay(300);
 	Get_Materialcolor(1U);
 	HAL_Delay(100);
 
@@ -459,5 +461,8 @@ static void task1_go_home(void) {
 	raceh = POSITION_FINE_REACHED_TOLERANCE_M;
 	if (task1_move_target(11, 0.0f, -90.0f)) {
 		task1_finish();
+		return;
 	}
+	PositionControl_SetMaxSpeed(IsPositionReached(TASK1_HOME_APPROACH_DISTANCE_M) ?
+	        TASK1_HOME_APPROACH_SPEED_MPS : TASK1_HOME_CRUISE_SPEED_MPS);
 }
