@@ -71,12 +71,12 @@ void Servo_Action_Group(uint8_t num)
 {
     if (num == 1U)
     {
-        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1050);
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1060);
         __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2460);
     }
     else if (num == 2U)/* 放地上 */
     {
-        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1050);
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1060);
         __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);
     }
     else if (num == 3U) /* 举起来（冠军台） */
