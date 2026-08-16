@@ -14,7 +14,7 @@
 #include <string.h>
 
 /** 第一段五圆柱路径配置完成标志。 */
-#define TASK1_MATERIAL_PATH_CONFIGURED 0U
+#define TASK1_MATERIAL_PATH_CONFIGURED 1U
 
 /** 第二段三奖杯路径配置完成标志。 */
 #define TASK1_TROPHY_PATH_CONFIGURED 0U
@@ -95,13 +95,12 @@ static const Point2D_t task1_targets[] = {
 };
 
 /** 伸缩环 PWM 位置表。 */
-const int Telescopic_ring[] = {1500, 1340, 1800};
+const int Telescopic_ring[] = {1500, 1800, 1340};
 static uint8_t task1_vision_timeout;
 static uint8_t task1_fourth_color_state;
 static servo_smooth_move_t task1_qrcode_servo_move;
 static uint8_t task1_qrcode_servo_move_started;
-static uint8_t task1_turnplate_last_slot;
-static uint8_t task1_turnplate_initialized;
+static uint8_t task1_turnplate_last_slot = 0xFFU;
 /** 连续收拢路径启动标志。 */
 static uint8_t task1_curve_started;
 /** 连续收拢过程中的执行机构阶段。 */
@@ -111,14 +110,14 @@ static uint32_t task1_curve_finish_time_ms;
 
 /** 切换物料转盘到指定槽位。 */
 void Move_to_turnplate(uint8_t num) {
-	if (num == 0U || num > TURNPLATE_SLOT_COUNT ||
+	if (num > TURNPLATE_SLOT_COUNT ||
 	        task1_turnplate_last_slot == num) {
 		return;
 	}
 
 	Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_DIRECTION,
 	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
-	        TurnplatePosition[num - 1U], 1U, 0U);
+	        TurnplatePosition[num], 1U, 0U);
 	task1_turnplate_last_slot = num;
 }
 
@@ -183,25 +182,7 @@ static void task1_go_home(void);
 
 /** 初始化任务一状态机和舵机缓动状态。 */
 void start_task1(void) {
-	if (task1_turnplate_initialized == 0U) {
-		Emm_V5_En_Control(TURNPLATE_MOTOR_ADDR, 1U, 0U);
-		HAL_Delay(5U);
-#if (TURNPLATE_ORIGIN_SAVE_ON_STARTUP != 0U)
-		Emm_V5_Origin_Set_O(TURNPLATE_MOTOR_ADDR, 1U);
-		HAL_Delay(5U);
-		Emm_V5_Reset_CurPos_To_Zero(TURNPLATE_MOTOR_ADDR);
-		HAL_Delay(5U);
-#endif
-		Emm_V5_Origin_Modify_Params(TURNPLATE_MOTOR_ADDR, 1U,
-		        TURNPLATE_ORIGIN_MODE, TURNPLATE_ORIGIN_DIRECTION,
-		        TURNPLATE_ORIGIN_SPEED_RPM, TURNPLATE_ORIGIN_TIMEOUT_MS,
-		        TURNPLATE_ORIGIN_COLLISION_SPEED_RPM,
-		        TURNPLATE_ORIGIN_COLLISION_CURRENT_MA,
-		        TURNPLATE_ORIGIN_COLLISION_TIME_MS, 1U);
-		HAL_Delay(5U);
-		task1_turnplate_initialized = 1U;
-	}
-	task1_turnplate_last_slot = 0U;
+	task1_turnplate_last_slot = 0xFFU;
 
 	task1_state.active = 1;
 	task1_state.current_step = 1;
@@ -231,7 +212,7 @@ void run_task1(void) {
 	case 1: task1_go_first_qrcode(); break;
 	case 2: task1_prepare_material_turnplate(); break;
 	case 11: task1_go_first_material_point(); break;
-	case 12: task1_wait_vision(1); break;
+	case 112: task1_wait_vision(1); break;
 	case 13: task1_relative_action(0, 0U); break;
 	case 14: task1_go_material_point(2, 2); break;
 	case 15: task1_wait_vision(2); break;
@@ -296,7 +277,7 @@ static uint8_t task1_move_target(
 static void task1_qrcode_servo_slowdown(void) {
 	if (!task1_qrcode_servo_move_started && IsPositionReached(0.60f)) {
 		servo_smooth_move_start(&task1_qrcode_servo_move, &htim14,
-		        TIM_CHANNEL_1, 2460U, 1800U, 600);
+		        TIM_CHANNEL_1, 2460U, 1840U, 600);
 		task1_qrcode_servo_move_started = 1U;
 	}
 
@@ -417,7 +398,7 @@ static void task1_go_material_point(
 	if (target_index == 1U) {
 		if ((task1_fourth_color_state == 0U) &&
 		        IsPositionReached(0.8f)) {
-			Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
+			Move_to_turnplate(6U);
 			task1_fourth_color_state = 1U;
 		}
 
@@ -425,8 +406,8 @@ static void task1_go_material_point(
 		        IsPositionReached(0.2f)) {
 			Get_Materialcolor(3U);
 			Get_Materialcolor(4U);
-			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
-			Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
+			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
+			Move_to_turnplate(6U);
 			task1_fourth_color_state = 2U;
 		}
 	}
@@ -493,10 +474,10 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 	if (!skip_pos_move) {
 		POS_move();
 	}
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
 
 	if (task1_state.current_step != 25U){
-		Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
+		Move_to_turnplate(6U);
 	}else{
 		Move_to_turnplate(5);
 	}
@@ -580,21 +561,21 @@ static void task1_pick_trophies(void) {
 
 /** 前往亚军台。 */
 static void task1_go_second_podium(void) {
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
 	task1_go_podium_point(8, 6, 5, 0.6f);
 }
 
 
 /** 前往冠军台。 */
 static void task1_go_champion_podium(void) {
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
 	task1_go_podium_point(9, 4, 0, 0.0f);
 }
 
 
 /** 前往季军台。 */
 static void task1_go_third_podium(void) {
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
 	task1_go_podium_point(10, 7, 0, 0.0f);
 }
 
@@ -610,7 +591,7 @@ static void task1_go_podium_point(uint8_t target_index,
 
 	if (prepare_servo != 0U && IsPositionReached(prepare_tolerance_m)) {
 		Servo_Action_Group(prepare_servo);
-		Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
+		Move_to_turnplate(6U);
 	}
 }
 

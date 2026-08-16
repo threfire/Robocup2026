@@ -269,8 +269,26 @@ int main(void)
 	Mecanum_Init(config);
 	/* 复位后立即下发四轮 0 RPM，清除电机保留的上一条速度指令。 */
 	Mecanum_SendVelocity();
+//					Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_DIRECTION,
+//	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
+//	        0, 1U, 0U);
+//	Emm_V5_En_Control(TURNPLATE_MOTOR_ADDR, 1U, 0U);
+	HAL_Delay(5U);
+#if (TURNPLATE_ORIGIN_SAVE_ON_STARTUP != 0U)
+	Emm_V5_Origin_Set_O(TURNPLATE_MOTOR_ADDR, 1U);
+#else
+//	Emm_V5_Origin_Trigger_Return(TURNPLATE_MOTOR_ADDR,
+//	        TURNPLATE_ORIGIN_MODE, 0U);
+//					Emm_V5_Origin_Modify_Params(TURNPLATE_MOTOR_ADDR, 1U, 0, 0, );
+#endif
+
 	/* 等待里程计上电后进入稳定输出，再初始化零点状态。 */
 	HAL_Delay(2000);
+					Emm_V5_Origin_Interrupt(TURNPLATE_MOTOR_ADDR);
+										HAL_Delay(100);
+					Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_DIRECTION,
+	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
+	        control_ctx.material_position_pulses[1] , 1U, 0U);
 	odometer_init();
 	/* 控制环模块初始化：视觉、位置、位姿协同和姿态环。 */
 	vision_init();
@@ -281,6 +299,7 @@ int main(void)
 	memset(rx_data, 0, sizeof(rx_data));
 	/* USART3 颜色传感器按字节中断接收。 */
 	HAL_UART_Receive_IT(&huart3, rx_data, 1);
+	/* USART3 颜色传感器白平衡校准。 */
 //	HAL_UART_Transmit(&huart3, gy33sendbuffer1, APP_GY33_CMD_LEN, 100U);
 	vision_enable(0U);
 //	servo_init();

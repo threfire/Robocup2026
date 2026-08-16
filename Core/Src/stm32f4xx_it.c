@@ -320,12 +320,14 @@ void USART3_IRQHandler(void)
 			}
 			if ((checksum & 0xFF) == uart3_color_parser.buffer[7]) {
 				/* 校验通过后更新 RGB 结果，业务层读取 scan_information。 */
+				scan_information.sequence++;
 				scan_information.R =
 				        uart3_color_parser.buffer[4];
 				scan_information.G =
 				        uart3_color_parser.buffer[5];
 				scan_information.B =
 				        uart3_color_parser.buffer[6];
+				scan_information.sequence++;
 			}
 			uart3_color_parser.state = 0;
 		}

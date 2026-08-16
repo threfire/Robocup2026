@@ -19,12 +19,12 @@ ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
         .material_position_pulses = {
                 0U,
-                TURNPLATE_SLOT_PULSES * 1U,
-                TURNPLATE_SLOT_PULSES * 2U,
-                TURNPLATE_SLOT_PULSES * 3U,
-                TURNPLATE_SLOT_PULSES * 4U,
-                TURNPLATE_SLOT_PULSES * 5U,
-                TURNPLATE_SLOT_PULSES * 6U,
+                720U,
+                1150U,
+                1580U,
+                2010U,
+                2500U,
+                2950U, /* 识别第四个物料的虚拟转盘位置 */
         },
         .task_num = 1,
         .cam_mode = 2,

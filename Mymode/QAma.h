@@ -8,9 +8,13 @@ typedef struct {
 	uint8_t G;
 	uint8_t B;
 	uint8_t color;
+	uint16_t H;
+	uint8_t S;
+	uint8_t V;
+	uint32_t sequence;
 }Scan_information;
 
-extern Scan_information scan_information;
+extern volatile Scan_information scan_information;
 extern int detected_colors[5];
 
 // 任务 1 二维码到移动方案映射

@@ -224,9 +224,10 @@ static void motion_path_reference_update(void)
 		        motion_path.segment_index];
 		float end_angle_rad = motion_path.circle_angle_rad[
 		        motion_path.segment_index + 1U];
+		/* 平移坐标已旋转 180°，路径切线同步转换到车体 yaw 方向。 */
 		float yaw_rad = start_angle_rad +
 		        (end_angle_rad - start_angle_rad) * motion_path.segment_u +
-		        (float)motion_path.circle_direction * 1.5707963267948966f;
+		        -(float)motion_path.circle_direction * 1.5707963267948966f;
 
 		attitude_control.target_yaw = yaw_rad * 57.29577951308232f;
 		motion_path.yaw_rate_m_inv = (end_angle_rad - start_angle_rad) /

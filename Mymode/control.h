@@ -125,22 +125,12 @@
 /* 转盘 ZDT 电机 5 的绝对位置参数，位置单位为驱动器脉冲。 */
 #define TURNPLATE_MOTOR_ADDR 5U
 #define TURNPLATE_DIRECTION 0U
-#define TURNPLATE_SPEED_RPM 200U
-#define TURNPLATE_ACCEL 100U
-#define TURNPLATE_PULSES_PER_REV 3200U
-#define TURNPLATE_SLOT_COUNT 7U
-#define TURNPLATE_SLOT_PULSES \
-        (TURNPLATE_PULSES_PER_REV / TURNPLATE_SLOT_COUNT)
-#define TURNPLATE_TROPHY_SLOT TURNPLATE_SLOT_COUNT
-/* 转盘单圈就近回零配置，保存后由驱动上电自动触发。 */
+#define TURNPLATE_SPEED_RPM 300U
+#define TURNPLATE_ACCEL 230U
+#define TURNPLATE_SLOT_COUNT 6U
+/* 转盘单圈零点保存与上电回零配置。 */
 #define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 0U /* 首次标定后改为 0U */
 #define TURNPLATE_ORIGIN_MODE 0U
-#define TURNPLATE_ORIGIN_DIRECTION 0U
-#define TURNPLATE_ORIGIN_SPEED_RPM 30U
-#define TURNPLATE_ORIGIN_TIMEOUT_MS 10000U
-#define TURNPLATE_ORIGIN_COLLISION_SPEED_RPM 300U
-#define TURNPLATE_ORIGIN_COLLISION_CURRENT_MA 800U
-#define TURNPLATE_ORIGIN_COLLISION_TIME_MS 60U
 
 /* 兼容旧任务代码的速度宏 */
 #define HIGHESTSPEED POSITION_SPEED_HIGHEST_MPS /* 兼容旧代码的最高速度 */
@@ -240,7 +230,7 @@ typedef struct {
 
 typedef struct {
 	float race_tolerance_m;             /* 当前任务到点容差，单位 m */
-	uint32_t material_position_pulses[TURNPLATE_SLOT_COUNT]; /* 转盘槽位绝对脉冲位置 */
+	uint32_t material_position_pulses[TURNPLATE_SLOT_COUNT + 1U]; /* 初始点及转盘绝对脉冲位置 */
 	TaskState_t task1;                  /* 任务 1 状态机 */
 	TaskState_t task2;                  /* 任务 2 状态机 */
 	uint8_t task_num;                   /* 当前任务编号 */

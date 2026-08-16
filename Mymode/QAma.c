@@ -1,9 +1,44 @@
 #include "QAma.h"                  // Device header
 
-Scan_information scan_information;
+volatile Scan_information scan_information;
 uint8_t QAtask_flag = 0;
 int detected_colors[5];
 int detected_championcup[3];
+
+/** 颜色滤波窗口长度，必须为奇数。 */
+#define COLOR_FILTER_WINDOW_SIZE 7U
+
+/** 黑色最大明度，HSV 的 V 范围为 0 至 255。 */
+#define COLOR_BLACK_VALUE_MAX 110U
+
+/** 白色最小明度，HSV 的 V 范围为 0 至 255。 */
+#define COLOR_WHITE_VALUE_MIN 220U
+
+/** 白色最大饱和度，HSV 的 S 范围为 0 至 255。 */
+#define COLOR_WHITE_SATURATION_MAX 35U
+
+/** 彩色最小饱和度，低于该值时输出未知颜色。 */
+#define COLOR_CHROMATIC_SATURATION_MIN 55U
+
+/** 颜色编号：蓝、绿、红、白、黑。 */
+#define COLOR_BLUE 1U
+#define COLOR_GREEN 2U
+#define COLOR_RED 3U
+#define COLOR_WHITE 4U
+#define COLOR_BLACK 5U
+
+/** RGB 中值滤波和颜色投票状态。 */
+typedef struct {
+	uint8_t red[COLOR_FILTER_WINDOW_SIZE];
+	uint8_t green[COLOR_FILTER_WINDOW_SIZE];
+	uint8_t blue[COLOR_FILTER_WINDOW_SIZE];
+	uint8_t classified[COLOR_FILTER_WINDOW_SIZE];
+	uint8_t write_index;
+	uint8_t sample_count;
+	uint32_t last_sequence;
+} ColorFilterState_t;
+
+static ColorFilterState_t color_filter;
 //// 任务 1 二维码到移动方案映射
 //char* task1_scheme[16][5] = {
 //    /* 1 */ {"Black", "White", "Red", "Green", "Blue"},
@@ -66,86 +101,180 @@ int task2_scheme[6][3] = {
     /* 6 */ {3, 2, 1}
 };
 
-//void Get_Materialcolor (uint8_t ch)
-//{
-//	if(ch<4){
-//		if(scan_information.R<100&&scan_information.G<100&&scan_information.B<100){
-//			detected_colors[ch] = 5;//黑
-//			scan_information.color = detected_colors[ch];
-//		}
-//		else if(scan_information.R>200&&scan_information.G>200&&scan_information.B>200){
-//			detected_colors[ch] = 4;//白
-//			scan_information.color = detected_colors[ch];
-//		}
-//		else if(scan_information.R>130&&scan_information.G<100&&scan_information.B<100){
-//			detected_colors[ch] = 3;//红
-//			scan_information.color = detected_colors[ch];
-//		}
-//		else if(scan_information.R<100&&scan_information.G>130&&scan_information.B<130){
-//			detected_colors[ch] = 2;//绿
-//			scan_information.color = detected_colors[ch];
-//		}
-//		else if(scan_information.R<100&&scan_information.G<150&&scan_information.B>150){
-//			detected_colors[ch] = 1;//蓝
-//			scan_information.color = detected_colors[ch];
-//		}
-//		else
-//		{scan_information.color = 0;}
-//	}
-//	else {
-//		detected_colors[ch] = 15 - detected_colors[1]- detected_colors[2]- detected_colors[3]- detected_colors[0];}
-//		
-//}
+/**
+ * @brief 计算一个 RGB 通道窗口的中值。
+ */
+static uint8_t color_median(const uint8_t *samples, uint8_t count)
+{
+	uint8_t sorted[COLOR_FILTER_WINDOW_SIZE];
+	uint8_t i;
+
+	for (i = 0U; i < count; i++) {
+		sorted[i] = samples[i];
+	}
+	for (i = 1U; i < count; i++) {
+		uint8_t value = sorted[i];
+		uint8_t index = i;
+
+		while ((index > 0U) && (sorted[index - 1U] > value)) {
+			sorted[index] = sorted[index - 1U];
+			index--;
+		}
+		sorted[index] = value;
+	}
+
+	return sorted[count / 2U];
+}
+
+/**
+ * @brief 将 RGB 转换为整数 HSV 并识别黑、白、红、绿、蓝。
+ *
+ * H 的范围为 0 至 359 deg，S 和 V 的范围为 0 至 255。
+ */
+static uint8_t color_classify(uint8_t red, uint8_t green, uint8_t blue,
+		uint16_t *hue_deg, uint8_t *saturation, uint8_t *value)
+{
+	uint8_t max_channel = red;
+	uint8_t min_channel = red;
+	uint8_t delta;
+	uint8_t saturation_value;
+	int32_t hue_value = 0;
+
+	if (green > max_channel) {
+		max_channel = green;
+	}
+	if (blue > max_channel) {
+		max_channel = blue;
+	}
+	if (green < min_channel) {
+		min_channel = green;
+	}
+	if (blue < min_channel) {
+		min_channel = blue;
+	}
+
+	delta = max_channel - min_channel;
+	saturation_value = (max_channel == 0U) ? 0U :
+	        (uint8_t)((uint16_t)delta * 255U / max_channel);
+	if (delta != 0U) {
+		if (max_channel == red) {
+			hue_value = 60 * ((int32_t)green - (int32_t)blue) / delta;
+		} else if (max_channel == green) {
+			hue_value = 120 +
+			        60 * ((int32_t)blue - (int32_t)red) / delta;
+		} else {
+			hue_value = 240 +
+			        60 * ((int32_t)red - (int32_t)green) / delta;
+		}
+		if (hue_value < 0) {
+			hue_value += 360;
+		}
+	}
+
+	*hue_deg = (uint16_t)hue_value;
+	*saturation = saturation_value;
+	*value = max_channel;
+
+	if (max_channel <= COLOR_BLACK_VALUE_MAX) {
+		return COLOR_BLACK;
+	}
+	if ((max_channel >= COLOR_WHITE_VALUE_MIN) &&
+	        (saturation_value <= COLOR_WHITE_SATURATION_MAX)) {
+		return COLOR_WHITE;
+	}
+	if (saturation_value < COLOR_CHROMATIC_SATURATION_MIN) {
+		return 0U;
+	}
+	if ((hue_value < 60) || (hue_value >= 300)) {
+		return COLOR_RED;
+	}
+	if (hue_value < 180) {
+		return COLOR_GREEN;
+	}
+	return COLOR_BLUE;
+}
+
+/**
+ * @brief 读取中断更新的一帧完整 RGB 数据。
+ */
+static uint8_t color_read_frame(uint8_t *red, uint8_t *green, uint8_t *blue)
+{
+	uint32_t sequence_before;
+	uint32_t sequence_after;
+
+	do {
+		sequence_before = scan_information.sequence;
+		if ((sequence_before & 1U) != 0U) {
+			return 0U;
+		}
+		*red = scan_information.R;
+		*green = scan_information.G;
+		*blue = scan_information.B;
+		sequence_after = scan_information.sequence;
+	} while (sequence_before != sequence_after);
+
+	if (sequence_after == color_filter.last_sequence) {
+		return 0U;
+	}
+	color_filter.last_sequence = sequence_after;
+	return 1U;
+}
 
 void Update_Materialcolor(void)
 {
-	scan_information.color = 0U;
-	if (scan_information.R < 150U && scan_information.G < 180U &&
-	        scan_information.B < 180U) {
-		scan_information.color = 5U;
-	} else if (scan_information.R > 240U && scan_information.G > 240U &&
-	        scan_information.B > 240U) {
-		scan_information.color = 4U;
-	} else if (scan_information.R > 240U && scan_information.G < 200U &&
-	        scan_information.B < 200U) {
-		scan_information.color = 3U;
-	} else if (scan_information.R < 180U && scan_information.G > 240U &&
-	        scan_information.B > 240U && scan_information.G >scan_information.B) {
-		scan_information.color = 2U;
-	} else if (scan_information.R < 180U && scan_information.G > 240U &&
-	        scan_information.B > 245U) {
-		scan_information.color = 1U;
-	}
-	return;
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
+	uint8_t median_red;
+	uint8_t median_green;
+	uint8_t median_blue;
+	uint8_t median_color;
+	uint16_t hue_deg;
+	uint8_t saturation;
+	uint8_t value;
+	uint8_t vote_count[COLOR_BLACK + 1U] = {0U};
+	uint8_t winner = 0U;
+	uint8_t winner_count = 0U;
+	uint8_t required_votes;
+	uint8_t i;
 
-#if 0
-	if(ch<4){
-		if(scan_information.R<150&&scan_information.G<180&&scan_information.B<180){
-			detected_colors[ch] = 5;//黑
-			scan_information.color = detected_colors[ch];
-		}
-		else if(scan_information.R>240&&scan_information.G>240&&scan_information.B>240){
-			detected_colors[ch] = 4;//白
-			scan_information.color = detected_colors[ch];
-		}
-		else if(scan_information.R>240&&scan_information.G<200&&scan_information.B<200){
-			detected_colors[ch] = 3;//红
-			scan_information.color = detected_colors[ch];
-		}
-		else if(scan_information.R<180&&scan_information.G>240&&scan_information.B<245){
-			detected_colors[ch] = 2;//绿
-			scan_information.color = detected_colors[ch];
-		}
-		else if(scan_information.R<180&&scan_information.G>240&&scan_information.B>245){
-			detected_colors[ch] = 1;//蓝
-			scan_information.color = detected_colors[ch];
-		}
-
+	if (!color_read_frame(&red, &green, &blue)) {
+		return;
 	}
-	else {
-		detected_colors[ch] = 15 - detected_colors[1]- detected_colors[2]- detected_colors[3]- detected_colors[0];}
-		
-#endif
+
+	color_filter.red[color_filter.write_index] = red;
+	color_filter.green[color_filter.write_index] = green;
+	color_filter.blue[color_filter.write_index] = blue;
+	color_filter.classified[color_filter.write_index] = color_classify(
+	        red, green, blue, &hue_deg, &saturation, &value);
+	color_filter.write_index = (uint8_t)((color_filter.write_index + 1U) %
+	        COLOR_FILTER_WINDOW_SIZE);
+	if (color_filter.sample_count < COLOR_FILTER_WINDOW_SIZE) {
+		color_filter.sample_count++;
+	}
+
+	median_red = color_median(color_filter.red, color_filter.sample_count);
+	median_green = color_median(color_filter.green, color_filter.sample_count);
+	median_blue = color_median(color_filter.blue, color_filter.sample_count);
+	median_color = color_classify(median_red, median_green, median_blue,
+	        &hue_deg, &saturation, &value);
+	scan_information.H = hue_deg;
+	scan_information.S = saturation;
+	scan_information.V = value;
+
+	for (i = 0U; i < color_filter.sample_count; i++) {
+		vote_count[color_filter.classified[i]]++;
+	}
+	for (i = 0U; i <= COLOR_BLACK; i++) {
+		if (vote_count[i] > winner_count) {
+			winner = i;
+			winner_count = vote_count[i];
+		}
+	}
+	required_votes = (uint8_t)(color_filter.sample_count / 2U + 1U);
+	if ((winner_count >= required_votes) && (winner == median_color)) {
+		scan_information.color = winner;
+	}
 }
 
 void Get_Materialcolor(uint8_t ch)

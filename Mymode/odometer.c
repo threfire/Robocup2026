@@ -209,10 +209,11 @@ void odometer_rx_parse(const uint8_t *data, uint16_t len) {
 			        &data[frame_offset], ODOMETER_FRAME_LEN - 2U);
 			if (rx_crc == calc_crc) {
 				/* 坐标和姿态由里程计内部融合完成，控制层直接使用世界系位姿。 */
-				x_mm = odometer_read_float_le(
+				/* 里程计绕 Z 轴反装 180°，平移位置和速度转换到车体坐标方向。 */
+				x_mm = -odometer_read_float_le(
 				        &data[frame_offset +
 				                ODOMETER_X_OFFSET]);
-				y_mm = odometer_read_float_le(
+				y_mm = -odometer_read_float_le(
 				        &data[frame_offset +
 				                ODOMETER_Y_OFFSET]);
 				yaw_deg = odometer_read_float_le(
@@ -221,10 +222,10 @@ void odometer_rx_parse(const uint8_t *data, uint16_t len) {
 				gyro_dps = odometer_read_float_le(
 				        &data[frame_offset +
 				                ODOMETER_GYRO_OFFSET]);
-				vel_x_mmps = odometer_read_float_le(
+				vel_x_mmps = -odometer_read_float_le(
 				        &data[frame_offset +
 				                ODOMETER_VEL_X_OFFSET]);
-				vel_y_mmps = odometer_read_float_le(
+				vel_y_mmps = -odometer_read_float_le(
 				        &data[frame_offset +
 				                ODOMETER_VEL_Y_OFFSET]);
 
