@@ -341,73 +341,39 @@ static void task1_go_first_qrcode(void) {
 }
 
 
-/** 沿五圆柱连续闭环路径运动并识别物料颜色。 */
+/** 开环转动并识别物料颜色。 */
 static void task1_prepare_material_turnplate(void) {
-	uint32_t now_ms = HAL_GetTick();
-	uint32_t elapsed_ms;
+	Servo_Action_Group(2);
+	PositionControl_Enable(0U);
+	EnableAttitudeStabilization(0U);
 
-	if (TASK1_MATERIAL_PATH_CONFIGURED == 0U) {
-		stop();
-		return;
-	}
+	SetTargetVelocity(-0.8f, 0.0f, -3.121f);
+	HAL_Delay(300U);
+	Move_to_turnplate(2U);
+	HAL_Delay(600U);
 
-	if (!task1_curve_started) {
-		Servo_Action_Group(2);
-		if (!motion_circle_path_start(&task1_material_circle)) {
-			return;
-		}
-		task1_curve_started = 1U;
-		task1_curve_action = 0U;
-		task1_curve_finish_time_ms = 0U;
-		task1_state.step_start = now_ms;
-		return;
-	}
+	SetTargetVelocity(-0.8f, 0.0f, -1.55f);
+	HAL_Delay(200U);
+	Move_to_turnplate(3U);
+	HAL_Delay(550U);
 
-	elapsed_ms = now_ms - task1_state.step_start;
-	if ((task1_curve_action == 0U) && (elapsed_ms >= 300U)) {
-		Move_to_turnplate(2U);
-		task1_curve_action = 1U;
-	}
-	if ((task1_curve_action == 1U) && (elapsed_ms >= 1100U)) {
-		Move_to_turnplate(3U);
-		task1_curve_action = 2U;
-	}
-	if ((task1_curve_action == 2U) && (elapsed_ms >= 1650U)) {
-		Move_to_turnplate(4U);
-		task1_curve_action = 3U;
-	}
-	if ((task1_curve_action == 3U) && (elapsed_ms >= 2250U)) {
-		Get_Materialcolor(0U);
-		task1_curve_action = 4U;
-	}
-	if ((task1_curve_action == 4U) && (elapsed_ms >= 2550U)) {
-		Move_to_turnplate(5U);
-		task1_curve_action = 5U;
-	}
-	if ((task1_curve_action == 5U) && (elapsed_ms >= 2850U)) {
-		Get_Materialcolor(1U);
-		task1_curve_action = 6U;
-	}
-	if ((task1_curve_action == 6U) && (elapsed_ms >= 2950U)) {
-		Move_to_turnplate(6U);
-		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
-		task1_curve_action = 7U;
-	}
+	Move_to_turnplate(4U);
+	SetTargetVelocity(-0.8f, 0.0f, -1.924f);
+	HAL_Delay(600U);
+	Get_Materialcolor(0U);
+	HAL_Delay(300U);
+	Move_to_turnplate(5U);
+	SetTargetVelocity(-0.8f, 0.0f, -1.730f);
+	HAL_Delay(300U);
+	Get_Materialcolor(1U);
+	HAL_Delay(100U);
 
-	if ((task1_curve_action >= 7U) && motion_path_finished()) {
-		if (task1_curve_finish_time_ms == 0U) {
-			task1_curve_finish_time_ms = now_ms;
-			return;
-		}
-		if ((now_ms - task1_curve_finish_time_ms) >= 300U) {
-			motion_reset();
-			task1_curve_started = 0U;
-			task1_curve_action = 0U;
-			task1_curve_finish_time_ms = 0U;
-			task1_state.current_step = 11U;
-			task1_state.step_start = now_ms;
-		}
-	}
+	Move_to_turnplate(6U);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+	motion_reset();
+	HAL_Delay(300U);
+	task1_state.current_step = 11U;
+	task1_state.step_start = HAL_GetTick();
 }
 
 
@@ -539,50 +505,26 @@ static void task1_go_trophy_transition(void) {
 }
 
 
-/** 执行奖杯连续拾取动作。 */
+/** 开环转动并拾取奖杯。 */
 static void task1_pick_trophies(void) {
-#if (TASK1_TROPHY_PATH_CONFIGURED == 0U)
-	stop();
-#else
-	uint32_t now_ms = HAL_GetTick();
-	uint32_t elapsed_ms;
+	PositionControl_Enable(0U);
+	EnableAttitudeStabilization(0U);
 
-	if (!task1_curve_started) {
-		if (!motion_circle_path_start(&task1_trophy_circle)) {
-			return;
-		}
-		task1_curve_started = 1U;
-		task1_curve_action = 0U;
-		task1_curve_finish_time_ms = 0U;
-		task1_state.step_start = now_ms;
-		return;
-	}
+	SetTargetVelocity(-0.8f, 0.0f, 1.85f);
+	HAL_Delay(300U);
+	Move_to_turnplate(4U);
+	HAL_Delay(300U);
+	SetTargetVelocity(-0.8f, 0.0f, 1.64f);
+	HAL_Delay(400U);
 
-	elapsed_ms = now_ms - task1_state.step_start;
-	if ((task1_curve_action == 0U) && (elapsed_ms >= 300U)) {
-		Move_to_turnplate(4U);
-		task1_curve_action = 1U;
-	}
-	if ((task1_curve_action == 1U) && (elapsed_ms >= 1000U)) {
-		Move_to_turnplate(3U);
-		task1_curve_action = 2U;
-	}
+	Move_to_turnplate(3U);
+	HAL_Delay(500U);
+	HAL_Delay(250U);
 
-	if ((task1_curve_action >= 2U) && motion_path_finished()) {
-		if (task1_curve_finish_time_ms == 0U) {
-			task1_curve_finish_time_ms = now_ms;
-			return;
-		}
-		if ((now_ms - task1_curve_finish_time_ms) >= 250U) {
-			motion_reset();
-			task1_curve_started = 0U;
-			task1_curve_action = 0U;
-			task1_curve_finish_time_ms = 0U;
-			task1_state.current_step = 31U;
-			task1_state.step_start = now_ms;
-		}
-	}
-#endif
+	motion_reset();
+	HAL_Delay(100U);
+	task1_state.current_step = 31U;
+	task1_state.step_start = HAL_GetTick();
 }
 
 
