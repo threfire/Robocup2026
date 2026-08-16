@@ -44,6 +44,7 @@
 #include "vision.h"
 #include "QAma.h"
 #include "ai_tune.h"
+#include "motion.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -285,9 +286,8 @@ int main(void)
 //	servo_init();
 	LCD_DisplayText(48, 0, "Init Success!");
 					HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);		//0	PF7
-					HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_2);		//4	PE11
-					__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[0]);
-					__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+					HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);		//4	PE11
+					__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 100);
 	HAL_Delay(100);
 	/* 已完成 2 s 里程计稳定等待，补足 8 s 后发送最后一条初始化指令。 */
 	HAL_Delay(ODOMETER_ZERO_FINAL_WAIT_MS);
@@ -399,6 +399,7 @@ void Robot_RealtimeControl(float dt) {
 		if (camtim_button) {
 			camtim += TIM6_TICK_MS;
 		}
+		motion_path_update(dt);
 		UpdatePoseCoordination(dt);
 		if (is_position_control_enabled) {
 			UpdatePositionControl(dt);

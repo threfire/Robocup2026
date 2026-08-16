@@ -1,66 +1,10 @@
-#include "stm32f4xx.h"                  // Device header
 #include "servo.h"
 
-
-servo_t duoji_doing[DJ_NUM];
-uint8_t startServo = 0;
-
-
-// 脉宽范围定义
-#define SERVO_MIN_PULSE  500   // 最小脉冲宽度 (μs)
-#define SERVO_MAX_PULSE  2500  // 最大脉冲宽度 (μs)
-#define SERVO_MID_PULSE  1500  // 中位脉冲宽度 (μs)
-
-// 设置脉冲宽度 (直接设置占空比)
-void Servo_SetPulseWidth(uint16_t pulse_us)
-{
-    // 安全限制
-    if(pulse_us < SERVO_MIN_PULSE) pulse_us = SERVO_MIN_PULSE;
-    if(pulse_us > SERVO_MAX_PULSE) pulse_us = SERVO_MAX_PULSE;
-    
-//	HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);
-    // 直接设置比较值 (1计数=1μs)
-    __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse_us);
-//	HAL_TIM_PWM_Stop(&htim13,TIM_CHANNEL_1);
-}
-
-// 设置角度 (0-270度)
-void Servo_SetAngle(uint16_t angle)
-{
-    // 角度限制
-    if(angle > 270) angle = 270;
-    
-    // 角度转脉冲宽度: 500 + (angle/270)*2000
-    uint32_t pulse_width = SERVO_MIN_PULSE + 
-                          (angle * (SERVO_MAX_PULSE - SERVO_MIN_PULSE)) / 270;
-    
-    Servo_SetPulseWidth(pulse_width);
-}
-/* 舵机初始化 */
 void servo_init(void)
 {
-	
-	HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);		//0	PF7
-  HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);		//1 PF8
-	HAL_TIM_PWM_Start(&htim14,TIM_CHANNEL_1);		//2 PF9
-	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_2);		//4	PE11
-	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);//打开led灯pwm通道
-	
-//    for (i = 0; i < DJ_NUM; i++)
-//    {
-//        duoji_doing[i].aim = 500;
-//        duoji_doing[i].cur = 500;
-//        duoji_doing[i].inc = 0;
-//        duoji_doing[i].time = 5000;
-
-//    }
-////	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, duoji_doing[0].aim);
-////	__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, duoji_doing[1].aim);
-////	__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, duoji_doing[2].aim);
-//	
-//	duoji_doing_set(0,800,5000);		//倒转臂
-//	duoji_doing_set(1,575,5000);
-//	duoji_doing_set(2,550,5000);
+    HAL_TIM_PWM_Start(&htim11, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim14, TIM_CHANNEL_1);
 }
 
 void servo_smooth_move_start(servo_smooth_move_t *move,
@@ -102,8 +46,7 @@ void servo_smooth_move_update(servo_smooth_move_t *move)
 
     if (!move->active)
     {
-        __HAL_TIM_SetCompare(move->htim, move->channel,
-                move->target_pwm);
+        __HAL_TIM_SetCompare(move->htim, move->channel, move->target_pwm);
         return;
     }
 
@@ -116,7 +59,7 @@ void servo_smooth_move_update(servo_smooth_move_t *move)
     }
 
     progress = (float)elapsed_ms / (float)move->duration_ms;
-    /* 三次缓出曲线使 PWM 变化速率随时间逐步减小。 */
+    /* 三次缓出曲线让 PWM 变化速率随时间逐步减小。 */
     curve = 1.0f - (1.0f - progress) * (1.0f - progress) *
             (1.0f - progress);
     pwm = (uint16_t)((float)move->start_pwm +
@@ -124,148 +67,68 @@ void servo_smooth_move_update(servo_smooth_move_t *move)
     __HAL_TIM_SetCompare(move->htim, move->channel, pwm);
 }
 
-/***********************************************
-    功能介绍：	设置舵机控制参数函数
-    函数参数：	index 舵机编号 aim 执行目标 time 执行时间(如果aim 执行目标==0，视为舵机停止)
-    返回值：		无
- ***********************************************/
-void duoji_doing_set(uint8_t index, int aim, int time)
+void Servo_Action_Group(uint8_t num)
 {
-    /* 限制输入值大小 */
-    if (index >= DJ_NUM)
-        return;
-
-    if (aim == 0)
+    if (num == 1U)
     {
-        duoji_doing[index].inc = 0;
-        duoji_doing[index].aim = duoji_doing[index].cur;
-        return;
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1070U);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2460U);
     }
-
-    if (aim > 2490)
-        aim = 2490;
-    else if (aim < 200)
-        aim = 200;
-
-    if (time > 10000)
-        time = 10000;
-
-    if (duoji_doing[index].cur == aim)
+    else if (num == 2U)
     {
-        aim = aim + 0.0077;
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1070U);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800U);
     }
-
-    if (time < 20) /* 执行时间太短，舵机直接以最快速度运动 */
+    else if (num == 3U)
     {
-        duoji_doing[index].aim = aim;
-        duoji_doing[index].cur = aim;
-        duoji_doing[index].inc = 0;
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1460U);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880U);
     }
-    else
+    else if (num == 4U)
     {
-        duoji_doing[index].aim = aim;
-        duoji_doing[index].time = time;
-        duoji_doing[index].inc = (duoji_doing[index].aim - duoji_doing[index].cur) / (duoji_doing[index].time / 20.000);
-    }
-}
+        uint16_t pwm13_last = 1460U;
+        uint16_t pwm14_last = 1880U;
 
-/* 设置舵机每次增加的偏移量 */
-void servo_inc_offset(uint8_t index)
-{
-    int aim_temp;
-
-    if (duoji_doing[index].inc != 0)
-    {
-
-        aim_temp = duoji_doing[index].aim;
-
-        if (aim_temp > 2490)
+        for (uint16_t i = 1U; i <= 200U; i++)
         {
-            aim_temp = 2490;
+            __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
+                    pwm13_last - i * (pwm13_last - 1380U) / 200U);
+            __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
+                    pwm14_last - i * (pwm14_last - 1520U) / 200U);
+            HAL_Delay(2U);
         }
-        else if (aim_temp < 500)
-        {
-            aim_temp = 500;
-        }
+    }
+    else if (num == 5U)
+    {
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1390U);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860U);
+    }
+    else if (num == 6U)
+    {
+        uint16_t pwm13_last = 1390U;
+        uint16_t pwm14_last = 1860U;
 
-        if (abs_float(aim_temp - duoji_doing[index].cur) <= abs_float(duoji_doing[index].inc + duoji_doing[index].inc))
+        for (uint16_t i = 1U; i <= 200U; i++)
         {
-            duoji_doing[index].cur = aim_temp;
-            duoji_doing[index].inc = 0;
+            __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
+                    pwm13_last - i * (pwm13_last - 1260U) / 200U);
+            __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
+                    pwm14_last - i * (pwm14_last - 1700U) / 200U);
+            HAL_Delay(2U);
         }
-        else
+    }
+    else if (num == 7U)
+    {
+        uint16_t pwm13_last = 1460U;
+        uint16_t pwm14_last = 1680U;
+
+        for (uint16_t i = 1U; i <= 200U; i++)
         {
-            duoji_doing[index].cur += duoji_doing[index].inc;
+            __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
+                    pwm13_last - i * (pwm13_last - 1070U) / 200U);
+            __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
+                    pwm14_last - i * (pwm14_last - 1800U) / 200U);
+            HAL_Delay(3U);
         }
     }
 }
-
-void servo_tick(void)
-{
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, duoji_doing[0].aim);
-	__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, duoji_doing[1].aim);
-	__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, duoji_doing[2].aim);
-}
-void jiazhuadongzuo(void)
-{
-	duoji_doing_set(0,490,5000);		//夹
-	//非阻塞延时
-	duoji_doing_set(0,700,5000);		//松
-}
-void wuliaopanxuanzhuan(void)
-{
-	duoji_doing_set(2,1000,5000);
-}
-
-void Servo_Action_Group(uint8_t num){
-	if(num == 1){
-		__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1070);
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2460);
-//		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 575);
-	}
-	if(num == 2){
-		__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1070);
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800);
-//		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, 770);
-	}
-	if(num == 3){//举起来（冠军台）
-		__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1460);
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);
-	}
-	if(num == 4){//放平（冠军台）
-		uint16_t pwm13last = 1460;
-		uint16_t pwm14last = 1880;
-
-		for(uint8_t i = 1;i<=200;i++){
-			__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, pwm13last-i*(pwm13last-1380)/200);
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, pwm14last-i*(pwm14last-1520)/200);
-			HAL_Delay(2);
-		}
-	}
-	if(num == 5){//举起来（亚军台）
-		__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1390);
-		__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);
-	}
-	if(num == 6){//放平（亚军台）
-		uint16_t pwm13last = 1390;
-		uint16_t pwm14last = 1860;
-
-		for(uint8_t i = 1;i<=200;i++){
-			__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, pwm13last-i*(pwm13last-1260)/200);
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, pwm14last-i*(pwm14last-1700)/200);
-			HAL_Delay(2);
-		}
-	}
-	if(num == 7){//放平（季军台）
-		uint16_t pwm13last = 1460;
-		uint16_t pwm14last = 1680;
-
-		for(uint8_t i = 1;i<=200;i++){
-			__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, pwm13last-i*(pwm13last-1070)/200);
-			__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, pwm14last-i*(pwm14last-1800)/200);
-			HAL_Delay(3);
-		}
-	}
-	else
-		return;
-	}

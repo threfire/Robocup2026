@@ -17,7 +17,15 @@
 /* 控制模块运行状态统一收敛到 control_ctx，旧任务代码通过宏访问字段。 */
 ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
-        .material_pwm = { 2340, 2340-290*1, 2340-290*2, 2340-290*3, 2340-290*4 +10, 2340-290*5, 2340-290*6},
+        .material_position_pulses = {
+                0U,
+                TURNPLATE_SLOT_PULSES * 1U,
+                TURNPLATE_SLOT_PULSES * 2U,
+                TURNPLATE_SLOT_PULSES * 3U,
+                TURNPLATE_SLOT_PULSES * 4U,
+                TURNPLATE_SLOT_PULSES * 5U,
+                TURNPLATE_SLOT_PULSES * 6U,
+        },
         .task_num = 1,
         .cam_mode = 2,
         .look_mode_control = 1,

@@ -13,6 +13,70 @@
 #include "QAma.h"
 #include <string.h>
 
+/** 第一段五圆柱路径配置完成标志。 */
+#define TASK1_MATERIAL_PATH_CONFIGURED 0U
+
+/** 第二段三奖杯路径配置完成标志。 */
+#define TASK1_TROPHY_PATH_CONFIGURED 0U
+
+/** 第一段连续收拢路径巡航速度，单位 m/s。 */
+#define TASK1_MATERIAL_PATH_SPEED_MPS 0.80f
+
+/** 第二段连续收拢路径巡航速度，单位 m/s。 */
+#define TASK1_TROPHY_PATH_SPEED_MPS 0.80f
+
+/**
+ * @brief 第一段五个圆柱的世界系中心坐标。
+ *
+ * 按实际行进顺序填写坐标并将 TASK1_MATERIAL_PATH_CONFIGURED 设为 1U。
+ */
+static const MotionPathPoint_t task1_material_path[] = {
+		{-1058.24f, 258.25f},
+		{-1399.38f, 600.35f},
+		{-1524.00f, 1075.00f},
+		{-1399.38f, 1545.11f},
+		{-1058.24f, 1891.75f},
+};
+
+/**
+ * @brief 第二段三个奖杯的世界系中心坐标。
+ *
+ * 按实际行进顺序填写坐标并将 TASK1_TROPHY_PATH_CONFIGURED 设为 1U。
+ */
+static const MotionPathPoint_t task1_trophy_path[] = {
+		{0.0f, 0.0f},
+		{0.0f, 0.0f},
+		{0.0f, 0.0f},
+};
+
+/** 第一段大圆、槽口和运行方向参数。 */
+static const MotionCirclePath_t task1_material_circle = {
+		.center_x_mm = -589.69f,
+		.center_y_mm = 1066.62f,
+		.radius_mm = 934.35f,
+		.slot_x_mm = 0.0f,
+		.slot_y_mm = 0.0f,
+		.material_points = task1_material_path,
+		.point_count = (uint8_t)(sizeof(task1_material_path) /
+		        sizeof(task1_material_path[0])),
+		.direction = -1,
+		.cruise_speed_mps = TASK1_MATERIAL_PATH_SPEED_MPS,
+};
+
+/** 第二段大圆、槽口和运行方向参数。 */
+static const MotionCirclePath_t task1_trophy_circle = {
+		.center_x_mm = 0.0f,
+		.center_y_mm = 0.0f,
+		.radius_mm = 0.0f,
+		.slot_x_mm = 0.0f,
+		.slot_y_mm = 0.0f,
+		.material_points = task1_trophy_path,
+		.point_count = (uint8_t)(sizeof(task1_trophy_path) /
+		        sizeof(task1_trophy_path[0])),
+		.direction = 1,
+		.cruise_speed_mps = TASK1_TROPHY_PATH_SPEED_MPS,
+};
+
 /** 任务一路径点，单位 mm。 */
 static const Point2D_t task1_targets[] = {
         {-650.0f, 255.25f, 0.0f},
@@ -31,15 +95,31 @@ static const Point2D_t task1_targets[] = {
 };
 
 /** 伸缩环 PWM 位置表。 */
-const int Telescopic_ring[] = {320, 750, 750};
+const int Telescopic_ring[] = {1500, 1340, 1800};
 static uint8_t task1_vision_timeout;
 static uint8_t task1_fourth_color_state;
 static servo_smooth_move_t task1_qrcode_servo_move;
 static uint8_t task1_qrcode_servo_move_started;
+static uint8_t task1_turnplate_last_slot;
+static uint8_t task1_turnplate_initialized;
+/** 连续收拢路径启动标志。 */
+static uint8_t task1_curve_started;
+/** 连续收拢过程中的执行机构阶段。 */
+static uint8_t task1_curve_action;
+/** 连续收拢完成后的机构等待起始时刻，单位 ms。 */
+static uint32_t task1_curve_finish_time_ms;
 
 /** 切换物料转盘到指定槽位。 */
 void Move_to_turnplate(uint8_t num) {
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Material[num - 1]);
+	if (num == 0U || num > TURNPLATE_SLOT_COUNT ||
+	        task1_turnplate_last_slot == num) {
+		return;
+	}
+
+	Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_DIRECTION,
+	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
+	        TurnplatePosition[num - 1U], 1U, 0U);
+	task1_turnplate_last_slot = num;
 }
 
 
@@ -103,6 +183,25 @@ static void task1_go_home(void);
 
 /** 初始化任务一状态机和舵机缓动状态。 */
 void start_task1(void) {
+	if (task1_turnplate_initialized == 0U) {
+		Emm_V5_En_Control(TURNPLATE_MOTOR_ADDR, 1U, 0U);
+		HAL_Delay(5U);
+#if (TURNPLATE_ORIGIN_SAVE_ON_STARTUP != 0U)
+		Emm_V5_Origin_Set_O(TURNPLATE_MOTOR_ADDR, 1U);
+		HAL_Delay(5U);
+		Emm_V5_Reset_CurPos_To_Zero(TURNPLATE_MOTOR_ADDR);
+		HAL_Delay(5U);
+#endif
+		Emm_V5_Origin_Modify_Params(TURNPLATE_MOTOR_ADDR, 1U,
+		        TURNPLATE_ORIGIN_MODE, TURNPLATE_ORIGIN_DIRECTION,
+		        TURNPLATE_ORIGIN_SPEED_RPM, TURNPLATE_ORIGIN_TIMEOUT_MS,
+		        TURNPLATE_ORIGIN_COLLISION_SPEED_RPM,
+		        TURNPLATE_ORIGIN_COLLISION_CURRENT_MA,
+		        TURNPLATE_ORIGIN_COLLISION_TIME_MS, 1U);
+		HAL_Delay(5U);
+		task1_turnplate_initialized = 1U;
+	}
+	task1_turnplate_last_slot = 0U;
 
 	task1_state.active = 1;
 	task1_state.current_step = 1;
@@ -113,6 +212,10 @@ void start_task1(void) {
 	PositionControl_SetMaxSpeed(1.80f);
 	memset(&task1_qrcode_servo_move, 0, sizeof(task1_qrcode_servo_move));
 	task1_qrcode_servo_move_started = 0U;
+	task1_curve_started = 0U;
+	task1_curve_action = 0U;
+	task1_curve_finish_time_ms = 0U;
+	motion_path_stop();
 	is_hasgetcolor = 0U;
 }
 
@@ -212,7 +315,7 @@ static void task1_go_first_qrcode(void) {
 	}
 	servo_init();
 	tasknum = 1;
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
 	if (task1_move_target(0, 0.0f, 0.0f)) {
 		PositionControl_SetMaxSpeed(1.95f);
 		Servo_Action_Group(2);
@@ -229,40 +332,73 @@ static void task1_go_first_qrcode(void) {
 }
 
 
-/** 开环转动并识别物料颜色。 */
+/** 沿五圆柱连续闭环路径运动并识别物料颜色。 */
 static void task1_prepare_material_turnplate(void) {
-	Servo_Action_Group(2);
-	PositionControl_Enable(0);
-	EnableAttitudeStabilization(0);
+	uint32_t now_ms = HAL_GetTick();
+	uint32_t elapsed_ms;
 
-	SetTargetVelocity(-0.8f, 0.0f, -3.121f);
-	HAL_Delay(300);
-	Move_to_turnplate(2);
-	HAL_Delay(600);
+	if (TASK1_MATERIAL_PATH_CONFIGURED == 0U) {
+		stop();
+		return;
+	}
 
-	SetTargetVelocity(-0.8f, 0.0f, -1.55f);
-	HAL_Delay(200);
-	Move_to_turnplate(3);
-	HAL_Delay(550);
+	if (!task1_curve_started) {
+		Servo_Action_Group(2);
+		if (!motion_circle_path_start(&task1_material_circle)) {
+			return;
+		}
+		task1_curve_started = 1U;
+		task1_curve_action = 0U;
+		task1_curve_finish_time_ms = 0U;
+		task1_state.step_start = now_ms;
+		return;
+	}
 
-	Move_to_turnplate(4);
-	SetTargetVelocity(-0.8f, 0.0f, -1.924f);
-	HAL_Delay(600);
-	Get_Materialcolor(0U);
-	HAL_Delay(300);
-	Move_to_turnplate(5);
-	SetTargetVelocity(-0.8f, 0.0f, -1.730);
-	HAL_Delay(300);
-	Get_Materialcolor(1U);
-	HAL_Delay(100);
+	elapsed_ms = now_ms - task1_state.step_start;
+	if ((task1_curve_action == 0U) && (elapsed_ms >= 300U)) {
+		Move_to_turnplate(2U);
+		task1_curve_action = 1U;
+	}
+	if ((task1_curve_action == 1U) && (elapsed_ms >= 1100U)) {
+		Move_to_turnplate(3U);
+		task1_curve_action = 2U;
+	}
+	if ((task1_curve_action == 2U) && (elapsed_ms >= 1650U)) {
+		Move_to_turnplate(4U);
+		task1_curve_action = 3U;
+	}
+	if ((task1_curve_action == 3U) && (elapsed_ms >= 2250U)) {
+		Get_Materialcolor(0U);
+		task1_curve_action = 4U;
+	}
+	if ((task1_curve_action == 4U) && (elapsed_ms >= 2550U)) {
+		Move_to_turnplate(5U);
+		task1_curve_action = 5U;
+	}
+	if ((task1_curve_action == 5U) && (elapsed_ms >= 2850U)) {
+		Get_Materialcolor(1U);
+		task1_curve_action = 6U;
+	}
+	if ((task1_curve_action == 6U) && (elapsed_ms >= 2950U)) {
+		Move_to_turnplate(6U);
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+		task1_curve_action = 7U;
+	}
 
-
-	Move_to_turnplate(6);
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
-	motion_reset();
-	HAL_Delay(300);
-	task1_state.current_step = 11;
-	task1_state.step_start = HAL_GetTick();
+	if ((task1_curve_action >= 7U) && motion_path_finished()) {
+		if (task1_curve_finish_time_ms == 0U) {
+			task1_curve_finish_time_ms = now_ms;
+			return;
+		}
+		if ((now_ms - task1_curve_finish_time_ms) >= 300U) {
+			motion_reset();
+			task1_curve_started = 0U;
+			task1_curve_action = 0U;
+			task1_curve_finish_time_ms = 0U;
+			task1_state.current_step = 11U;
+			task1_state.step_start = now_ms;
+		}
+	}
 }
 
 
@@ -281,7 +417,7 @@ static void task1_go_material_point(
 	if (target_index == 1U) {
 		if ((task1_fourth_color_state == 0U) &&
 		        IsPositionReached(0.8f)) {
-			Move_to_turnplate(7U);
+			Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
 			task1_fourth_color_state = 1U;
 		}
 
@@ -289,8 +425,8 @@ static void task1_go_material_point(
 		        IsPositionReached(0.2f)) {
 			Get_Materialcolor(3U);
 			Get_Materialcolor(4U);
-			__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
-			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
+			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
+			Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
 			task1_fourth_color_state = 2U;
 		}
 	}
@@ -349,19 +485,18 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 	        task1_state.current_step <= 25U) {
 		uint8_t material_index =
 		        (uint8_t)(5U - (task1_state.current_step - 13U) / 3U);
-		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
-		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1,
-		        control_ctx.material_pwm[material_index - 1U]);
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+		Move_to_turnplate(material_index);
 		HAL_Delay(1900- (material_index- 1) * 300);
 	}
 
 	if (!skip_pos_move) {
 		POS_move();
 	}
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
 
 	if (task1_state.current_step != 25U){
-		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
+		Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
 	}else{
 		Move_to_turnplate(5);
 	}
@@ -381,7 +516,7 @@ static void task1_go_second_qrcode(void) {
 	tasknum = 2;
 	if (task1_move_target(6, 0.0f, 0.0f)) {
 		Move_to_turnplate(5);
-		__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[1]);
+		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
 		task1_next_step();
 	}
 }
@@ -397,45 +532,69 @@ static void task1_go_trophy_transition(void) {
 
 /** 执行奖杯连续拾取动作。 */
 static void task1_pick_trophies(void) {
-	PositionControl_Enable(0);
-	EnableAttitudeStabilization(0);
+	uint32_t now_ms = HAL_GetTick();
+	uint32_t elapsed_ms;
 
-	SetTargetVelocity(-0.8f, 0.0f, 1.85f);
-	HAL_Delay(300);
-	Move_to_turnplate(4);
-	HAL_Delay(300);
-	SetTargetVelocity(-0.8f, 0.0f, 1.64f);
-	HAL_Delay(400);
+	if (TASK1_TROPHY_PATH_CONFIGURED == 0U) {
+		stop();
+		return;
+	}
 
-	Move_to_turnplate(3);
-		HAL_Delay(500);
+	if (!task1_curve_started) {
+		if (!motion_circle_path_start(&task1_trophy_circle)) {
+			return;
+		}
+		task1_curve_started = 1U;
+		task1_curve_action = 0U;
+		task1_curve_finish_time_ms = 0U;
+		task1_state.step_start = now_ms;
+		return;
+	}
 
-	HAL_Delay(250);
+	elapsed_ms = now_ms - task1_state.step_start;
+	if ((task1_curve_action == 0U) && (elapsed_ms >= 300U)) {
+		Move_to_turnplate(4U);
+		task1_curve_action = 1U;
+	}
+	if ((task1_curve_action == 1U) && (elapsed_ms >= 1000U)) {
+		Move_to_turnplate(3U);
+		task1_curve_action = 2U;
+	}
 
-	motion_reset();
-	HAL_Delay(100);
-	task1_state.current_step = 31;
-	task1_state.step_start = HAL_GetTick();
+	if ((task1_curve_action >= 2U) && motion_path_finished()) {
+		if (task1_curve_finish_time_ms == 0U) {
+			task1_curve_finish_time_ms = now_ms;
+			return;
+		}
+		if ((now_ms - task1_curve_finish_time_ms) >= 250U) {
+			motion_reset();
+			task1_curve_started = 0U;
+			task1_curve_action = 0U;
+			task1_curve_finish_time_ms = 0U;
+			task1_state.current_step = 31U;
+			task1_state.step_start = now_ms;
+		}
+	}
 }
 
 
 /** 前往亚军台。 */
 static void task1_go_second_podium(void) {
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
 	task1_go_podium_point(8, 6, 5, 0.6f);
 }
 
 
 /** 前往冠军台。 */
 static void task1_go_champion_podium(void) {
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
 	task1_go_podium_point(9, 4, 0, 0.0f);
 }
 
 
 /** 前往季军台。 */
 static void task1_go_third_podium(void) {
-	__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, Telescopic_ring[0]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[0]);
 	task1_go_podium_point(10, 7, 0, 0.0f);
 }
 
@@ -451,7 +610,7 @@ static void task1_go_podium_point(uint8_t target_index,
 
 	if (prepare_servo != 0U && IsPositionReached(prepare_tolerance_m)) {
 		Servo_Action_Group(prepare_servo);
-		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, TROPHY_PLACE_PWM);
+		Move_to_turnplate(TURNPLATE_TROPHY_SLOT);
 	}
 }
 

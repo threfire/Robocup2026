@@ -122,7 +122,25 @@
 #define ATTITUDE_MAX_OMEGA 20.0f        /* 姿态控制最大角速度，单位 rad/s */
 #define CAM_DEAD_ZONE 0.0f              /* 视觉控制死区 */
 #define CAM_ERROR_ABS_LIMIT 480         /* 视觉误差绝对值上限 */
-#define TROPHY_PLACE_PWM 820U           /* 奖杯放置舵机 PWM */
+/* 转盘 ZDT 电机 5 的绝对位置参数，位置单位为驱动器脉冲。 */
+#define TURNPLATE_MOTOR_ADDR 5U
+#define TURNPLATE_DIRECTION 0U
+#define TURNPLATE_SPEED_RPM 200U
+#define TURNPLATE_ACCEL 100U
+#define TURNPLATE_PULSES_PER_REV 3200U
+#define TURNPLATE_SLOT_COUNT 7U
+#define TURNPLATE_SLOT_PULSES \
+        (TURNPLATE_PULSES_PER_REV / TURNPLATE_SLOT_COUNT)
+#define TURNPLATE_TROPHY_SLOT TURNPLATE_SLOT_COUNT
+/* 转盘单圈就近回零配置，保存后由驱动上电自动触发。 */
+#define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 0U /* 首次标定后改为 0U */
+#define TURNPLATE_ORIGIN_MODE 0U
+#define TURNPLATE_ORIGIN_DIRECTION 0U
+#define TURNPLATE_ORIGIN_SPEED_RPM 30U
+#define TURNPLATE_ORIGIN_TIMEOUT_MS 10000U
+#define TURNPLATE_ORIGIN_COLLISION_SPEED_RPM 300U
+#define TURNPLATE_ORIGIN_COLLISION_CURRENT_MA 800U
+#define TURNPLATE_ORIGIN_COLLISION_TIME_MS 60U
 
 /* 兼容旧任务代码的速度宏 */
 #define HIGHESTSPEED POSITION_SPEED_HIGHEST_MPS /* 兼容旧代码的最高速度 */
@@ -222,7 +240,7 @@ typedef struct {
 
 typedef struct {
 	float race_tolerance_m;             /* 当前任务到点容差，单位 m */
-	uint16_t material_pwm[7];           /* 转盘五个物料位 PWM */
+	uint32_t material_position_pulses[TURNPLATE_SLOT_COUNT]; /* 转盘槽位绝对脉冲位置 */
 	TaskState_t task1;                  /* 任务 1 状态机 */
 	TaskState_t task2;                  /* 任务 2 状态机 */
 	uint8_t task_num;                   /* 当前任务编号 */
@@ -258,7 +276,7 @@ typedef struct {
 extern ControlContext_t control_ctx;
 extern const int Telescopic_ring[];
 #define raceh control_ctx.race_tolerance_m /* 当前任务到点容差 */
-#define Material control_ctx.material_pwm /* 物料转盘 PWM 表 */
+#define TurnplatePosition control_ctx.material_position_pulses /* 转盘绝对位置表 */
 #define task1_state control_ctx.task1 /* 任务一状态机 */
 #define task2_state control_ctx.task2 /* 任务二状态机 */
 #define tasknum control_ctx.task_num /* 当前任务编号 */
