@@ -12,6 +12,7 @@
 #include "control.h"
 #include "usart.h"
 
+#if (AI_TUNE_MODE_ENABLE != 0U)
 #define AI_TUNE_FRAME_HEAD0 0xC3U
 #define AI_TUNE_FRAME_HEAD1 0x3CU
 #define AI_TUNE_CMD_PARAM 0x01U
@@ -25,6 +26,7 @@
 #define AI_TUNE_TELEMETRY_PAYLOAD_SIZE 44U
 #define AI_TUNE_PARAM_PAYLOAD_SIZE 24U
 #define AI_TUNE_START_PAYLOAD_SIZE 12U
+#endif
 #define AI_TUNE_INCREASE_GUARD_MS 150U
 #define AI_TUNE_SATURATION_GUARD_MS 100U
 #define AI_TUNE_TIMEOUT_MS 8000U
@@ -57,6 +59,7 @@ static float ai_tune_min_distance_m;
 static float ai_tune_increase_time_s;
 static float ai_tune_saturation_time_s;
 static uint32_t ai_tune_segment_start_ms;
+#if (AI_TUNE_MODE_ENABLE != 0U)
 static uint32_t ai_tune_last_telemetry_ms;
 static uint16_t ai_tune_tx_sequence;
 static volatile uint8_t ai_tune_ack_pending;
@@ -66,7 +69,9 @@ static volatile uint16_t ai_tune_ack_sequence;
 static volatile uint32_t ai_tune_ack_version;
 static uint8_t ai_tune_rx_buffer[AI_TUNE_RX_BUFFER_SIZE];
 static uint8_t ai_tune_tx_buffer[AI_TUNE_TX_BUFFER_SIZE];
+#endif
 
+#if (AI_TUNE_MODE_ENABLE != 0U)
 static uint16_t ai_tune_crc16(const uint8_t *data, uint16_t length)
 {
     uint16_t crc = 0xFFFFU;
@@ -239,6 +244,7 @@ static void ai_tune_parse_rx(uint16_t length)
         index += frame_length;
     }
 }
+#endif
 
 void ai_tune_init(void)
 {
@@ -249,16 +255,19 @@ void ai_tune_init(void)
     ai_tune_guarded = 0U;
     ai_tune_segment_active = 0U;
     ai_tune_start_pending = 0U;
+#if (AI_TUNE_MODE_ENABLE != 0U)
     ai_tune_tx_sequence = 0U;
     ai_tune_ack_pending = 0U;
     ai_tune_last_telemetry_ms = HAL_GetTick();
     memset(ai_tune_rx_buffer, 0, sizeof(ai_tune_rx_buffer));
     __HAL_UART_ENABLE_IT(&huart5, UART_IT_IDLE);
     HAL_UART_Receive_DMA(&huart5, ai_tune_rx_buffer, sizeof(ai_tune_rx_buffer));
+#endif
 }
 
 void ai_tune_uart_idle_irq(void)
 {
+#if (AI_TUNE_MODE_ENABLE != 0U)
     uint16_t received_length;
 
     if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_IDLE) == RESET) {
@@ -273,13 +282,16 @@ void ai_tune_uart_idle_irq(void)
     }
     HAL_UART_Receive_DMA(&huart5, ai_tune_rx_buffer, sizeof(ai_tune_rx_buffer));
     __HAL_UART_ENABLE_IT(&huart5, UART_IT_IDLE);
+#endif
 }
 
 void ai_tune_poll(void)
 {
+#if (AI_TUNE_MODE_ENABLE != 0U)
     if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_IDLE) != RESET) {
         ai_tune_uart_idle_irq();
     }
+#endif
 }
 
 uint8_t ai_tune_apply_pending(void)
@@ -363,6 +375,7 @@ uint8_t ai_tune_is_guarded(void)
 
 void ai_tune_send_telemetry(const ai_tune_telemetry_t *telemetry)
 {
+#if (AI_TUNE_MODE_ENABLE != 0U)
     uint16_t index = 0U;
     uint16_t crc;
     uint32_t now_ms;
@@ -429,6 +442,9 @@ void ai_tune_send_telemetry(const ai_tune_telemetry_t *telemetry)
     crc = ai_tune_crc16(&ai_tune_tx_buffer[2], index - 2U);
     ai_tune_write_u16(ai_tune_tx_buffer, &index, crc);
     HAL_UART_Transmit_DMA(&huart5, ai_tune_tx_buffer, index);
+#else
+    (void)telemetry;
+#endif
 }
 
 uint8_t ai_tune_take_start(float *target_x_mm, float *target_y_mm,

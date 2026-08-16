@@ -26,13 +26,19 @@ static float mpc_linear_speed_limit(float distance_m, float speed_mps,
 static float mpc_yaw_rate_limit(float angle_error_rad, float yaw_rate_rad_s);
 
 /** 连续路径最大坐标点数量。 */
-#define MOTION_PATH_MAX_POINTS 8U
+#define MOTION_PATH_MAX_POINTS 25U
 
 /** 单段曲线长度估算采样数。 */
 #define MOTION_PATH_LENGTH_SAMPLES 16U
 
-/** 连续路径终点姿态容差，单位 deg。 */
-#define MOTION_PATH_YAW_TOLERANCE_DEG 1.0f
+/** 连续路径参考点沿圆弧的前视距离，单位 m。 */
+#define MOTION_PATH_LOOKAHEAD_M 0.030f
+
+/** 连续路径终点槽口位置容差，单位 m。 */
+#define MOTION_PATH_TRACK_TOLERANCE_M 0.003f
+
+/** 入弧姿态渐进对齐对应的圆心角，单位 rad。 */
+#define MOTION_PATH_ENTRY_YAW_BLEND_RAD 0.515f
 
 /**
  * @brief 连续路径运行状态。
@@ -41,6 +47,8 @@ typedef struct
 {
 	float segment_length_m[MOTION_PATH_MAX_POINTS - 1U];
 	float segment_u;
+	float total_length_m;
+	float projected_progress_m;
 	float remaining_distance_m;
 	float tangent_x;
 	float tangent_y;
@@ -49,6 +57,7 @@ typedef struct
 	float yaw_rate_m_inv;
 	float circle_angle_rad[MOTION_PATH_MAX_POINTS];
 	float circle_radius_mm[MOTION_PATH_MAX_POINTS];
+	float circle_yaw_rad[MOTION_PATH_MAX_POINTS];
 	float circle_center_x_mm;
 	float circle_center_y_mm;
 	float circle_base_radius_mm;
@@ -59,7 +68,6 @@ typedef struct
 	uint8_t active;
 	uint8_t reference_complete;
 	uint8_t completed;
-	int8_t circle_direction;
 } MotionPathState_t;
 
 /** 连续路径运行状态。 */
@@ -102,15 +110,17 @@ static void motion_circle_eval(uint8_t segment_index, float u,
 	float radial_accel_mm = radius_d2u_mm -
 	        radius_mm * angle_delta_rad * angle_delta_rad;
 	float tangent_accel_mm = 2.0f * radius_du_mm * angle_delta_rad;
-	float slot_yaw_rad = angle_rad + (float)motion_path.circle_direction *
-	        1.5707963267948966f;
+	float start_yaw_rad = motion_path.circle_yaw_rad[segment_index];
+	float yaw_delta_rad = motion_path.circle_yaw_rad[segment_index + 1U] -
+	        start_yaw_rad;
+	float slot_yaw_rad = start_yaw_rad + yaw_delta_rad * u;
 	float yaw_cos = cosf(slot_yaw_rad);
 	float yaw_sin = sinf(slot_yaw_rad);
 	float slot_world_x_mm = yaw_cos * motion_path.circle_slot_x_mm -
 	        yaw_sin * motion_path.circle_slot_y_mm;
 	float slot_world_y_mm = yaw_sin * motion_path.circle_slot_x_mm +
 	        yaw_cos * motion_path.circle_slot_y_mm;
-	float slot_angle_accel = angle_delta_rad * angle_delta_rad;
+	float slot_angle_accel = yaw_delta_rad * yaw_delta_rad;
 
 	/* 槽口目标曲线反解底盘中心，同时对旋转偏置求一、二阶导数。 */
 	*x_mm = motion_path.circle_center_x_mm + radius_mm * angle_cos -
@@ -119,10 +129,10 @@ static void motion_circle_eval(uint8_t segment_index, float u,
 	        slot_world_y_mm;
 	*dx_du = radius_du_mm * angle_cos -
 	        radius_mm * angle_delta_rad * angle_sin +
-	        slot_world_y_mm * angle_delta_rad;
+	        slot_world_y_mm * yaw_delta_rad;
 	*dy_du = radius_du_mm * angle_sin +
 	        radius_mm * angle_delta_rad * angle_cos -
-	        slot_world_x_mm * angle_delta_rad;
+	        slot_world_x_mm * yaw_delta_rad;
 	*d2x_du2 = radial_accel_mm * angle_cos -
 	        tangent_accel_mm * angle_sin +
 	        slot_world_x_mm * slot_angle_accel;
@@ -220,39 +230,110 @@ static void motion_path_reference_update(void)
 	        (dx_du * d2y_du2 - dy_du * d2x_du2) /
 	        curvature_denominator;
 	{
-		float start_angle_rad = motion_path.circle_angle_rad[
+		float start_yaw_rad = motion_path.circle_yaw_rad[
 		        motion_path.segment_index];
-		float end_angle_rad = motion_path.circle_angle_rad[
+		float end_yaw_rad = motion_path.circle_yaw_rad[
 		        motion_path.segment_index + 1U];
-		/* 平移坐标已旋转 180°，路径切线同步转换到车体 yaw 方向。 */
-		float yaw_rad = start_angle_rad +
-		        (end_angle_rad - start_angle_rad) * motion_path.segment_u +
-		        -(float)motion_path.circle_direction * 1.5707963267948966f;
+		float yaw_rad = start_yaw_rad +
+		        (end_yaw_rad - start_yaw_rad) * motion_path.segment_u;
 
 		attitude_control.target_yaw = yaw_rad * 57.29577951308232f;
-		motion_path.yaw_rate_m_inv = (end_angle_rad - start_angle_rad) /
+		motion_path.yaw_rate_m_inv = (end_yaw_rad - start_yaw_rad) /
 		        motion_path.segment_length_m[motion_path.segment_index];
 	}
 }
 
 /**
- * @brief 计算当前参考点到路径终点的剩余弧长。
+ * @brief 将槽口极角投影为路径弧长进度。
  *
- * @return 剩余弧长，单位 m。
+ * @param angle_rad 槽口相对圆心的极角，单位 rad。
+ * @return 路径投影进度，单位 m。
  */
-static float motion_path_remaining(void)
+static float motion_path_project_progress(float angle_rad)
 {
-	float remaining_m = motion_path.segment_length_m[
-	        motion_path.segment_index] * (1.0f - motion_path.segment_u);
+	float reference_angle_rad = motion_path.circle_angle_rad[
+	        motion_path.segment_index] +
+	        (motion_path.circle_angle_rad[motion_path.segment_index + 1U] -
+	                motion_path.circle_angle_rad[motion_path.segment_index]) *
+	                motion_path.segment_u;
+	float path_angle_delta_rad = motion_path.circle_angle_rad[
+	        motion_path.point_count - 1U] - motion_path.circle_angle_rad[0U];
+	float progress_m = 0.0f;
 	uint8_t segment_index;
 
-	for (segment_index = (uint8_t)(motion_path.segment_index + 1U);
-	        segment_index < (uint8_t)(motion_path.point_count - 1U);
-	        segment_index++) {
-		remaining_m += motion_path.segment_length_m[segment_index];
+	/* 将传感器极角展开到当前参考角附近，保持跨越正负 180° 时连续。 */
+	while ((angle_rad - reference_angle_rad) > 3.1415926535897932f) {
+		angle_rad -= 6.2831853071795865f;
+	}
+	while ((angle_rad - reference_angle_rad) <= -3.1415926535897932f) {
+		angle_rad += 6.2831853071795865f;
 	}
 
-	return remaining_m;
+	if (((path_angle_delta_rad > 0.0f) &&
+	        (angle_rad <= motion_path.circle_angle_rad[0U])) ||
+	        ((path_angle_delta_rad < 0.0f) &&
+	                (angle_rad >= motion_path.circle_angle_rad[0U]))) {
+		return 0.0f;
+	}
+	if (((path_angle_delta_rad > 0.0f) &&
+	        (angle_rad >= motion_path.circle_angle_rad[
+	                motion_path.point_count - 1U])) ||
+	        ((path_angle_delta_rad < 0.0f) &&
+	                (angle_rad <= motion_path.circle_angle_rad[
+	                        motion_path.point_count - 1U]))) {
+		return motion_path.total_length_m;
+	}
+
+	for (segment_index = 0U;
+	        segment_index < (uint8_t)(motion_path.point_count - 1U);
+	        segment_index++) {
+		float start_angle_rad = motion_path.circle_angle_rad[segment_index];
+		float end_angle_rad = motion_path.circle_angle_rad[segment_index + 1U];
+		float angle_delta_rad = end_angle_rad - start_angle_rad;
+
+		if (((angle_delta_rad > 0.0f) && (angle_rad <= end_angle_rad)) ||
+		        ((angle_delta_rad < 0.0f) && (angle_rad >= end_angle_rad))) {
+			float segment_u = (angle_rad - start_angle_rad) /
+			        angle_delta_rad;
+
+			return progress_m + motion_path.segment_length_m[segment_index] *
+			        ClampFloat(segment_u, 0.0f, 1.0f);
+		}
+		progress_m += motion_path.segment_length_m[segment_index];
+	}
+
+	return motion_path.total_length_m;
+}
+
+/**
+ * @brief 根据弧长进度更新连续路径参考点。
+ *
+ * @param progress_m 目标弧长进度，单位 m。
+ */
+static void motion_path_set_progress(float progress_m)
+{
+	uint8_t reference_complete =
+	        (progress_m >= motion_path.total_length_m);
+	uint8_t segment_index;
+
+	progress_m = ClampFloat(progress_m, 0.0f, motion_path.total_length_m);
+	for (segment_index = 0U;
+	        segment_index < (uint8_t)(motion_path.point_count - 1U);
+	        segment_index++) {
+		float segment_length_m = motion_path.segment_length_m[segment_index];
+
+		if ((progress_m <= segment_length_m) ||
+		        (segment_index >= (uint8_t)(motion_path.point_count - 2U))) {
+			motion_path.segment_index = segment_index;
+			motion_path.segment_u = ClampFloat(progress_m / segment_length_m,
+			        0.0f, 1.0f);
+			break;
+		}
+		progress_m -= segment_length_m;
+	}
+
+	motion_path.reference_complete = reference_complete;
+	motion_path_reference_update();
 }
 
 /** 设置底盘局部坐标系速度目标。 */
@@ -337,8 +418,11 @@ static uint8_t motion_path_begin(float cruise_speed_mps)
 
 	motion_path.segment_index = 0U;
 	motion_path.segment_u = 0.0f;
+	motion_path.total_length_m = total_length_m;
+	motion_path.projected_progress_m = 0.0f;
 	motion_path.remaining_distance_m = total_length_m;
 	motion_path.active = 1U;
+	motion_path.reference_complete = 0U;
 	motion_path.completed = 0U;
 	motion_path_reference_update();
 	start_yaw_deg = attitude_control.target_yaw;
@@ -356,6 +440,8 @@ static uint8_t motion_path_begin(float cruise_speed_mps)
 uint8_t motion_circle_path_start(const MotionCirclePath_t *path)
 {
 	float previous_angle_rad = 0.0f;
+	float entry_yaw_rad;
+	float entry_yaw_offset_rad;
 	uint8_t point_index;
 
 	if ((path == NULL) || (path->material_points == NULL) ||
@@ -395,7 +481,29 @@ uint8_t motion_circle_path_start(const MotionCirclePath_t *path)
 
 		motion_path.circle_angle_rad[point_index] = angle_rad;
 		motion_path.circle_radius_mm[point_index] = point_radius_mm;
+		motion_path.circle_yaw_rad[point_index] = angle_rad -
+		        (float)path->direction * 1.5707963267948966f;
 		previous_angle_rad = angle_rad;
+	}
+	/* 入弧姿态按固定圆心角渐进对齐，使转向过程不受锚点密度影响。 */
+	entry_yaw_rad = odometer_get_yaw_deg() * 0.017453292519943295f;
+	while ((entry_yaw_rad - motion_path.circle_yaw_rad[0U]) >
+	        3.1415926535897932f) {
+		entry_yaw_rad -= 6.2831853071795865f;
+	}
+	while ((entry_yaw_rad - motion_path.circle_yaw_rad[0U]) <=
+	        -3.1415926535897932f) {
+		entry_yaw_rad += 6.2831853071795865f;
+	}
+	entry_yaw_offset_rad = entry_yaw_rad - motion_path.circle_yaw_rad[0U];
+	for (point_index = 0U; point_index < path->point_count; point_index++) {
+		float angle_progress_rad = fabsf(motion_path.circle_angle_rad[point_index] -
+		        motion_path.circle_angle_rad[0U]);
+		float entry_blend = ClampFloat(angle_progress_rad /
+		        MOTION_PATH_ENTRY_YAW_BLEND_RAD, 0.0f, 1.0f);
+
+		motion_path.circle_yaw_rad[point_index] += entry_yaw_offset_rad *
+		        (1.0f - entry_blend);
 	}
 
 	motion_path.point_count = path->point_count;
@@ -404,53 +512,70 @@ uint8_t motion_circle_path_start(const MotionCirclePath_t *path)
 	motion_path.circle_base_radius_mm = path->radius_mm;
 	motion_path.circle_slot_x_mm = path->slot_x_mm;
 	motion_path.circle_slot_y_mm = path->slot_y_mm;
-	motion_path.circle_direction = path->direction;
 	return motion_path_begin(path->cruise_speed_mps);
 }
 
 void motion_path_update(float dt)
 {
-	float travel_m;
+	float target_yaw_rad;
+	float current_yaw_rad;
+	float target_slot_x_mm;
+	float target_slot_y_mm;
+	float current_slot_x_mm;
+	float current_slot_y_mm;
+	float slot_error_x_m;
+	float slot_error_y_m;
+	float slot_error_m;
+	float current_slot_angle_rad;
+	float projected_progress_m;
+	float reference_progress_m;
 
 	if (!motion_path.active || (dt <= 0.0f)) {
 		return;
 	}
 
-	if (!motion_path.reference_complete) {
-		travel_m = motion_plan_speed() * dt;
-		while ((travel_m > 0.0f) && !motion_path.reference_complete) {
-			float segment_remaining_m = motion_path.segment_length_m[
-			        motion_path.segment_index] *
-			        (1.0f - motion_path.segment_u);
-
-			if (travel_m < segment_remaining_m) {
-				motion_path.segment_u += travel_m /
-				        motion_path.segment_length_m[
-				                motion_path.segment_index];
-				travel_m = 0.0f;
-			} else {
-				travel_m -= segment_remaining_m;
-				if (motion_path.segment_index >=
-				        (uint8_t)(motion_path.point_count - 2U)) {
-					motion_path.segment_u = 1.0f;
-					motion_path.reference_complete = 1U;
-				} else {
-					motion_path.segment_index++;
-					motion_path.segment_u = 0.0f;
-				}
-			}
-		}
-		motion_path_reference_update();
-		motion_path.remaining_distance_m = motion_path.reference_complete ?
-		        0.0f : motion_path_remaining();
-		motion_path.yaw_rate_rad_s = motion_path.reference_complete ? 0.0f :
-		        motion_plan_speed() * motion_path.yaw_rate_m_inv;
+	/* 实际槽口投影确定沿弧进度，固定前视距离生成连续底盘参考点。 */
+	current_yaw_rad = odometer_get_yaw_deg() * 0.017453292519943295f;
+	current_slot_x_mm = odometer_ctx.pose.pos_x_mm +
+	        cosf(current_yaw_rad) * motion_path.circle_slot_x_mm -
+	        sinf(current_yaw_rad) * motion_path.circle_slot_y_mm;
+	current_slot_y_mm = odometer_ctx.pose.pos_y_mm +
+	        sinf(current_yaw_rad) * motion_path.circle_slot_x_mm +
+	        cosf(current_yaw_rad) * motion_path.circle_slot_y_mm;
+	current_slot_angle_rad = atan2f(
+	        current_slot_y_mm - motion_path.circle_center_y_mm,
+	        current_slot_x_mm - motion_path.circle_center_x_mm);
+	projected_progress_m = motion_path_project_progress(current_slot_angle_rad);
+	if (projected_progress_m > motion_path.projected_progress_m) {
+		motion_path.projected_progress_m = projected_progress_m;
 	}
+	reference_progress_m = motion_path.projected_progress_m +
+	        MOTION_PATH_LOOKAHEAD_M;
+	motion_path_set_progress(reference_progress_m);
+	motion_path.remaining_distance_m = motion_path.total_length_m -
+	        motion_path.projected_progress_m;
+	motion_path.yaw_rate_rad_s = motion_path.reference_complete ? 0.0f :
+	        motion_plan_speed() * motion_path.yaw_rate_m_inv;
 
-	if (motion_path.reference_complete && IsPositionReached(raceh) &&
-	        IsYawReached(attitude_control.target_yaw,
-	                MOTION_PATH_YAW_TOLERANCE_DEG) &&
-	        (motion_plan_speed() <= POSITION_PLANNER_STOP_SPEED_MPS)) {
+	target_yaw_rad = attitude_control.target_yaw * 0.017453292519943295f;
+	target_slot_x_mm = position_control.target_x +
+	        cosf(target_yaw_rad) * motion_path.circle_slot_x_mm -
+	        sinf(target_yaw_rad) * motion_path.circle_slot_y_mm;
+	target_slot_y_mm = position_control.target_y +
+	        sinf(target_yaw_rad) * motion_path.circle_slot_x_mm +
+	        cosf(target_yaw_rad) * motion_path.circle_slot_y_mm;
+	slot_error_x_m = (target_slot_x_mm - current_slot_x_mm) * 0.001f;
+	slot_error_y_m = (target_slot_y_mm - current_slot_y_mm) * 0.001f;
+	slot_error_m = sqrtf(slot_error_x_m * slot_error_x_m +
+	        slot_error_y_m * slot_error_y_m);
+	/* 按实测 yaw 反算底盘中心，使位置环误差直接等于槽口轨迹误差。 */
+	position_control.target_x = odometer_ctx.pose.pos_x_mm +
+	        slot_error_x_m * 1000.0f;
+	position_control.target_y = odometer_ctx.pose.pos_y_mm +
+	        slot_error_y_m * 1000.0f;
+
+	if (motion_path.reference_complete &&
+	        (slot_error_m <= MOTION_PATH_TRACK_TOLERANCE_M)) {
 		motion_path.active = 0U;
 		motion_path.completed = 1U;
 		motion_path.yaw_rate_rad_s = 0.0f;
@@ -470,6 +595,8 @@ void motion_path_stop(void)
 	motion_path.point_count = 0U;
 	motion_path.segment_index = 0U;
 	motion_path.segment_u = 0.0f;
+	motion_path.total_length_m = 0.0f;
+	motion_path.projected_progress_m = 0.0f;
 	motion_path.remaining_distance_m = 0.0f;
 	motion_path.tangent_x = 0.0f;
 	motion_path.tangent_y = 0.0f;
@@ -484,7 +611,6 @@ void motion_path_stop(void)
 	motion_path.active = 0U;
 	motion_path.reference_complete = 0U;
 	motion_path.completed = 0U;
-	motion_path.circle_direction = 0;
 }
 
 static ChassisConfig_t chassis_config;
@@ -856,6 +982,8 @@ void UpdatePositionControl(float dt) {
 	float distance_error = sqrtf(error_x_global * error_x_global +
 	                             error_y_global * error_y_global);
 	uint8_t path_enabled = motion_path.active;
+	float position_tolerance_m = path_enabled ?
+	        MOTION_PATH_TRACK_TOLERANCE_M : raceh;
 	float planner_distance_m = path_enabled ?
 	        motion_path.remaining_distance_m + distance_error : distance_error;
 	control_ctx.error_x_global_m = error_x_global;
@@ -927,7 +1055,7 @@ void UpdatePositionControl(float dt) {
 		        desired_accel_y_global * sinf(current_yaw_rad);
 		desired_accel_y_local = -desired_accel_x_global * sinf(current_yaw_rad) +
 		        desired_accel_y_global * cosf(current_yaw_rad);
-	} else if (distance_error > raceh) {
+	} else if (distance_error > position_tolerance_m) {
 		plan_vx = error_x_local * plan_speed / distance_error;
 		plan_vy = error_y_local * plan_speed / distance_error;
 		desired_accel_x_local = error_x_local *
@@ -935,7 +1063,7 @@ void UpdatePositionControl(float dt) {
 		desired_accel_y_local = error_y_local *
 		        motion_plan_accel() / distance_error;
 	}
-	if (path_enabled || (distance_error > raceh)) {
+	if (path_enabled || (distance_error > position_tolerance_m)) {
 		float force_x_n = CHASSIS_MASS_KG *
 		        (desired_accel_x_local + com_accel_x_local +
 		                param->accel_feedback_gain *
@@ -971,7 +1099,7 @@ void UpdatePositionControl(float dt) {
 		feedback_vx *= feedback_ratio;
 		feedback_vy *= feedback_ratio;
 	}
-	if ((distance_error > raceh) &&
+	if ((distance_error > position_tolerance_m) &&
 	        (distance_error <= POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M) &&
 	        (feedback_speed < param->static_friction_speed_mps)) {
 
@@ -997,7 +1125,7 @@ void UpdatePositionControl(float dt) {
 		vy_local *= ratio;
 		linear_speed = command_speed_limit;
 	}
-	if (distance_error <= raceh &&
+	if (distance_error <= position_tolerance_m &&
 	        (!path_enabled || motion_path.reference_complete)) {
 		vx_local = 0.0f;
 		vy_local = 0.0f;
@@ -1010,6 +1138,7 @@ void UpdatePositionControl(float dt) {
 		vx_local = 0.0f;
 		vy_local = 0.0f;
 	}
+#if (AI_TUNE_MODE_ENABLE != 0U)
 	{
 		ai_tune_telemetry_t telemetry = {
 		        .time_ms = HAL_GetTick(),
@@ -1039,6 +1168,7 @@ void UpdatePositionControl(float dt) {
 
 		ai_tune_send_telemetry(&telemetry);
 	}
+#endif
 
 	SetTargetLinearVelocity(vx_local, vy_local);
 	if (ai_tune_is_guarded()) {
@@ -1046,7 +1176,7 @@ void UpdatePositionControl(float dt) {
 		return;
 	}
 
-	if (IsPositionControlFinished(raceh)) {
+	if (IsPositionControlFinished(position_tolerance_m)) {
 		testflag = 1;
 		PositionPlanner_Reset();
 	}

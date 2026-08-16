@@ -49,18 +49,22 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#if (AI_TUNE_MODE_ENABLE != 0U)
 typedef struct {
 	float x_mm;
 	float y_mm;
 	float yaw_deg;
 } ai_tune_pose_t;
+#endif
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#if (AI_TUNE_MODE_ENABLE != 0U)
 #define AI_TUNE_TRAJECTORY_COUNT 4U
 #define AI_TUNE_TRAJECTORY_HOLD_MS 300U
+#endif
 #define ROBOT_CONTROL_BUDGET_US 1000U
 
 /* USER CODE END PD */
@@ -78,8 +82,9 @@ AppContext_t app_ctx = {
         .gy33_white_balance_cmd = {0xA5, 0xbb, 0x60},
         .gy33_read_cmd = {0xA5, 0xCC, 0x71},
         .chassis_velocity_mode = 1,
-				.debug_enable = 0,
+				.debug_enable = AI_TUNE_MODE_ENABLE,
 };
+#if (AI_TUNE_MODE_ENABLE != 0U)
 static const ai_tune_pose_t ai_tune_trajectory[AI_TUNE_TRAJECTORY_COUNT] = {
 		{-1200.0f, 0.0f, 0.0f},
 		{-1200.0f, 800.0f, -90.0f},
@@ -90,6 +95,7 @@ static uint8_t ai_tune_trajectory_active;
 static uint8_t ai_tune_trajectory_index;
 static uint32_t ai_tune_trajectory_hold_start_ms;
 static uint8_t ai_tune_servo_initialized;
+#endif
 volatile uint32_t robot_control_current_us;
 volatile uint32_t robot_control_max_us;
 volatile uint32_t robot_control_overrun_count;
@@ -138,6 +144,7 @@ static void Robot_ControlTiming_Update(uint32_t start_cycle)
 	}
 }
 
+#if (AI_TUNE_MODE_ENABLE != 0U)
 static void ai_tune_start_trajectory(float max_speed_mps)
 {
 	ai_tune_trajectory_active = 1U;
@@ -189,6 +196,7 @@ static void ai_tune_update_trajectory(void)
 	        ai_tune_trajectory[ai_tune_trajectory_index].y_mm,
 	        ai_tune_trajectory[ai_tune_trajectory_index].yaw_deg);
 }
+#endif
 /* USER CODE END 0 */
 
 /**
@@ -380,6 +388,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+#if (AI_TUNE_MODE_ENABLE != 0U)
 static void Robot_HandleDebugModeTransition(void) {
 	static uint8_t initialized = 0U;
 	static uint8_t previous_debug;
@@ -405,14 +414,17 @@ static void Robot_HandleDebugModeTransition(void) {
 	stop();
 	Mecanum_SendVelocity();
 }
+#endif
 
 void Robot_RealtimeControl(float dt) {
 	if (dt > 0.0f) {
 		uint32_t control_start_cycle = DWT->CYCCNT;
 
 		/* FreeRTOS 固定周期任务调用本函数，dt 为控制周期秒数。 */
+#if (AI_TUNE_MODE_ENABLE != 0U)
 		ai_tune_poll();
 		Robot_HandleDebugModeTransition();
+#endif
 		led_count++;
 		timcount++;
 		if (camtim_button) {
@@ -423,6 +435,7 @@ void Robot_RealtimeControl(float dt) {
 		if (is_position_control_enabled) {
 			UpdatePositionControl(dt);
 		}
+#if (AI_TUNE_MODE_ENABLE != 0U)
 		ai_tune_update_trajectory();
 		{
 			float target_x_mm;
@@ -469,6 +482,7 @@ void Robot_RealtimeControl(float dt) {
 
 			ai_tune_send_telemetry(&telemetry);
 		}
+#endif
 		UpdateAttitudeStabilization(dt);
 		vision_process_usart1_packet();
 		if (cam_stabilization.is_enabled) {
@@ -508,14 +522,16 @@ void Robot_RealtimeControl(float dt) {
 }
 void Robot_ServiceTick(void) {
 	/* 低频服务任务处理 LCD、按键和任务一状态机。 */
+#if (AI_TUNE_MODE_ENABLE != 0U)
 	Robot_HandleDebugModeTransition();
+#endif
 	LCD_DisplayNumber(0, 20, timcount, 6);
 
+#if (AI_TUNE_MODE_ENABLE == 0U)
 	Key_Tick();
 	if (Key_Num == 1) {
 		Key_Num = 0U;
 		Start_flag = 0U;
-		ai_tune_trajectory_active = 0U;
 		task2_start_pending = odometer_request_zero();
 		task2_zero_confirm_time_ms = 0U;
 		tasknum = 1U;
@@ -538,6 +554,7 @@ void Robot_ServiceTick(void) {
 		start_task1();
 	}
 	run_task1();
+#endif
 }
 
 int abs_int(int int1) {

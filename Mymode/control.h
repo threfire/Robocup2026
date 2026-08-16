@@ -56,7 +56,7 @@
 #define POSITION_FUZZY_KD_MAX_SCALE 1.50f /* 位置快速变化时 Kd 缩放系数 */
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.35f /* 位置误差变化率滤波系数 */
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.40f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.95f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 2.0f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 12.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 18.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 3000.0f /* 速度规划器最大加加速度，单位 m/s³ */
@@ -79,7 +79,7 @@
 #define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f /* 静摩擦补偿启用距离，单位 m */
 #define POSITION_STATIC_FRICTION_SPEED_MPS 0.0700433f /* 静摩擦补偿速度，单位 m/s */
-#define CHASSIS_MASS_KG 5.0f /* 底盘质量，单位 kg */
+#define CHASSIS_MASS_KG 5.888f /* 底盘质量，单位 kg */
 #define CHASSIS_CENTER_OF_MASS_X_M - 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
 #define POSITION_ACCEL_FEEDBACK_GAIN 0.274512f /* 位置环加速度反馈增益 */

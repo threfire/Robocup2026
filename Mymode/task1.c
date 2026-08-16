@@ -22,6 +22,9 @@
 /** 第一段连续收拢路径巡航速度，单位 m/s。 */
 #define TASK1_MATERIAL_PATH_SPEED_MPS 0.80f
 
+/** 槽口捕获圆心相对底盘中心的前向距离，单位 mm。 */
+#define TASK1_MATERIAL_SLOT_FORWARD_MM 308.58f
+
 /** 第二段连续收拢路径巡航速度，单位 m/s。 */
 #define TASK1_TROPHY_PATH_SPEED_MPS 0.80f
 
@@ -32,9 +35,29 @@
  */
 static const MotionPathPoint_t task1_material_path[] = {
 		{-1058.24f, 258.25f},
+		{-1126.78f, 302.04f},
+		{-1190.95f, 352.06f},
+		{-1250.60f, 407.39f},
+		{-1305.28f, 467.63f},
+		{-1354.60f, 532.34f},
 		{-1399.38f, 600.35f},
+		{-1436.30f, 674.41f},
+		{-1467.87f, 750.82f},
+		{-1492.66f, 829.69f},
+		{-1510.49f, 910.42f},
+		{-1521.23f, 992.40f},
 		{-1524.00f, 1075.00f},
+		{-1521.19f, 1156.92f},
+		{-1510.53f, 1238.22f},
+		{-1492.89f, 1318.30f},
+		{-1468.41f, 1396.55f},
+		{-1437.25f, 1472.40f},
 		{-1399.38f, 1545.11f},
+		{-1355.95f, 1614.58f},
+		{-1306.41f, 1679.87f},
+		{-1251.43f, 1740.63f},
+		{-1191.40f, 1796.42f},
+		{-1126.79f, 1846.82f},
 		{-1058.24f, 1891.75f},
 };
 
@@ -43,18 +66,21 @@ static const MotionPathPoint_t task1_material_path[] = {
  *
  * 按实际行进顺序填写坐标并将 TASK1_TROPHY_PATH_CONFIGURED 设为 1U。
  */
+#if (TASK1_TROPHY_PATH_CONFIGURED != 0U)
 static const MotionPathPoint_t task1_trophy_path[] = {
 		{0.0f, 0.0f},
 		{0.0f, 0.0f},
 		{0.0f, 0.0f},
 };
+#endif
 
 /** 第一段大圆、槽口和运行方向参数。 */
 static const MotionCirclePath_t task1_material_circle = {
-		.center_x_mm = -589.69f,
-		.center_y_mm = 1066.62f,
-		.radius_mm = 934.35f,
-		.slot_x_mm = 0.0f,
+		.center_x_mm = -576.29f,
+		.center_y_mm = 1074.43f,
+		.radius_mm = 948.49f,
+		/* 里程计平移轴旋转 180°，车体前向对应车体系 X 轴负方向。 */
+		.slot_x_mm = -TASK1_MATERIAL_SLOT_FORWARD_MM,
 		.slot_y_mm = 0.0f,
 		.material_points = task1_material_path,
 		.point_count = (uint8_t)(sizeof(task1_material_path) /
@@ -64,6 +90,7 @@ static const MotionCirclePath_t task1_material_circle = {
 };
 
 /** 第二段大圆、槽口和运行方向参数。 */
+#if (TASK1_TROPHY_PATH_CONFIGURED != 0U)
 static const MotionCirclePath_t task1_trophy_circle = {
 		.center_x_mm = 0.0f,
 		.center_y_mm = 0.0f,
@@ -76,6 +103,7 @@ static const MotionCirclePath_t task1_trophy_circle = {
 		.direction = 1,
 		.cruise_speed_mps = TASK1_TROPHY_PATH_SPEED_MPS,
 };
+#endif
 
 /** 任务一路径点，单位 mm。 */
 static const Point2D_t task1_targets[] = {
@@ -212,7 +240,7 @@ void run_task1(void) {
 	case 1: task1_go_first_qrcode(); break;
 	case 2: task1_prepare_material_turnplate(); break;
 	case 11: task1_go_first_material_point(); break;
-	case 112: task1_wait_vision(1); break;
+	case 12: task1_wait_vision(1); break;
 	case 13: task1_relative_action(0, 0U); break;
 	case 14: task1_go_material_point(2, 2); break;
 	case 15: task1_wait_vision(2); break;
@@ -513,13 +541,11 @@ static void task1_go_trophy_transition(void) {
 
 /** 执行奖杯连续拾取动作。 */
 static void task1_pick_trophies(void) {
+#if (TASK1_TROPHY_PATH_CONFIGURED == 0U)
+	stop();
+#else
 	uint32_t now_ms = HAL_GetTick();
 	uint32_t elapsed_ms;
-
-	if (TASK1_TROPHY_PATH_CONFIGURED == 0U) {
-		stop();
-		return;
-	}
 
 	if (!task1_curve_started) {
 		if (!motion_circle_path_start(&task1_trophy_circle)) {
@@ -556,6 +582,7 @@ static void task1_pick_trophies(void) {
 			task1_state.step_start = now_ms;
 		}
 	}
+#endif
 }
 
 
