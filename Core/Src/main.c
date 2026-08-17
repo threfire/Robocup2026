@@ -45,6 +45,7 @@
 #include "QAma.h"
 #include "ai_tune.h"
 #include "motion.h"
+#include "task1.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -435,6 +436,7 @@ void Robot_RealtimeControl(float dt) {
 		if (is_position_control_enabled) {
 			UpdatePositionControl(dt);
 		}
+		task1_arc_control_update(dt);
 #if (AI_TUNE_MODE_ENABLE != 0U)
 		ai_tune_update_trajectory();
 		{
@@ -450,8 +452,7 @@ void Robot_RealtimeControl(float dt) {
 					servo_init();
 					ai_tune_servo_initialized = 1U;
 				}
-				__HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1070U);
-				__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1800U);
+				Servo_Action_Group(2U);
 				task2_start_pending = 0U;
 				task1_state.active = 0U;
 				task1_state.completed = 0U;

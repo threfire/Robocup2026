@@ -8,102 +8,56 @@
 #include "task1.h"
 #include "control.h"
 #include "motion.h"
+#include "odometer.h"
 #include "servo.h"
 #include "vision.h"
 #include "QAma.h"
+#include "cmsis_os.h"
+#include <math.h>
 #include <string.h>
 
-/** 第一段五圆柱路径配置完成标志。 */
-#define TASK1_MATERIAL_PATH_CONFIGURED 1U
+/** 圆弧循迹车体前向速度，单位 m/s。 */
+#define TASK1_ARC_SPEED_MPS (-0.80f)
 
-/** 第二段三奖杯路径配置完成标志。 */
-#define TASK1_TROPHY_PATH_CONFIGURED 0U
+/** 圆弧径向循迹配置。 */
+typedef struct {
+	float center_x_mm;
+	float center_y_mm;
+	float radius_mm;
+	int8_t direction;
+	float base_omega_rad_s;
+} task1_arc_config_t;
 
-/** 第一段连续收拢路径巡航速度，单位 m/s。 */
-#define TASK1_MATERIAL_PATH_SPEED_MPS 0.80f
-
-/** 槽口捕获圆心相对底盘中心的前向距离，单位 mm。 */
-#define TASK1_MATERIAL_SLOT_FORWARD_MM 308.58f
-
-/** 第二段连续收拢路径巡航速度，单位 m/s。 */
-#define TASK1_TROPHY_PATH_SPEED_MPS 0.80f
-
-/**
- * @brief 第一段五个圆柱的世界系中心坐标。
- *
- * 按实际行进顺序填写坐标并将 TASK1_MATERIAL_PATH_CONFIGURED 设为 1U。
- */
-static const MotionPathPoint_t task1_material_path[] = {
-		{-1058.24f, 258.25f},
-		{-1126.78f, 302.04f},
-		{-1190.95f, 352.06f},
-		{-1250.60f, 407.39f},
-		{-1305.28f, 467.63f},
-		{-1354.60f, 532.34f},
-		{-1399.38f, 600.35f},
-		{-1436.30f, 674.41f},
-		{-1467.87f, 750.82f},
-		{-1492.66f, 829.69f},
-		{-1510.49f, 910.42f},
-		{-1521.23f, 992.40f},
-		{-1524.00f, 1075.00f},
-		{-1521.19f, 1156.92f},
-		{-1510.53f, 1238.22f},
-		{-1492.89f, 1318.30f},
-		{-1468.41f, 1396.55f},
-		{-1437.25f, 1472.40f},
-		{-1399.38f, 1545.11f},
-		{-1355.95f, 1614.58f},
-		{-1306.41f, 1679.87f},
-		{-1251.43f, 1740.63f},
-		{-1191.40f, 1796.42f},
-		{-1126.79f, 1846.82f},
-		{-1058.24f, 1891.75f},
+/** 圆弧径向循迹运行状态。 */
+struct task1_arc_control_s {
+	PID_Controller pid;
+	const task1_arc_config_t *config;
+	volatile uint8_t active;
+	float slot_x_mm;
+	float slot_y_mm;
+	float actual_radius_mm;
+	float radial_error_m;
+	float pid_output_rad_s;
+	float omega_command_rad_s;
 };
 
-/**
- * @brief 第二段三个奖杯的世界系中心坐标。
- *
- * 按实际行进顺序填写坐标并将 TASK1_TROPHY_PATH_CONFIGURED 设为 1U。
- */
-#if (TASK1_TROPHY_PATH_CONFIGURED != 0U)
-static const MotionPathPoint_t task1_trophy_path[] = {
-		{0.0f, 0.0f},
-		{0.0f, 0.0f},
-		{0.0f, 0.0f},
-};
-#endif
-
-/** 第一段大圆、槽口和运行方向参数。 */
-static const MotionCirclePath_t task1_material_circle = {
+/** step 2 五圆柱目标圆弧。 */
+static const task1_arc_config_t task1_material_arc = {
 		.center_x_mm = -576.29f,
-		.center_y_mm = 1074.43f,
-		.radius_mm = 948.49f,
-		/* 里程计平移轴旋转 180°，车体前向对应车体系 X 轴负方向。 */
-		.slot_x_mm = -TASK1_MATERIAL_SLOT_FORWARD_MM,
-		.slot_y_mm = 0.0f,
-		.material_points = task1_material_path,
-		.point_count = (uint8_t)(sizeof(task1_material_path) /
-		        sizeof(task1_material_path[0])),
-		.direction = -1,
-		.cruise_speed_mps = TASK1_MATERIAL_PATH_SPEED_MPS,
+	.center_y_mm = 1074.43f,
+	.radius_mm = 948.49f,
+	.direction = -1,
+	.base_omega_rad_s = TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S,
 };
 
-/** 第二段大圆、槽口和运行方向参数。 */
-#if (TASK1_TROPHY_PATH_CONFIGURED != 0U)
-static const MotionCirclePath_t task1_trophy_circle = {
-		.center_x_mm = 0.0f,
-		.center_y_mm = 0.0f,
-		.radius_mm = 0.0f,
-		.slot_x_mm = 0.0f,
-		.slot_y_mm = 0.0f,
-		.material_points = task1_trophy_path,
-		.point_count = (uint8_t)(sizeof(task1_trophy_path) /
-		        sizeof(task1_trophy_path[0])),
+/** step 28 奖杯目标圆弧。 */
+static const task1_arc_config_t task1_trophy_arc = {
+		.center_x_mm = 615.51f,
+		.center_y_mm = 1075.00f,
+		.radius_mm = 948.49f,
 		.direction = 1,
-		.cruise_speed_mps = TASK1_TROPHY_PATH_SPEED_MPS,
+		.base_omega_rad_s = TASK1_TROPHY_ARC_BASE_OMEGA_RAD_S,
 };
-#endif
 
 /** 任务一路径点，单位 mm。 */
 static const Point2D_t task1_targets[] = {
@@ -129,12 +83,85 @@ static uint8_t task1_fourth_color_state;
 static servo_smooth_move_t task1_qrcode_servo_move;
 static uint8_t task1_qrcode_servo_move_started;
 static uint8_t task1_turnplate_last_slot = 0xFFU;
-/** 连续收拢路径启动标志。 */
-static uint8_t task1_curve_started;
-/** 连续收拢过程中的执行机构阶段。 */
-static uint8_t task1_curve_action;
-/** 连续收拢完成后的机构等待起始时刻，单位 ms。 */
-static uint32_t task1_curve_finish_time_ms;
+task1_arc_control_t task1_arc_control;
+
+/** 启动指定目标圆弧的径向 PID。 */
+static void task1_arc_control_start(const task1_arc_config_t *config) {
+	task1_arc_control.active = 0U;
+	task1_arc_control.config = config;
+	task1_arc_control.slot_x_mm = 0.0f;
+	task1_arc_control.slot_y_mm = 0.0f;
+	task1_arc_control.actual_radius_mm = 0.0f;
+	task1_arc_control.radial_error_m = 0.0f;
+	task1_arc_control.pid_output_rad_s = 0.0f;
+	task1_arc_control.omega_command_rad_s = 0.0f;
+	pid_init(&task1_arc_control.pid, TASK1_ARC_PID_KP,
+	        TASK1_ARC_PID_KI, TASK1_ARC_PID_KD,
+	        TASK1_ARC_PID_MAX_OMEGA_RAD_S);
+	__DMB();
+	task1_arc_control.active = 1U;
+}
+
+/** 停止圆弧径向 PID。 */
+static void task1_arc_control_stop(void) {
+	task1_arc_control.active = 0U;
+	task1_arc_control.pid_output_rad_s = 0.0f;
+	task1_arc_control.omega_command_rad_s = 0.0f;
+	__DMB();
+}
+
+/** 在 1 ms 实时任务中更新圆弧径向 PID。 */
+void task1_arc_control_update(float dt) {
+	const task1_arc_config_t *config;
+	float delta_x_mm;
+	float delta_y_mm;
+	float yaw_rad;
+	float slot_x_mm;
+	float slot_y_mm;
+	float actual_radius_mm;
+	float radial_error_m;
+	float omega_rad_s;
+
+	if ((task1_arc_control.active == 0U) || (dt <= 0.0f)) {
+		return;
+	}
+
+	config = task1_arc_control.config;
+	yaw_rad = odometer_ctx.pose.yaw_deg * 0.017453292519943295f;
+	slot_x_mm = odometer_ctx.pose.pos_x_mm +
+	        cosf(yaw_rad) * TASK1_ARC_SLOT_X_MM -
+	        sinf(yaw_rad) * TASK1_ARC_SLOT_Y_MM;
+	slot_y_mm = odometer_ctx.pose.pos_y_mm +
+	        sinf(yaw_rad) * TASK1_ARC_SLOT_X_MM +
+	        cosf(yaw_rad) * TASK1_ARC_SLOT_Y_MM;
+	task1_arc_control.slot_x_mm = slot_x_mm;
+	task1_arc_control.slot_y_mm = slot_y_mm;
+	delta_x_mm = slot_x_mm - config->center_x_mm;
+	delta_y_mm = slot_y_mm - config->center_y_mm;
+	actual_radius_mm = sqrtf(delta_x_mm * delta_x_mm +
+	        delta_y_mm * delta_y_mm);
+	task1_arc_control.actual_radius_mm = actual_radius_mm;
+	/* 方向符号将实际半径相对目标半径的误差映射到旋转方向。 */
+	radial_error_m = (float)config->direction *
+	        (actual_radius_mm - config->radius_mm) * 0.001f;
+	task1_arc_control.radial_error_m = radial_error_m;
+	task1_arc_control.pid_output_rad_s = pid_calc(
+	        &task1_arc_control.pid, radial_error_m, dt);
+	omega_rad_s = config->base_omega_rad_s +
+	        task1_arc_control.pid_output_rad_s;
+	task1_arc_control.omega_command_rad_s = omega_rad_s;
+
+	if (task1_arc_control.pid.integral > TASK1_ARC_PID_INTEGRAL_LIMIT) {
+		task1_arc_control.pid.integral = TASK1_ARC_PID_INTEGRAL_LIMIT;
+	} else if (task1_arc_control.pid.integral <
+	        -TASK1_ARC_PID_INTEGRAL_LIMIT) {
+		task1_arc_control.pid.integral = -TASK1_ARC_PID_INTEGRAL_LIMIT;
+	}
+
+	if (task1_arc_control.active != 0U) {
+		SetTargetVelocity(TASK1_ARC_SPEED_MPS, 0.0f, omega_rad_s);
+	}
+}
 
 /** 切换物料转盘到指定槽位。 */
 void Move_to_turnplate(uint8_t num) {
@@ -218,12 +245,10 @@ void start_task1(void) {
 	task1_state.step_start = HAL_GetTick();
 	task1_vision_timeout = 0U;
 	task1_fourth_color_state = 0U;
-	PositionControl_SetMaxSpeed(1.80f);
+	PositionControl_SetMaxSpeed(1.70f);
 	memset(&task1_qrcode_servo_move, 0, sizeof(task1_qrcode_servo_move));
 	task1_qrcode_servo_move_started = 0U;
-	task1_curve_started = 0U;
-	task1_curve_action = 0U;
-	task1_curve_finish_time_ms = 0U;
+	task1_arc_control_stop();
 	motion_path_stop();
 	is_hasgetcolor = 0U;
 }
@@ -326,7 +351,7 @@ static void task1_go_first_qrcode(void) {
 	tasknum = 1;
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
 	if (task1_move_target(0, 0.0f, 0.0f)) {
-		PositionControl_SetMaxSpeed(1.95f);
+		PositionControl_SetMaxSpeed(POSITION_PLANNER_CRUISE_SPEED_MPS);
 		Servo_Action_Group(2);
 		if (qanum == 0U) {
 			return;
@@ -346,32 +371,30 @@ static void task1_prepare_material_turnplate(void) {
 	Servo_Action_Group(2);
 	PositionControl_Enable(0U);
 	EnableAttitudeStabilization(0U);
+	task1_arc_control_start(&task1_material_arc);
 
-	SetTargetVelocity(-0.8f, 0.0f, -3.121f);
-	HAL_Delay(300U);
+	osDelay(300U);
 	Move_to_turnplate(2U);
-	HAL_Delay(600U);
+	osDelay(600U);
 
-	SetTargetVelocity(-0.8f, 0.0f, -1.55f);
-	HAL_Delay(200U);
+	osDelay(200U);
 	Move_to_turnplate(3U);
-	HAL_Delay(550U);
+	osDelay(550U);
 
 	Move_to_turnplate(4U);
-	SetTargetVelocity(-0.8f, 0.0f, -1.924f);
-	HAL_Delay(600U);
+	osDelay(600U);
 	Get_Materialcolor(0U);
-	HAL_Delay(300U);
+	osDelay(300U);
 	Move_to_turnplate(5U);
-	SetTargetVelocity(-0.8f, 0.0f, -1.730f);
-	HAL_Delay(300U);
+	osDelay(300U);
 	Get_Materialcolor(1U);
-	HAL_Delay(100U);
+	osDelay(100U);
 
 	Move_to_turnplate(6U);
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+	task1_arc_control_stop();
 	motion_reset();
-	HAL_Delay(300U);
+	osDelay(300U);
 	task1_state.current_step = 11U;
 	task1_state.step_start = HAL_GetTick();
 }
@@ -509,20 +532,20 @@ static void task1_go_trophy_transition(void) {
 static void task1_pick_trophies(void) {
 	PositionControl_Enable(0U);
 	EnableAttitudeStabilization(0U);
+	task1_arc_control_start(&task1_trophy_arc);
 
-	SetTargetVelocity(-0.8f, 0.0f, 1.85f);
-	HAL_Delay(300U);
+	osDelay(300U);
 	Move_to_turnplate(4U);
-	HAL_Delay(300U);
-	SetTargetVelocity(-0.8f, 0.0f, 1.64f);
-	HAL_Delay(400U);
+	osDelay(300U);
+	osDelay(400U);
 
 	Move_to_turnplate(3U);
-	HAL_Delay(500U);
-	HAL_Delay(250U);
+	osDelay(500U);
+	osDelay(250U);
 
+	task1_arc_control_stop();
 	motion_reset();
-	HAL_Delay(100U);
+	osDelay(100U);
 	task1_state.current_step = 31U;
 	task1_state.step_start = HAL_GetTick();
 }

@@ -56,14 +56,14 @@
 #define POSITION_FUZZY_KD_MAX_SCALE 1.50f /* 位置快速变化时 Kd 缩放系数 */
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.35f /* 位置误差变化率滤波系数 */
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.40f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.90f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.95f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 12.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 18.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 3000.0f /* 速度规划器最大加加速度，单位 m/s³ */
 #define POSITION_COMMAND_BRAKE_DECEL_MPS2 5.00f /* 总速度命令制动包络，单位 m/s² */
 #define MOTION_OBSERVER_ALPHA 0.25f /* 车体状态观测器低通系数 */
-#define MOTION_MPC_HORIZON_STEPS 200U /* MPC 预测步数 */
-#define MOTION_MPC_STEP_S 0.005f /* MPC 预测步长，单位 s */
+#define MOTION_MPC_HORIZON_STEPS 50U /* MPC 预测步数 */
+#define MOTION_MPC_STEP_S 0.01f /* MPC 预测步长，单位 s */
 #define MOTION_MPC_MAX_ACCEL_MPS2 12.0f /* MPC 线加速度约束，单位 m/s² */
 #define MOTION_MPC_MAX_ANG_ACCEL_RAD_S2 20.0f /* MPC 角加速度约束，单位 rad/s² */
 #define MOTION_MPC_TERMINAL_DISTANCE_WEIGHT 40.0f /* 终端距离代价权重 */
@@ -79,8 +79,8 @@
 #define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f /* 静摩擦补偿启用距离，单位 m */
 #define POSITION_STATIC_FRICTION_SPEED_MPS 0.0700433f /* 静摩擦补偿速度，单位 m/s */
-#define CHASSIS_MASS_KG 5.488f /* 底盘质量，单位 kg */
-#define CHASSIS_CENTER_OF_MASS_X_M - 0.000f /* 质心相对车体中心的前向偏移，单位 m */
+#define CHASSIS_MASS_KG 5.0f /* 底盘质量，单位 kg */
+#define CHASSIS_CENTER_OF_MASS_X_M - 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
 #define POSITION_ACCEL_FEEDBACK_GAIN 0.274512f /* 位置环加速度反馈增益 */
 #define POSITION_FORCE_TO_SPEED_FF_MPS_PER_N 0.0103671f /* 作用力前馈转速度系数，单位 m/(s·N) */
@@ -125,8 +125,8 @@
 /* 转盘 ZDT 电机 5 的绝对位置参数，位置单位为驱动器脉冲。 */
 #define TURNPLATE_MOTOR_ADDR 5U
 #define TURNPLATE_DIRECTION 0U
-#define TURNPLATE_SPEED_RPM 300U
-#define TURNPLATE_ACCEL 230U
+#define TURNPLATE_SPEED_RPM 200U
+#define TURNPLATE_ACCEL 150U
 #define TURNPLATE_SLOT_COUNT 6U
 /* 转盘单圈零点保存与上电回零配置。 */
 #define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 0U /* 首次标定后改为 0U */
