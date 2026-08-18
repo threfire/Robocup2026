@@ -11,7 +11,7 @@
 
 /* 姿态控制参数 */
 #define ATTITUDE_DEAD_ZONE_DEG 0.5f    /* 姿态闭环死区，单位 deg */
-#define ATTITUDE_PID_DEFAULT_KP 15.750f /* 姿态角度环比例系数，单位 rad/s/rad */
+#define ATTITUDE_PID_DEFAULT_KP 14.750f /* 姿态角度环比例系数，单位 rad/s/rad */
 #define ATTITUDE_PID_DEFAULT_KI 0.05f   /* 姿态角度环积分系数 */
 #define ATTITUDE_PID_DEFAULT_KD 0.75f /* 姿态角度环角速度阻尼系数，单位 s */
 #define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
@@ -33,17 +33,18 @@
 #define POSITION_SPEED_LOWEST_MPS 0.65f /* 最低位置控制速度，单位 m/s */
 #define TASK1_EMM_BACKWARD_SPEED_RPM 200U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
-#define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
-#define TASK1_START_CRUISE_SPEED_MPS 1.25f /* 出发巡航速度，单位 m/s */
+#define TASK1_EMM_BACKWARD_WAIT_MS 600U  /* 任务一 EMM 后退等待时间，单位 ms */
+#define TASK1_START_CRUISE_SPEED_MPS 1.1f /* 出发巡航速度，单位 m/s */
 #define TASK1_QRCODE_TIMEOUT_MS 1000U /* 二维码到点等待超时，单位 ms */
-#define TASK1_HOME_CRUISE_SPEED_MPS 1.45f /* 回家巡航速度，单位 m/s */
-#define TASK1_HOME_APPROACH_SPEED_MPS 1.25f /* 回家接近速度，单位 m/s */
-#define TASK1_HOME_APPROACH_DISTANCE_M 0.50f /* 回家降速距离，单位 m */
+#define TASK1_QRCODE_TRANSITION_TOLERANCE_M 0.1f /* 二维码前过渡点到点容差，单位 m */
+#define TASK1_HOME_CRUISE_SPEED_MPS 1.2f /* 回家巡航速度，单位 m/s */
+#define TASK1_HOME_APPROACH_SPEED_MPS 1.1f /* 回家接近速度，单位 m/s */
+#define TASK1_HOME_APPROACH_DISTANCE_M 0.80f /* 回家降速距离，单位 m */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 
 /* 任务一圆弧径向循迹参数 */
-#define TASK1_ARC_SPEED_MPS (-0.90f) /* 圆弧循迹车体前向速度，单位 m/s */
-#define TASK1_ARC_PID_KP 25.0f /* 圆弧径向 PID 比例系数，输入单位 m */
+#define TASK1_ARC_SPEED_MPS (-0.85f) /* 圆弧循迹车体前向速度，单位 m/s */
+#define TASK1_ARC_PID_KP 24.0f /* 圆弧径向 PID 比例系数，输入单位 m */
 #define TASK1_ARC_PID_KI 0.1f /* 圆弧径向 PID 积分系数 */
 #define TASK1_ARC_PID_KD 0.5f /* 圆弧径向 PID 微分系数 */
 #define TASK1_ARC_PID_INTEGRAL_LIMIT 0.50f /* 圆弧 PID 积分限幅，单位 m·s */
@@ -54,7 +55,7 @@
 #define TASK1_MATERIAL_ARC_CENTER_Y_MM 1074.43f /* 五圆柱目标圆心 Y 坐标，单位 mm */
 #define TASK1_MATERIAL_ARC_RADIUS_MM 948.49f /* 五圆柱目标圆弧半径，单位 mm */
 #define TASK1_MATERIAL_ARC_DIRECTION (-1) /* 五圆柱圆弧旋转方向 */
-#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.5f) /* 五圆柱圆弧基础角速度，单位 rad/s */
+#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.7f) /* 五圆柱圆弧基础角速度，单位 rad/s */
 #define TASK1_TROPHY_ARC_CENTER_X_MM 615.51f /* 奖杯目标圆心 X 坐标，单位 mm */
 #define TASK1_TROPHY_ARC_CENTER_Y_MM 1075.00f /* 奖杯目标圆心 Y 坐标，单位 mm */
 #define TASK1_TROPHY_ARC_RADIUS_MM 948.49f /* 奖杯目标圆弧半径，单位 mm */
@@ -74,7 +75,7 @@
 #define POSITION_FUZZY_KD_MAX_SCALE 1.00f /* 位置快速变化时 Kd 缩放系数 */
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.10f /* 位置误差变化率滤波系数 */
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.08f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.25f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.10f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_TRAJECTORY_CRUISE_SPEED_MPS POSITION_PLANNER_CRUISE_SPEED_MPS /* 任务代码巡航速度别名 */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 9.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 9.0f /* 速度规划器最大减速度，单位 m/s² */
@@ -95,12 +96,12 @@
 #define POSITION_MPC_VELOCITY_FILTER_ALPHA 0.40f /* 二维位置 MPC 参考低通系数 */
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.02f /* 近目标距离阈值，单位 m */
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.95f /* 速度反馈参与上限，单位 m/s */
-#define POSITION_VELOCITY_FEEDBACK_GAIN 0.95f /* 车体速度内环比例增益 */
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.9f /* 速度反馈参与上限，单位 m/s */
+#define POSITION_VELOCITY_FEEDBACK_GAIN 0.9f /* 车体速度内环比例增益 */
 #define POSITION_VELOCITY_FEEDBACK_FADE_DISTANCE_M 0.030f /* 速度反馈开始衰减的位置误差，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.050f /* 静摩擦补偿启用距离，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_SPEED_MPS 0.030f /* 静摩擦补偿启用实测速度，单位 m/s */
-#define POSITION_STATIC_FRICTION_SPEED_MPS 0.01500433f /* 静摩擦补偿速度，单位 m/s */
+#define POSITION_STATIC_FRICTION_SPEED_MPS 0.00800433f /* 静摩擦补偿速度，单位 m/s */
 #define CHASSIS_MASS_KG 5.88f /* 底盘质量，单位 kg */
 #define CHASSIS_CENTER_OF_MASS_X_M - 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
@@ -251,7 +252,7 @@ typedef struct {
 
 typedef struct {
 	float race_tolerance_m;             /* 当前任务到点容差，单位 m */
-	uint32_t material_position_pulses[TURNPLATE_SLOT_COUNT + 1U]; /* 初始点及转盘绝对脉冲位置 */
+	uint32_t material_position_pulses[TURNPLATE_SLOT_COUNT + 2U]; /* 初始点及转盘绝对脉冲位置 */
 	TaskState_t task1;                  /* 任务 1 状态机 */
 	TaskState_t task2;                  /* 任务 2 状态机 */
 	uint8_t task_num;                   /* 当前任务编号 */

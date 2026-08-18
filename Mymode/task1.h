@@ -20,6 +20,8 @@ void start_task1(void);
 void run_task1(void);
 /** 在 1 ms 实时任务中更新圆弧径向 PID。 */
 void task1_arc_control_update(float dt);
+/** 动态设置圆弧闭环基础角速度，单位 rad/s。 */
+void task1_arc_set_omega(float base_omega_rad_s);
 /** 获取任务一激活状态。 */
 uint8_t is_task1_active(void);
 

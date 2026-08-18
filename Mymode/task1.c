@@ -35,6 +35,7 @@ struct task1_arc_control_s {
 	float actual_radius_mm;
 	float radial_error_m;
 	float pid_output_rad_s;
+	volatile float base_omega_rad_s;
 	float omega_command_rad_s;
 };
 
@@ -70,6 +71,7 @@ static const Point2D_t task1_targets[] = {
         {0.0f-20.0f, 1816.29f, -90.0f},
         {-270.0f-20.0f, 1816.29f, -90.0f},
         {0.0f, 0.0f, -90.0f},
+        {0.0f, 200.25f, 0.0f},
 
 };
 
@@ -92,6 +94,7 @@ static void task1_arc_control_start(const task1_arc_config_t *config) {
 	task1_arc_control.actual_radius_mm = 0.0f;
 	task1_arc_control.radial_error_m = 0.0f;
 	task1_arc_control.pid_output_rad_s = 0.0f;
+	task1_arc_control.base_omega_rad_s = config->base_omega_rad_s;
 	task1_arc_control.omega_command_rad_s = 0.0f;
 	pid_init(&task1_arc_control.pid, TASK1_ARC_PID_KP,
 	        TASK1_ARC_PID_KI, TASK1_ARC_PID_KD,
@@ -118,6 +121,7 @@ void task1_arc_control_update(float dt) {
 	float slot_y_mm;
 	float actual_radius_mm;
 	float radial_error_m;
+	float base_omega_rad_s;
 	float omega_rad_s;
 
 	if ((task1_arc_control.active == 0U) || (dt <= 0.0f)) {
@@ -145,7 +149,8 @@ void task1_arc_control_update(float dt) {
 	task1_arc_control.radial_error_m = radial_error_m;
 	task1_arc_control.pid_output_rad_s = pid_calc(
 	        &task1_arc_control.pid, radial_error_m, dt);
-	omega_rad_s = config->base_omega_rad_s +
+	base_omega_rad_s = task1_arc_control.base_omega_rad_s;
+	omega_rad_s = base_omega_rad_s +
 	        task1_arc_control.pid_output_rad_s;
 	task1_arc_control.omega_command_rad_s = omega_rad_s;
 
@@ -159,6 +164,12 @@ void task1_arc_control_update(float dt) {
 	if (task1_arc_control.active != 0U) {
 		SetTargetVelocity(TASK1_ARC_SPEED_MPS, 0.0f, omega_rad_s);
 	}
+}
+
+/** 动态设置圆弧闭环基础角速度。 */
+void task1_arc_set_omega(float base_omega_rad_s) {
+	task1_arc_control.base_omega_rad_s = base_omega_rad_s;
+	__DMB();
 }
 
 /** 切换物料转盘到指定槽位。 */
@@ -213,6 +224,7 @@ static void task1_finish(void);
 /** 下发任务一路径点的位姿目标。 */
 static uint8_t task1_move_target(
         uint8_t target_index, float y_offset_mm, float yaw_deg);
+static void task1_go_qrcode_transition(void);
 static void task1_go_first_qrcode(void);
 static void task1_prepare_material_turnplate(void);
 static void task1_go_first_material_point(void);
@@ -238,7 +250,7 @@ void start_task1(void) {
 	task1_turnplate_last_slot = 0xFFU;
 
 	task1_state.active = 1;
-	task1_state.current_step = 1;
+	task1_state.current_step = 0;
 	task1_state.completed = 0;
 	task1_state.step_start = HAL_GetTick();
 	task1_vision_timeout = 0U;
@@ -261,9 +273,10 @@ void run_task1(void) {
 	}
 
 	switch (task1_state.current_step) {
+	case 0: task1_go_qrcode_transition(); break;
 	case 1: task1_go_first_qrcode(); break;
 	case 2: task1_prepare_material_turnplate(); break;
-	case 11: task1_go_first_material_point(); break;
+	case 111: task1_go_first_material_point(); break;
 	case 12: task1_wait_vision(1); break;
 	case 13: task1_relative_action(0, 0U); break;
 	case 14: task1_go_material_point(2, 2); break;
@@ -325,6 +338,25 @@ static uint8_t task1_move_target(
 }
 
 
+/** 前往首个二维码点前的过渡点。 */
+static void task1_go_qrcode_transition(void) {
+	EnableAttitudeStabilization(1);
+	SetTargetYaw(0.0f);
+	Move_to_turnplate(1);
+	if (!task1_qrcode_servo_move_started) {
+		Servo_Action_Group(2);
+	}
+	servo_init();
+	tasknum = 1;
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+	raceh = TASK1_QRCODE_TRANSITION_TOLERANCE_M;
+	if (task1_move_target(12U, 0.0f, task1_targets[12U].yaw_deg)) {
+		raceh = POSITION_REACHED_TOLERANCE_M;
+		task1_next_step();
+	}
+}
+
+
 /** 接近二维码点时平滑下放舵机。 */
 static void task1_qrcode_servo_slowdown(void) {
 	if (!task1_qrcode_servo_move_started && IsPositionReached(0.60f)) {
@@ -339,15 +371,7 @@ static void task1_qrcode_servo_slowdown(void) {
 
 /** 前往第一个二维码点。 */
 static void task1_go_first_qrcode(void) {
-	EnableAttitudeStabilization(1);
-	SetTargetYaw(0.0f);
-	Move_to_turnplate(1);
-	if (!task1_qrcode_servo_move_started) {
-		Servo_Action_Group(2);
-	}
-	servo_init();
-	tasknum = 1;
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+
 	if (task1_qrcode_wait_start_ms == 0U) {
 		if (!task1_move_target(0, 0.0f, 0.0f)) {
 			return;
@@ -377,33 +401,35 @@ static void task1_prepare_material_turnplate(void) {
 	EnableAttitudeStabilization(0U);
 	task1_arc_control_start(&task1_material_arc);
 
-	osDelay(300U);
+	osDelay(500U);
 	Move_to_turnplate(2U);
 	
 	osDelay(550);
 	Move_to_turnplate(3U);
 	
+	task1_arc_set_omega(2.6);
 	
 	osDelay(550);
 	Get_Materialcolor(0U);
 	Move_to_turnplate(4U);
 	
+	task1_arc_set_omega(2.4);
 
-	osDelay(550);
+	osDelay(650);
 	Get_Materialcolor(1U);
 	Move_to_turnplate(5U);
 	
-	osDelay(550);
+	osDelay(650);
 	Get_Materialcolor(2U);
 	Move_to_turnplate(6U);
 	
 	task1_arc_control_stop();
 	motion_reset();
 	osDelay(300U);
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
 	Get_Materialcolor(3U);
 	Get_Materialcolor(4U);
-	Move_to_turnplate(0U);
+	Move_to_turnplate(7U);
 	task1_state.current_step = 11U;
 	task1_state.step_start = HAL_GetTick();
 }
@@ -437,10 +463,6 @@ static void task1_wait_vision(uint8_t point_index) {
 
 /** 执行视觉校正后的取放动作。 */
 static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) {
-	uint8_t skip_pos_move =
-	        (task1_state.current_step == 13U ||
-	         task1_state.current_step == 19U);
-
 	if (task1_vision_timeout) {
 		task1_vision_timeout = 0U;
 	} else if (!vision_center(TOLERANCE, TOLERANCE,
@@ -476,9 +498,7 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		HAL_Delay(1900- (material_index- 1) * 300);
 	}
 
-	if (!skip_pos_move) {
-		POS_move();
-	}
+	POS_move();
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
 
 	Move_to_turnplate(0);
