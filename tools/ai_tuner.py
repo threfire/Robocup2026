@@ -21,14 +21,19 @@ CMD_START = 0x03
 TELEMETRY = 0x81
 ACK = 0x82
 BAUDRATE = 2_000_000
-TELEMETRY_PAYLOAD_SIZE = 44
+TELEMETRY_STATE_PAYLOAD_SIZE = 51
+TELEMETRY_POSITION_PAYLOAD_SIZE = 49
+TELEMETRY_YAW_PAYLOAD_SIZE = 31
 ACK_PAYLOAD_SIZE = 6
 EPISODE_MIN_DISTANCE_M = 0.05
-PARAM_NAMES = ("kp", "kd", "accel_feedback_gain", "force_to_speed_ff", "static_friction_speed_mps")
-LIMITS = ((2.0, 10.0), (0.0, 0.10), (0.0, 0.40), (0.0, 0.040), (0.04, 0.16))
-BASELINE_VALUES = (6.50, 0.0555565, 0.274512, 0.0103671, 0.0500433)
-SEARCH_SPANS = (1.2, 0.015, 0.08, 0.004, 0.015)
-SEARCH_TARGET_VALUES = (7.2, 0.070, 0.34, 0.014, 0.060)
+PARAM_NAMES = ("position_kp", "position_ki", "position_kd", "accel_ff_gain_s",
+        "com_ff_gain_s", "yaw_kp", "yaw_ki", "yaw_kd", "yaw_rate_ff_gain")
+LIMITS = ((0.0, 30.0), (0.0, 10.0), (0.0, 10.0), (0.0, 1.0),
+        (0.0, 1.0), (0.0, 30.0), (0.0, 10.0), (0.0, 10.0), (0.0, 2.0))
+BASELINE_VALUES = (2.80, 0.0, 1.00, 0.060957, 0.060957,
+        8.50, 0.05, 0.55, 1.0)
+SEARCH_SPANS = (1.2, 0.1, 0.2, 0.01, 0.01, 1.0, 0.05, 0.1, 0.05)
+SEARCH_TARGET_VALUES = BASELINE_VALUES
 STOP_SPEED_MPS = 0.05
 STOP_HOLD_S = 0.30
 SPEED_ERROR_WEIGHT = 5.0
@@ -61,15 +66,20 @@ def make_frame(frame_type: int, payload: bytes, sequence: int) -> bytes:
 @dataclass(frozen=True)
 class Parameters:
     version: int
-    kp: float
-    kd: float
-    accel_feedback_gain: float
-    force_to_speed_ff: float
-    static_friction_speed_mps: float
+    position_kp: float
+    position_ki: float
+    position_kd: float
+    accel_ff_gain_s: float
+    com_ff_gain_s: float
+    yaw_kp: float
+    yaw_ki: float
+    yaw_kd: float
+    yaw_rate_ff_gain: float
 
     def values(self):
-        return (self.kp, self.kd, self.accel_feedback_gain,
-                self.force_to_speed_ff, self.static_friction_speed_mps)
+        return (self.position_kp, self.position_ki, self.position_kd,
+                self.accel_ff_gain_s, self.com_ff_gain_s, self.yaw_kp,
+                self.yaw_ki, self.yaw_kd, self.yaw_rate_ff_gain)
 
 
 @dataclass
@@ -78,6 +88,8 @@ class Telemetry:
     version: int
     target_x_m: float
     target_y_m: float
+    trajectory_x_m: float
+    trajectory_y_m: float
     position_x_m: float
     position_y_m: float
     target_yaw_deg: float
@@ -148,26 +160,53 @@ class FrameReader:
 
 
 def decode_telemetry(payload: bytes) -> Telemetry | None:
-    if len(payload) != TELEMETRY_PAYLOAD_SIZE:
+    if len(payload) != TELEMETRY_STATE_PAYLOAD_SIZE or payload[0] != 0:
         return None
-    timestamp_ms, version = struct.unpack_from("<II", payload)
-    target_x_mm, target_y_mm, position_x_mm, position_y_mm = \
-            struct.unpack_from("<iiii", payload, 8)
-    target_yaw_mdeg, yaw_mdeg = struct.unpack_from("<ii", payload, 24)
-    reached, guarded = struct.unpack_from("<BB", payload, 42)
+    timestamp_ms, version = struct.unpack_from("<II", payload, 1)
+    target_x_mm, target_y_mm, trajectory_x_mm, trajectory_y_mm, \
+            position_x_mm, position_y_mm = struct.unpack_from("<iiiiii",
+                    payload, 9)
+    target_yaw_mdeg, yaw_mdeg = struct.unpack_from("<ii", payload, 33)
+    error_x_mm, error_y_mm, velocity_x_mmps, velocity_y_mmps = \
+            struct.unpack_from("<hhhh", payload, 41)
+    reached, guarded = struct.unpack_from("<BB", payload, 49)
     target_x_m = target_x_mm * 0.001
     target_y_m = target_y_mm * 0.001
+    trajectory_x_m = trajectory_x_mm * 0.001
+    trajectory_y_m = trajectory_y_mm * 0.001
     position_x_m = position_x_mm * 0.001
     position_y_m = position_y_mm * 0.001
-    velocity_x_mmps, velocity_y_mmps, command_vx_mmps, command_vy_mmps, \
-            plan_accel_mmps2 = struct.unpack_from("<hhhhh", payload, 32)
     return Telemetry(timestamp_ms, version, target_x_m, target_y_m,
-            position_x_m, position_y_m, target_yaw_mdeg * 0.001,
-            yaw_mdeg * 0.001, target_x_m - position_x_m,
-            target_y_m - position_y_m, velocity_x_mmps * 0.001,
-            velocity_y_mmps * 0.001, command_vx_mmps * 0.001,
-            command_vy_mmps * 0.001, plan_accel_mmps2 * 0.001, reached,
+            trajectory_x_m, trajectory_y_m, position_x_m, position_y_m,
+            target_yaw_mdeg * 0.001,
+            yaw_mdeg * 0.001, error_x_mm * 0.001, error_y_mm * 0.001,
+            velocity_x_mmps * 0.001, velocity_y_mmps * 0.001, 0.0, 0.0,
+            0.0, reached,
             guarded)
+
+
+def decode_control_telemetry(payload: bytes):
+    if len(payload) < 9:
+        return None
+    frame_kind, timestamp_ms, version = struct.unpack_from("<BII", payload)
+    if frame_kind == 1 and len(payload) == TELEMETRY_POSITION_PAYLOAD_SIZE:
+        values = struct.unpack_from("<20h", payload, 9)
+        names = ("plan_vx", "plan_vy", "plan_ax", "plan_ay", "accel_ff_vx",
+                "accel_ff_vy", "com_ff_vx", "com_ff_vy", "pid_p_vx",
+                "pid_p_vy", "pid_i_vx", "pid_i_vy", "pid_d_vx", "pid_d_vy",
+                "pid_vx", "pid_vy", "velocity_feedback_vx",
+                "velocity_feedback_vy", "command_vx", "command_vy")
+        return frame_kind, timestamp_ms, version, {
+                name: value * 0.001 for name, value in zip(names, values)}
+    if frame_kind == 2 and len(payload) == TELEMETRY_YAW_PAYLOAD_SIZE:
+        values = struct.unpack_from("<10hBB", payload, 9)
+        names = ("yaw_plan_rate", "yaw_p", "yaw_i", "yaw_d", "yaw_pid",
+                "command_omega", "motor_1_rpm", "motor_2_rpm", "motor_3_rpm",
+                "motor_4_rpm", "position_reached", "guarded")
+        scaled_values = tuple(value * 0.001 for value in values[:6]) + \
+                values[6:]
+        return frame_kind, timestamp_ms, version, dict(zip(names, scaled_values))
+    return None
 
 
 def decode_ack(payload: bytes):
@@ -355,7 +394,7 @@ def merge_results(first: EpisodeResult, second: EpisodeResult) -> EpisodeResult:
 
 
 def send_parameters(port, parameters: Parameters, sequence: int):
-    payload = struct.pack("<I5f", parameters.version, *parameters.values())
+    payload = struct.pack("<I9f", parameters.version, *parameters.values())
     port.write(make_frame(CMD_PARAM, payload, sequence))
 
 
@@ -407,7 +446,7 @@ def start_trial(port, reader: FrameReader, parameters: Parameters,
         speed_mps: float, sequence: int) -> int:
     send_with_ack(port, reader, CMD_PARAM,
             make_frame(CMD_PARAM,
-                    struct.pack("<I5f", parameters.version,
+                    struct.pack("<I9f", parameters.version,
                             *parameters.values()), sequence), sequence)
     sequence += 1
     send_with_ack(port, reader, CMD_START,
@@ -464,6 +503,7 @@ def main():
                 "rise_time_s", "stop_time_s", "accepted", *PARAM_NAMES])
         telemetry_writer = csv.DictWriter(telemetry_file, fieldnames=[
                 "version", "timestamp_ms", "target_x_m", "target_y_m",
+                "trajectory_x_m", "trajectory_y_m",
                 "position_x_m", "position_y_m", "error_x_m", "error_y_m",
                 "target_yaw_deg", "yaw_deg",
                 "velocity_x_mps", "velocity_y_mps", "command_vx_mps",
@@ -498,6 +538,8 @@ def main():
                         "timestamp_ms": telemetry.timestamp_ms,
                         "target_x_m": telemetry.target_x_m,
                         "target_y_m": telemetry.target_y_m,
+                        "trajectory_x_m": telemetry.trajectory_x_m,
+                        "trajectory_y_m": telemetry.trajectory_y_m,
                         "position_x_m": telemetry.position_x_m,
                         "position_y_m": telemetry.position_y_m,
                         "target_yaw_deg": telemetry.target_yaw_deg,

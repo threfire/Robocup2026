@@ -468,6 +468,8 @@ void Robot_RealtimeControl(float dt) {
 			        .time_ms = HAL_GetTick(),
 			        .target_x_m = position_control.target_x * 0.001f,
 			        .target_y_m = position_control.target_y * 0.001f,
+			        .trajectory_x_m = position_control.target_x * 0.001f,
+			        .trajectory_y_m = position_control.target_y * 0.001f,
 			        .position_x_m = odometer_ctx.pose.pos_x_mm * 0.001f,
 			        .position_y_m = odometer_ctx.pose.pos_y_mm * 0.001f,
 			        .target_yaw_deg = attitude_control.target_yaw,

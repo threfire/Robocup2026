@@ -353,7 +353,7 @@ static void task1_go_first_qrcode(void) {
 			return;
 		}
 
-		PositionControl_SetMaxSpeed(POSITION_PLANNER_CRUISE_SPEED_MPS);
+		PositionControl_SetMaxSpeed(POSITION_TRAJECTORY_CRUISE_SPEED_MPS);
 		task1_qrcode_wait_start_ms = HAL_GetTick();
 	}
 

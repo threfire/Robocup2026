@@ -16,7 +16,6 @@ typedef struct {
     float Kd;
     float integral;
     float prev_error;
-    float fuzzy_rate;
     float max_output;
 } PID_Controller;
 

@@ -51,3 +51,11 @@ git diff --check
 ```
 
 提交固件源文件、Keil 工程文件、调参工具、实施方案和项目技能。保留遥测 CSV、SVG、Python 缓存与 Keil 构建产物在工作区。
+
+## 上位机 EXE 构建
+
+`tools/ai_tune_gui.py` 的 EXE 固定使用 `.pack_venv\Scripts\python.exe` 构建。该环境对应 Python 3.13、Matplotlib 与 NumPy 二进制版本，并提供 GUI 运行所需的 `_tkinter` 扩展。
+
+构建前设置 `TCL_LIBRARY=D:\Program Files\Python313\tcl\tcl8.6` 和 `TK_LIBRARY=D:\Program Files\Python313\tcl\tk8.6`。PyInstaller 必须包含 `tkinter`、`_tkinter`、`tkinter.ttk`、`tkinter.filedialog`、`tkinter.messagebox`，并附加 `D:\Program Files\Python313\Lib\tkinter` 到 `tkinter`、Tcl 目录到 `_tcl_data`、Tk 目录到 `_tk_data`；保留 Matplotlib 的完整收集参数。
+
+构建完成后，使用 `pyi-archive_viewer -l tools\dist\AI调参工具.exe` 确认存在 `pyi_rth__tkinter`、`_tkinter.pyd`、`_tcl_data` 与 `_tk_data`。随后启动 EXE 5 秒并确认进程持续运行，再结束该校验进程。

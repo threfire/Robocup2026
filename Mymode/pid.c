@@ -28,7 +28,6 @@ void pid_init(PID_Controller *pid, float kp, float ki, float kd, float max_outpu
     pid->Kd = kd;
     pid->integral = 0.0f;
     pid->prev_error = 0.0f;
-    pid->fuzzy_rate = 0.0f;
     pid->max_output = max_output;
 }
 

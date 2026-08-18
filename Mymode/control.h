@@ -11,26 +11,15 @@
 
 /* 姿态控制参数 */
 #define ATTITUDE_DEAD_ZONE_DEG 0.05f    /* 姿态闭环死区，单位 deg */
-#define ATTITUDE_PID_DEFAULT_KP 15.50f /* 姿态角度环比例系数，单位 rad/s/rad */
+#define ATTITUDE_PID_DEFAULT_KP 10.50f /* 姿态角度环比例系数，单位 rad/s/rad */
 #define ATTITUDE_PID_DEFAULT_KI 0.05f   /* 姿态角度环积分系数 */
-#define ATTITUDE_PID_DEFAULT_KD 1.05f /* 姿态角度环角速度阻尼系数，单位 s */
+#define ATTITUDE_PID_DEFAULT_KD 0.55f /* 姿态角度环角速度阻尼系数，单位 s */
 #define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
-#define ATTITUDE_ACCEL_FEEDFORWARD_GAIN 1.0f /* 偏航 J·α 加速度前馈系数 */
-#define ATTITUDE_ACCEL_FEEDBACK_GAIN 0.15f /* 偏航加速度反馈增益 */
-#define ATTITUDE_FF_MAX_ACCEL_RAD_S2 50.0f /* 偏航前馈最大角加速度，单位 rad/s² */
-#define ATTITUDE_FF_MAX_OMEGA_RAD_S 3.8f /* 偏航前馈最大角速度，单位 rad/s */
+#define ATTITUDE_RATE_FEEDFORWARD_GAIN 1.0f /* 偏航规划角速度前馈系数 */
 #define ATTITUDE_PLANNER_MAX_ACCEL_RAD_S2 65.0f /* 偏航规划最大角加速度，单位 rad/s² */
 #define ATTITUDE_PLANNER_MAX_DECEL_RAD_S2 50.0f /* 偏航规划最大角减速度，单位 rad/s² */
 #define ATTITUDE_PLANNER_MAX_JERK_RAD_S3 120.0f /* 偏航规划最大角加加速度，单位 rad/s³ */
-#define FUZZY_PID_ENABLE 1U /* 模糊自适应 PID 使能标志 */
-#define ATTITUDE_FUZZY_ERROR_FULL_DEG 15.0f /* 偏航误差达到最高隶属度的阈值，单位 deg */
-#define ATTITUDE_FUZZY_RATE_FULL_DPS 60.0f /* 偏航误差变化率达到最高隶属度的阈值，单位 deg/s */
-#define ATTITUDE_FUZZY_KP_MIN_SCALE 0.90f /* 偏航小误差时 Kp 缩放系数 */
-#define ATTITUDE_FUZZY_KP_MAX_SCALE 1.15f /* 偏航大误差时 Kp 缩放系数 */
-#define ATTITUDE_FUZZY_KD_MIN_SCALE 0.90f /* 偏航平稳时 Kd 缩放系数 */
-#define ATTITUDE_FUZZY_KD_MAX_SCALE 1.20f /* 偏航快速变化时 Kd 缩放系数 */
-#define ATTITUDE_FUZZY_RATE_FILTER_ALPHA 0.20f /* 偏航误差变化率滤波系数 */
-#define ATTITUDE_FF_ACCEL_FILTER_ALPHA 0.20f /* 偏航期望角加速度滤波系数 */
+#define ATTITUDE_MAX_OMEGA 20.0f        /* 姿态控制最大角速度，单位 rad/s */
 
 /* 位置控制速度参数，单位 m/s */
 #define POSITION_SPEED_HIGHEST_MPS 9.3f /* 最高位置控制速度，单位 m/s */
@@ -38,6 +27,8 @@
 #define POSITION_SPEED_MID_MPS 2.0f     /* 中速位置控制速度，单位 m/s */
 #define POSITION_SPEED_LOW_MPS 1.5f     /* 低速位置控制速度，单位 m/s */
 #define POSITION_SPEED_LOWEST_MPS 0.65f /* 最低位置控制速度，单位 m/s */
+
+/* 任务速度与等待参数 */
 #define TASK1_EMM_BACKWARD_SPEED_RPM 200U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
 #define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
@@ -68,47 +59,26 @@
 #define TASK1_TROPHY_ARC_DIRECTION 1 /* 奖杯圆弧旋转方向 */
 #define TASK1_TROPHY_ARC_BASE_OMEGA_RAD_S 2.5f /* 奖杯圆弧基础角速度，单位 rad/s */
 
-/* 位置控制 PID 和轨迹规划参数 */
-#define POSITION_PID_DEFAULT_KP 10.50f /* 位置 PID 比例系数 */
-#define POSITION_PID_DEFAULT_KD 1.5555565f /* 位置 PID 微分系数 */
-#define POSITION_FUZZY_ERROR_FULL_M 0.30f /* 位置误差达到最高隶属度的阈值，单位 m */
-#define POSITION_FUZZY_RATE_FULL_MPS 1.00f /* 位置误差变化率达到最高隶属度的阈值，单位 m/s */
-#define POSITION_FUZZY_KP_MIN_SCALE 0.90f /* 位置小误差时 Kp 缩放系数 */
-#define POSITION_FUZZY_KP_MAX_SCALE 1.50f /* 位置大误差时 Kp 缩放系数 */
-#define POSITION_FUZZY_KD_MIN_SCALE 0.90f /* 位置平稳时 Kd 缩放系数 */
-#define POSITION_FUZZY_KD_MAX_SCALE 1.60f /* 位置快速变化时 Kd 缩放系数 */
-#define POSITION_FUZZY_RATE_FILTER_ALPHA 0.35f /* 位置误差变化率滤波系数 */
-#define POSITION_PLANNER_MIN_SPEED_MPS 0.50f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.45f /* 速度规划器巡航速度，单位 m/s */
-#define POSITION_PLANNER_MAX_ACCEL_MPS2 12.0f /* 速度规划器最大加速度，单位 m/s² */
-#define POSITION_PLANNER_MAX_DECEL_MPS2 18.0f /* 速度规划器最大减速度，单位 m/s² */
-#define POSITION_PLANNER_MAX_JERK_MPS3 3000.0f /* 速度规划器最大加加速度，单位 m/s³ */
-#define POSITION_COMMAND_BRAKE_DECEL_MPS2 2.00f /* 总速度命令制动包络，单位 m/s² */
-#define MOTION_OBSERVER_ALPHA 0.25f /* 车体状态观测器低通系数 */
-#define MOTION_MPC_HORIZON_STEPS 50U /* MPC 预测步数 */
-#define MOTION_MPC_STEP_S 0.01f /* MPC 预测步长，单位 s */
-#define MOTION_MPC_MAX_ACCEL_MPS2 12.0f /* MPC 线加速度约束，单位 m/s² */
-#define MOTION_MPC_MAX_ANG_ACCEL_RAD_S2 20.0f /* MPC 角加速度约束，单位 rad/s² */
-#define MOTION_MPC_TERMINAL_DISTANCE_WEIGHT 40.0f /* 终端距离代价权重 */
-#define MOTION_MPC_TERMINAL_SPEED_WEIGHT 0.5f /* 终端速度代价权重 */
-#define MOTION_MPC_OVERSHOOT_WEIGHT 200.0f /* 预测越过目标代价权重 */
-#define MOTION_MPC_CRUISE_PREFERENCE_DISTANCE_M 0.25f /* 巡航候选偏好距离 */
-#define MOTION_MPC_CRUISE_PREFERENCE_GAIN 300.0f /* 巡航候选偏好增益 */
-#define MOTION_MPC_LOW_SPEED_PREFERENCE_DISTANCE_M 0.08f /* 低速候选偏好启用距离，单位 m */
-#define MOTION_MPC_LOW_SPEED_PREFERENCE_SPEED_MPS 0.4f /* 低速候选偏好速度基准，单位 m/s */
-#define MOTION_MPC_LOW_SPEED_PREFERENCE_GAIN 8.0f /* 低速候选代价增益 */
-#define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
-#define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.005f /* 近目标距离阈值，单位 m */
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
-#define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f /* 静摩擦补偿启用距离，单位 m */
-#define POSITION_STATIC_FRICTION_SPEED_MPS 0.0100433f /* 静摩擦补偿速度，单位 m/s */
-#define CHASSIS_MASS_KG 5.88f /* 底盘质量，单位 kg */
+/* 位置控制 PID 与前馈参数 */
+#define POSITION_PID_DEFAULT_KP 1.08f /* 位置 PID 比例系数 */
+#define POSITION_PID_DEFAULT_KD 0.1f /* 位置 PID 微分系数 */
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 1.70f /* 速度反馈参与上限，单位 m/s */
+#define POSITION_VELOCITY_FEEDBACK_GAIN 0.40f /* 车体系速度误差反馈增益，直接补偿轨迹速度跟随滞后 */
+#define POSITION_VELOCITY_FEEDBACK_FADE_DISTANCE_M 0.030f /* 终点附近速度反馈衰减距离，单位 m */
 #define CHASSIS_CENTER_OF_MASS_X_M - 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
-#define POSITION_ACCEL_FEEDBACK_GAIN 0.274512f /* 位置环加速度反馈增益 */
-#define POSITION_FORCE_TO_SPEED_FF_MPS_PER_N 0.0103671f /* 作用力前馈转速度系数，单位 m/(s·N) */
-#define POSITION_ACCEL_FEEDBACK_FILTER_ALPHA 0.15f /* 加速度反馈低通滤波系数 */
+#define POSITION_ACCEL_FEEDFORWARD_GAIN 0.160957f /* 规划加速度前馈系数，单位 s */
+#define POSITION_COM_FEEDFORWARD_GAIN 0.060957f /* 质心偏置补偿系数，单位 s */
 
+/* 位置加加速度轨迹规划参数 */
+#define POSITION_MAX_LINEAR_SPEED_MPS 7.0f /* 位置控制最大线速度，单位 m/s */
+#define POSITION_TRAJECTORY_CRUISE_SPEED_MPS 1.90f /* 轨迹规划器巡航速度，单位 m/s */
+#define POSITION_TRAJECTORY_MAX_ACCEL_MPS2 12.0f /* 轨迹规划器最大加速度，单位 m/s² */
+#define POSITION_TRAJECTORY_MAX_DECEL_MPS2 12.00f /* 轨迹规划器最大减速度，单位 m/s² */
+#define POSITION_TRAJECTORY_MAX_JERK_MPS3 3000.0f /* 轨迹规划器最大加加速度，单位 m/s³ */
+#define POSITION_TRAJECTORY_NEAR_TARGET_DISTANCE_M 0.005f /* 轨迹终点距离阈值，单位 m */
+
+/* 位置到点判定参数 */
 #define POSITION_REACHED_TOLERANCE_M 0.004f /* 常规到点容差，单位 m */
 #define POSITION_FINE_REACHED_TOLERANCE_M 0.004f /* 精确到点容差，单位 m */
 #define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f /* 回程到点容差，单位 m */
@@ -129,6 +99,8 @@
 #define ERROR_QUEUE_SIZE 10U            /* 视觉误差队列长度 */
 #define UART_WAIT_TIMEOUT_MS 800U       /* 串口等待超时，单位 ms */
 #define CAM_STABILIZE_TIMEOUT_MS 1200U  /* 视觉稳定超时，单位 ms */
+#define CAM_DEAD_ZONE 0.0f              /* 视觉控制死区 */
+#define CAM_ERROR_ABS_LIMIT 480         /* 视觉误差绝对值上限 */
 
 /* EMM 速度与位置模式参数。 */
 /* EMM 输出轴相对轮速模型存在约 1.8 倍的速度换算比例。 */
@@ -141,10 +113,7 @@
 #define CHASSIS_CLOSED_LOOP_VELOCITY_ACCEL 0U /* 闭环 EMM 速度模式内部加速度 */
 #define CHASSIS_POS_FORWARD_ACCEL 100U  /* EMM 前进位置模式加速度 */
 #define CHASSIS_POS_BACKWARD_ACCEL 100U  /* EMM 后退位置模式加速度 */
-#define POSITION_MAX_LINEAR_SPEED_MPS 7.0f /* 位置控制最大线速度，单位 m/s */
-#define ATTITUDE_MAX_OMEGA 20.0f        /* 姿态控制最大角速度，单位 rad/s */
-#define CAM_DEAD_ZONE 0.0f              /* 视觉控制死区 */
-#define CAM_ERROR_ABS_LIMIT 480         /* 视觉误差绝对值上限 */
+
 /* 转盘 ZDT 电机 5 的绝对位置参数，位置单位为驱动器脉冲。 */
 #define TURNPLATE_MOTOR_ADDR 5U
 #define TURNPLATE_DIRECTION 0U

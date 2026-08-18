@@ -1175,16 +1175,6 @@
               <FilePath>..\Mymode\pid.h</FilePath>
             </File>
             <File>
-              <FileName>fuzzy.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Mymode\fuzzy.c</FilePath>
-            </File>
-            <File>
-              <FileName>fuzzy.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Mymode\fuzzy.h</FilePath>
-            </File>
-            <File>
               <FileName>motion_plan.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Mymode\motion_plan.c</FilePath>

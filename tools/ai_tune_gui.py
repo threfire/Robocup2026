@@ -12,11 +12,13 @@ from tkinter import filedialog, messagebox, ttk
 
 import serial
 from serial.tools import list_ports
+from matplotlib import rcParams
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from ai_tuner import (ACK, BAUDRATE, CMD_START, TELEMETRY, FrameReader,
-                      decode_ack, decode_telemetry, make_frame)
+                      decode_ack, decode_control_telemetry, decode_telemetry,
+                      make_frame)
 
 
 REFRESH_MS = 33
@@ -26,6 +28,30 @@ START_X_MM = -800.0
 START_Y_MM = 0.0
 MAX_SAMPLES = 6000
 MAX_PLOT_SAMPLES = 1200
+rcParams["font.sans-serif"] = ["Microsoft YaHei", "DejaVu Sans"]
+rcParams["axes.unicode_minus"] = False
+POSITION_CONTROL_FIELDS = (
+        ("plan_vx", "trajectory v", "#1677ff"),
+        ("accel_ff_vx", "accel ff", "#f59e0b"),
+        ("com_ff_vx", "com ff", "#7c3aed"),
+        ("pid_p_vx", "pid p", "#dc2626"),
+        ("pid_i_vx", "pid i", "#9333ea"),
+        ("pid_d_vx", "pid d", "#0891b2"),
+        ("pid_vx", "pid", "#16a34a"),
+        ("velocity_feedback_vx", "velocity fb", "#ea580c"),
+        ("command_vx", "command", "#111827"))
+YAW_CONTROL_FIELDS = (
+        ("yaw_plan_rate", "plan", "#1677ff"),
+        ("yaw_p", "pid p", "#dc2626"),
+        ("yaw_i", "pid i", "#9333ea"),
+        ("yaw_d", "pid d", "#0891b2"),
+        ("yaw_pid", "pid", "#16a34a"),
+        ("command_omega", "command", "#111827"))
+CONTROL_FIELD_NAMES = (
+        tuple(field for field, _, _ in POSITION_CONTROL_FIELDS) +
+        tuple(field.replace("vx", "vy") for field, _, _ in
+                POSITION_CONTROL_FIELDS) +
+        tuple(field for field, _, _ in YAW_CONTROL_FIELDS))
 
 
 class TuneWindow(tk.Tk):
@@ -34,11 +60,13 @@ class TuneWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("底盘调参测试")
-        self.minsize(1450, 760)
+        self.minsize(1450, 900)
         self.serial_port = None
         self.reader = FrameReader()
         self.sequence = 1
         self.samples = deque(maxlen=MAX_SAMPLES)
+        self.position_control_samples = deque(maxlen=MAX_SAMPLES)
+        self.yaw_control_samples = deque(maxlen=MAX_SAMPLES)
         self.session_sample_count = 0
         self.plot_dirty = False
         self.start_time_ms = None
@@ -46,6 +74,7 @@ class TuneWindow(tk.Tk):
         self.port_name = tk.StringVar(value="COM3")
         self.speed_mps = tk.StringVar(value="1.8")
         self.status_text = tk.StringVar(value="未连接")
+        self.control_text = tk.StringVar(value="控制量等待")
         self._build_controls()
         self._build_plots()
         self.protocol("WM_DELETE_WINDOW", self._close)
@@ -74,20 +103,24 @@ class TuneWindow(tk.Tk):
         ttk.Button(controls, text="保存 CSV", command=self._save_csv).pack(
                 side=tk.LEFT)
         ttk.Label(controls, textvariable=self.status_text).pack(side=tk.RIGHT)
+        ttk.Label(self, textvariable=self.control_text, anchor=tk.W).pack(
+                fill=tk.X, padx=10)
         self._refresh_ports()
 
     def _build_plots(self):
         content = ttk.Frame(self)
         content.pack(fill=tk.BOTH, expand=True)
-        figure = Figure(figsize=(10, 9), dpi=100)
-        axes_grid = figure.subplots(3, 3, sharex="col")
+        figure = Figure(figsize=(10, 11), dpi=100)
+        axes_grid = figure.subplots(4, 3, sharex="col")
         self.axes = list(axes_grid.flat)
         labels = (("x", "m"), ("y", "m"), ("yaw", "deg"))
         self.position_actual_lines = []
         self.position_target_lines = []
+        self.position_trajectory_lines = []
         self.velocity_actual_lines = []
         self.velocity_command_lines = []
         self.accel_actual_lines = []
+        self.control_lines = []
         velocity_labels = (("vx", "m/s"), ("vy", "m/s"),
                 ("yaw rate", "deg/s"))
         accel_labels = (("ax", "m/s²"), ("ay", "m/s²"),
@@ -96,14 +129,17 @@ class TuneWindow(tk.Tk):
             position_axis = axes_grid[0, column]
             velocity_axis = axes_grid[1, column]
             accel_axis = axes_grid[2, column]
+            control_axis = axes_grid[3, column]
             actual, = position_axis.plot([], [], color="#1677ff",
                     label="实际")
             target, = position_axis.plot([], [], color="#f59e0b",
                     linestyle="--", label="目标")
+            trajectory, = position_axis.plot([], [], color="#16a34a",
+                    linestyle=":", label="轨迹")
             velocity, = velocity_axis.plot([], [], color="#1677ff",
-                    label="实际")
+                    label="实际(车体)")
             command, = velocity_axis.plot([], [], color="#f59e0b",
-                    linestyle="--", label="指令(世界)")
+                    linestyle="--", label="目标(车体)")
             if column == 2:
                 command.set_visible(False)
             accel, = accel_axis.plot([], [], color="#7c3aed",
@@ -113,6 +149,8 @@ class TuneWindow(tk.Tk):
             accel_name, accel_unit = accel_labels[column]
             velocity_axis.set_ylabel(f"{velocity_name} ({velocity_unit})")
             accel_axis.set_ylabel(f"{accel_name} ({accel_unit})")
+            control_axis.set_ylabel(
+                    f"{name} control ({'rad/s' if column == 2 else 'm/s'})")
             if column == 2:
                 command.set_visible(False)
             for axis in (position_axis, velocity_axis, accel_axis):
@@ -120,9 +158,20 @@ class TuneWindow(tk.Tk):
                 axis.legend(loc="upper right", fontsize=8)
             self.position_actual_lines.append(actual)
             self.position_target_lines.append(target)
+            self.position_trajectory_lines.append(trajectory)
             self.velocity_actual_lines.append(velocity)
             self.velocity_command_lines.append(command)
             self.accel_actual_lines.append(accel)
+            fields = YAW_CONTROL_FIELDS if column == 2 else \
+                    POSITION_CONTROL_FIELDS
+            component = "yaw" if column == 2 else ("vx" if column == 0 else
+                    "vy")
+            self.control_lines.append({
+                    field.replace("vx", component): control_axis.plot(
+                            [], [], color=color, label=label)[0]
+                    for field, label, color in fields})
+            control_axis.grid(True, alpha=0.25)
+            control_axis.legend(loc="upper right", fontsize=6, ncol=2)
             accel_axis.set_xlabel("时间 (s)")
         figure.tight_layout(pad=1.5)
         self.canvas = FigureCanvasTkAgg(figure, master=content)
@@ -181,6 +230,8 @@ class TuneWindow(tk.Tk):
             messagebox.showerror("速度无效", "测试速度范围为 0.20 到 7.0 m/s。")
             return
         self.samples.clear()
+        self.position_control_samples.clear()
+        self.yaw_control_samples.clear()
         self.session_sample_count = 0
         self.start_time_ms = None
         self.capture_active = True
@@ -194,8 +245,8 @@ class TuneWindow(tk.Tk):
         self.sequence += 1
 
     def _poll_serial(self):
-        if self.serial_port is not None:
-            try:
+        try:
+            if self.serial_port is not None:
                 count = self.serial_port.in_waiting
                 data = self.serial_port.read(count) if count else b""
                 for frame_type, _, payload in self.reader.feed(data):
@@ -203,15 +254,30 @@ class TuneWindow(tk.Tk):
                 if self.plot_dirty:
                     self.plot_dirty = False
                     self._update_plots()
-            except serial.SerialException as error:
-                self._disconnect()
-                messagebox.showerror("串口已断开", str(error))
-        self.after(REFRESH_MS, self._poll_serial)
+        except serial.SerialException as error:
+            self._disconnect()
+            messagebox.showerror("串口已断开", str(error))
+        except Exception as error:
+            self.status_text.set(f"绘图刷新异常：{error}")
+        finally:
+            self.after(REFRESH_MS, self._poll_serial)
 
     def _handle_frame(self, frame_type, payload):
         if frame_type == TELEMETRY:
             telemetry = decode_telemetry(payload)
             if telemetry is None:
+                control_frame = decode_control_telemetry(payload)
+                if control_frame is not None:
+                    frame_kind, timestamp_ms, version, values = control_frame
+                    self.control_text.set("  ".join(
+                            f"{name}={value:.3f}" for name, value in values.items()))
+                    if self.capture_active:
+                        sample = (timestamp_ms, version, values)
+                        if frame_kind == 1:
+                            self.position_control_samples.append(sample)
+                        else:
+                            self.yaw_control_samples.append(sample)
+                        self.plot_dirty = True
                 return
             if not self.capture_active:
                 return
@@ -273,9 +339,12 @@ class TuneWindow(tk.Tk):
 
     def _update_plots(self):
         if not self.samples or self.start_time_ms is None:
+            control_lines = [line for group in self.control_lines
+                    for line in group.values()]
             lines = (self.position_actual_lines + self.position_target_lines +
+                    self.position_trajectory_lines +
                     self.velocity_actual_lines + self.velocity_command_lines +
-                    self.accel_actual_lines)
+                    self.accel_actual_lines + control_lines)
             for line in lines:
                 line.set_data([], [])
             self.canvas.draw_idle()
@@ -292,8 +361,13 @@ class TuneWindow(tk.Tk):
         target_values = ([sample.target_x_m for sample in samples],
                 [sample.target_y_m for sample in samples],
                 [sample.target_yaw_deg for sample in samples])
-        velocity_values, command_values, accel_values = \
+        trajectory_values = ([sample.trajectory_x_m for sample in samples],
+                [sample.trajectory_y_m for sample in samples],
+                [sample.target_yaw_deg for sample in samples])
+        velocity_values, accel_values = \
                 self._derive_motion_series(samples)
+        local_target_time_s, local_target_values = self._derive_local_target_series(
+                self.position_control_samples, self.start_time_ms)
         for column in range(3):
             position_axis = self.axes[column]
             velocity_axis = self.axes[3 + column]
@@ -302,10 +376,12 @@ class TuneWindow(tk.Tk):
                     time_s, position_values[column])
             self.position_target_lines[column].set_data(
                     time_s, target_values[column])
+            self.position_trajectory_lines[column].set_data(
+                    time_s, trajectory_values[column])
             self.velocity_actual_lines[column].set_data(
                     time_s, velocity_values[column])
             self.velocity_command_lines[column].set_data(
-                    time_s, command_values[column])
+                    local_target_time_s, local_target_values[column])
             self.accel_actual_lines[column].set_data(
                     time_s, accel_values[column])
             for axis in (position_axis, velocity_axis, accel_axis):
@@ -313,22 +389,39 @@ class TuneWindow(tk.Tk):
                 axis.autoscale_view()
                 if not self.capture_active:
                     axis.set_xlim(0.0, TEST_WINDOW_S)
+        self._update_control_axis(0, self.position_control_samples)
+        self._update_control_axis(1, self.position_control_samples)
+        self._update_control_axis(2, self.yaw_control_samples)
         self.canvas.draw_idle()
+
+    def _update_control_axis(self, column, samples):
+        samples = list(samples)
+        if len(samples) > MAX_PLOT_SAMPLES:
+            step = (len(samples) + MAX_PLOT_SAMPLES - 1) // MAX_PLOT_SAMPLES
+            samples = samples[::step]
+        axis = self.axes[9 + column]
+        lines = self.control_lines[column]
+        time_s = [(sample[0] - self.start_time_ms) * 0.001
+                for sample in samples]
+        for name, line in lines.items():
+            line.set_data(time_s, [sample[2].get(name, 0.0)
+                    for sample in samples])
+        axis.relim()
+        axis.autoscale_view()
+        if not self.capture_active:
+            axis.set_xlim(0.0, TEST_WINDOW_S)
 
     @staticmethod
     def _derive_motion_series(samples):
-        velocity_values = (
-                [sample.velocity_x_mps for sample in samples],
-                [sample.velocity_y_mps for sample in samples], [])
-        command_x_world = []
-        command_y_world = []
+        velocity_x_local = []
+        velocity_y_local = []
         for sample in samples:
             yaw_rad = math.radians(sample.yaw_deg)
-            command_x_world.append(sample.command_vx_mps * math.cos(yaw_rad) -
-                    sample.command_vy_mps * math.sin(yaw_rad))
-            command_y_world.append(sample.command_vx_mps * math.sin(yaw_rad) +
-                    sample.command_vy_mps * math.cos(yaw_rad))
-        command_values = (command_x_world, command_y_world, [])
+            velocity_x_local.append(sample.velocity_x_mps * math.cos(yaw_rad) +
+                    sample.velocity_y_mps * math.sin(yaw_rad))
+            velocity_y_local.append(-sample.velocity_x_mps * math.sin(yaw_rad) +
+                    sample.velocity_y_mps * math.cos(yaw_rad))
+        velocity_values = (velocity_x_local, velocity_y_local, [])
         yaw_rates = [0.0]
         accel_x = [0.0]
         accel_y = [0.0]
@@ -345,15 +438,27 @@ class TuneWindow(tk.Tk):
                     360.0 - 180.0
             yaw_rate = yaw_delta / dt
             yaw_rates.append(yaw_rate)
-            accel_x.append((current.velocity_x_mps -
-                    previous.velocity_x_mps) / dt)
-            accel_y.append((current.velocity_y_mps -
-                    previous.velocity_y_mps) / dt)
+            accel_x.append((velocity_x_local[len(accel_x)] -
+                    velocity_x_local[len(accel_x) - 1]) / dt)
+            accel_y.append((velocity_y_local[len(accel_y)] -
+                    velocity_y_local[len(accel_y) - 1]) / dt)
             yaw_accel.append((yaw_rate - yaw_rates[-2]) / dt)
         velocity_values[2].extend(yaw_rates)
-        command_values[2].extend([0.0] * len(samples))
         accel_values = (accel_x, accel_y, yaw_accel)
-        return velocity_values, command_values, accel_values
+        return velocity_values, accel_values
+
+    @staticmethod
+    def _derive_local_target_series(samples, start_time_ms):
+        samples = list(samples)
+        if len(samples) > MAX_PLOT_SAMPLES:
+            step = (len(samples) + MAX_PLOT_SAMPLES - 1) // MAX_PLOT_SAMPLES
+            samples = samples[::step]
+        time_s = [(sample[0] - start_time_ms) * 0.001 for sample in samples]
+        target_x_local = [sample[2].get("plan_vx", 0.0) +
+                sample[2].get("pid_vx", 0.0) for sample in samples]
+        target_y_local = [sample[2].get("plan_vy", 0.0) +
+                sample[2].get("pid_vy", 0.0) for sample in samples]
+        return time_s, (target_x_local, target_y_local, [])
 
     def _save_csv(self):
         if not self.samples:
@@ -368,6 +473,7 @@ class TuneWindow(tk.Tk):
         if not path:
             return
         fieldnames = ("timestamp_ms", "version", "target_x_m", "target_y_m",
+                "trajectory_x_m", "trajectory_y_m",
                 "position_x_m", "position_y_m", "target_yaw_deg", "yaw_deg",
                 "velocity_x_mps", "velocity_y_mps", "command_vx_mps",
                 "command_vy_mps", "plan_accel_mps2", "position_reached",
@@ -377,6 +483,20 @@ class TuneWindow(tk.Tk):
             writer.writeheader()
             for sample in self.samples:
                 writer.writerow({name: getattr(sample, name) for name in fieldnames})
+        control_path = Path(path).with_name(
+                f"{Path(path).stem}_control.csv")
+        control_fieldnames = ("timestamp_ms", "version", "frame_kind",
+                *CONTROL_FIELD_NAMES)
+        with control_path.open("w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=control_fieldnames)
+            writer.writeheader()
+            for frame_kind, samples in ((1, self.position_control_samples),
+                    (2, self.yaw_control_samples)):
+                for timestamp_ms, version, values in samples:
+                    writer.writerow({"timestamp_ms": timestamp_ms,
+                            "version": version, "frame_kind": frame_kind,
+                            **{name: values.get(name, "")
+                                    for name in CONTROL_FIELD_NAMES}})
         self.status_text.set(f"已保存 {len(self.samples)} 帧到 {path}")
 
     def _close(self):

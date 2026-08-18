@@ -9,7 +9,6 @@
 #include "vision.h"
 #include "QAma.h"
 #include "ai_tune.h"
-#include "fuzzy.h"
 #include "motion_plan.h"
 #include "feedforward.h"
 #include "motion.h"

@@ -9,7 +9,6 @@
 #include "control.h"
 #include "motion_plan.h"
 #include "feedforward.h"
-#include "fuzzy.h"
 #include "odometer.h"
 #include "ai_tune.h"
 #include <math.h>
@@ -19,11 +18,6 @@ static void yaw_plan_reset(float current_yaw_deg);
 static float yaw_plan_update(float target_yaw_deg, float dt);
 static float NormalizeYawError(float error);
 static float ClampFloat(float value, float min_value, float max_value);
-static void motion_observer_reset(void);
-static void motion_observer_update(float dt);
-static float mpc_linear_speed_limit(float distance_m, float speed_mps,
-		float cruise_speed_mps);
-static float mpc_yaw_rate_limit(float angle_error_rad, float yaw_rate_rad_s);
 
 /** 连续路径最大坐标点数量。 */
 #define MOTION_PATH_MAX_POINTS 25U
@@ -72,6 +66,10 @@ typedef struct
 
 /** 连续路径运行状态。 */
 static MotionPathState_t motion_path;
+static float position_trajectory_start_x_m;
+static float position_trajectory_start_y_m;
+static float position_trajectory_direction_x;
+static float position_trajectory_direction_y;
 
 /**
  * @brief 根据大圆和槽口几何计算底盘中心曲线。
@@ -355,7 +353,6 @@ void motion_reset(void) {
 	motion_path_stop();
 	stop();
 	motion_plan_reset();
-	feedforward_reset();
 	target_velocity.vx = 0.0f;
 	target_velocity.vy = 0.0f;
 	target_velocity.omega = 0.0f;
@@ -363,15 +360,11 @@ void motion_reset(void) {
 	pose_coordination.sync_scale = 1.0f;
 	position_control.pid_x.integral = 0.0f;
 	position_control.pid_x.prev_error = 0.0f;
-	position_control.pid_x.fuzzy_rate = 0.0f;
 	position_control.pid_y.integral = 0.0f;
 	position_control.pid_y.prev_error = 0.0f;
-	position_control.pid_y.fuzzy_rate = 0.0f;
 	attitude_control.yaw_pid.integral = 0.0f;
 	attitude_control.yaw_pid.prev_error = 0.0f;
-	attitude_control.yaw_pid.fuzzy_rate = 0.0f;
 	yaw_plan_reset(odometer_get_yaw_deg());
-	motion_observer_reset();
 	motor1.speed_rpm = 0;
 	motor2.speed_rpm = 0;
 	motor3.speed_rpm = 0;
@@ -424,6 +417,7 @@ static uint8_t motion_path_begin(float cruise_speed_mps)
 	motion_path.active = 1U;
 	motion_path.reference_complete = 0U;
 	motion_path.completed = 0U;
+	motion_plan_start(total_length_m);
 	motion_path_reference_update();
 	start_yaw_deg = attitude_control.target_yaw;
 	motion_path_eval(0U, 0.0f, &start_x_mm, &start_y_mm,
@@ -526,15 +520,14 @@ void motion_path_update(float dt)
 	float slot_error_x_m;
 	float slot_error_y_m;
 	float slot_error_m;
-	float current_slot_angle_rad;
-	float projected_progress_m;
 	float reference_progress_m;
 
 	if (!motion_path.active || (dt <= 0.0f)) {
 		return;
 	}
 
-	/* 实际槽口投影确定沿弧进度，固定前视距离生成连续底盘参考点。 */
+	/* 轨迹进度直接生成连续底盘参考点，实车位置仅参与闭环误差。 */
+	motion_plan_update(dt);
 	current_yaw_rad = odometer_get_yaw_deg() * 0.017453292519943295f;
 	current_slot_x_mm = odometer_ctx.pose.pos_x_mm +
 	        cosf(current_yaw_rad) * motion_path.circle_slot_x_mm -
@@ -542,18 +535,10 @@ void motion_path_update(float dt)
 	current_slot_y_mm = odometer_ctx.pose.pos_y_mm +
 	        sinf(current_yaw_rad) * motion_path.circle_slot_x_mm +
 	        cosf(current_yaw_rad) * motion_path.circle_slot_y_mm;
-	current_slot_angle_rad = atan2f(
-	        current_slot_y_mm - motion_path.circle_center_y_mm,
-	        current_slot_x_mm - motion_path.circle_center_x_mm);
-	projected_progress_m = motion_path_project_progress(current_slot_angle_rad);
-	if (projected_progress_m > motion_path.projected_progress_m) {
-		motion_path.projected_progress_m = projected_progress_m;
-	}
-	reference_progress_m = motion_path.projected_progress_m +
-	        MOTION_PATH_LOOKAHEAD_M;
+	reference_progress_m = motion_plan_progress();
 	motion_path_set_progress(reference_progress_m);
-	motion_path.remaining_distance_m = motion_path.total_length_m -
-	        motion_path.projected_progress_m;
+	motion_path.projected_progress_m = reference_progress_m;
+	motion_path.remaining_distance_m = motion_plan_remaining();
 	motion_path.yaw_rate_rad_s = motion_path.reference_complete ? 0.0f :
 	        motion_plan_speed() * motion_path.yaw_rate_m_inv;
 
@@ -617,23 +602,11 @@ static ChassisConfig_t chassis_config;
 static float k_omega;
 static float yaw_plan_angle_deg;
 static float yaw_plan_rate_rad_s;
-
-typedef struct
-{
-	float velocity_x_mps;
-	float velocity_y_mps;
-	float accel_x_mps2;
-	float accel_y_mps2;
-	float yaw_rate_rad_s;
-	float yaw_accel_rad_s2;
-	float last_velocity_x_mps;
-	float last_velocity_y_mps;
-	float last_yaw_rate_rad_s;
-	uint32_t last_update_ms;
-	uint8_t initialized;
-} MotionObserverState;
-
-static MotionObserverState motion_observer;
+static float yaw_ff_rad_s;
+static float yaw_pid_p_rad_s;
+static float yaw_pid_i_rad_s;
+static float yaw_pid_d_rad_s;
+static float yaw_pid_rad_s;
 
 static void yaw_plan_reset(float current_yaw_deg)
 {
@@ -685,190 +658,8 @@ static float ClampFloat(float value, float min_value, float max_value) {
 	return value;
 }
 
-static void motion_observer_reset(void)
-{
-	memset(&motion_observer, 0, sizeof(motion_observer));
-	motion_observer.velocity_x_mps = odometer_ctx.motion.vel_x_mps;
-	motion_observer.velocity_y_mps = odometer_ctx.motion.vel_y_mps;
-	motion_observer.yaw_rate_rad_s = odometer_ctx.motion.yaw_rate_dps *
-	        0.017453292519943295f;
-	motion_observer.last_velocity_x_mps = motion_observer.velocity_x_mps;
-	motion_observer.last_velocity_y_mps = motion_observer.velocity_y_mps;
-	motion_observer.last_yaw_rate_rad_s = motion_observer.yaw_rate_rad_s;
-	motion_observer.last_update_ms = HAL_GetTick();
-	motion_observer.initialized = 1U;
-}
-
-static void motion_observer_update(float dt)
-{
-	uint32_t now_ms = HAL_GetTick();
-	uint32_t elapsed_ms;
-	float sample_dt;
-	float raw_accel_x;
-	float raw_accel_y;
-	float raw_yaw_accel;
-	float alpha = ClampFloat(MOTION_OBSERVER_ALPHA, 0.0f, 1.0f);
-	float raw_vx = odometer_ctx.motion.vel_x_mps;
-	float raw_vy = odometer_ctx.motion.vel_y_mps;
-	float raw_yaw_rate = odometer_ctx.motion.yaw_rate_dps *
-	        0.017453292519943295f;
-
-	if (!motion_observer.initialized) {
-		motion_observer_reset();
-		return;
-	}
-	elapsed_ms = now_ms - motion_observer.last_update_ms;
-	if (elapsed_ms == 0U) {
-		return;
-	}
-	if ((elapsed_ms > 100U) || (dt <= 0.0f)) {
-		motion_observer_reset();
-		return;
-	}
-	sample_dt = (float)elapsed_ms * 0.001f;
-	motion_observer.velocity_x_mps += alpha *
-	        (raw_vx - motion_observer.velocity_x_mps);
-	motion_observer.velocity_y_mps += alpha *
-	        (raw_vy - motion_observer.velocity_y_mps);
-	motion_observer.yaw_rate_rad_s += alpha *
-	        (raw_yaw_rate - motion_observer.yaw_rate_rad_s);
-	raw_accel_x = (motion_observer.velocity_x_mps -
-	        motion_observer.last_velocity_x_mps) / sample_dt;
-	raw_accel_y = (motion_observer.velocity_y_mps -
-	        motion_observer.last_velocity_y_mps) / sample_dt;
-	raw_yaw_accel = (motion_observer.yaw_rate_rad_s -
-	        motion_observer.last_yaw_rate_rad_s) / sample_dt;
-	motion_observer.accel_x_mps2 += alpha *
-	        (raw_accel_x - motion_observer.accel_x_mps2);
-	motion_observer.accel_y_mps2 += alpha *
-	        (raw_accel_y - motion_observer.accel_y_mps2);
-	motion_observer.yaw_accel_rad_s2 += alpha *
-	        (raw_yaw_accel - motion_observer.yaw_accel_rad_s2);
-	motion_observer.last_velocity_x_mps = motion_observer.velocity_x_mps;
-	motion_observer.last_velocity_y_mps = motion_observer.velocity_y_mps;
-	motion_observer.last_yaw_rate_rad_s = motion_observer.yaw_rate_rad_s;
-	motion_observer.last_update_ms = now_ms;
-}
-
-static float mpc_linear_speed_limit(float distance_m, float speed_mps,
-		float cruise_speed_mps)
-{
-	float best_speed = 0.0f;
-	float best_cost = 1.0e30f;
-	uint8_t candidate_index;
-
-	if (distance_m <= 0.0f) {
-		return 0.0f;
-	}
-	cruise_speed_mps = ClampFloat(cruise_speed_mps, 0.0f,
-	        POSITION_MAX_LINEAR_SPEED_MPS);
-	for (candidate_index = 0U; candidate_index < 9U; candidate_index++) {
-		float target_speed = cruise_speed_mps *
-		        (float)candidate_index * 0.125f;
-		float predicted_distance = distance_m;
-		float predicted_speed = ClampFloat(speed_mps, 0.0f,
-		        POSITION_MAX_LINEAR_SPEED_MPS);
-		float cost = 0.0f;
-		uint8_t step;
-
-		for (step = 0U; step < MOTION_MPC_HORIZON_STEPS; step++) {
-			float speed_delta = ClampFloat(target_speed - predicted_speed,
-			        -MOTION_MPC_MAX_ACCEL_MPS2 * MOTION_MPC_STEP_S,
-			        MOTION_MPC_MAX_ACCEL_MPS2 * MOTION_MPC_STEP_S);
-			predicted_speed = ClampFloat(predicted_speed + speed_delta,
-			        0.0f, POSITION_MAX_LINEAR_SPEED_MPS);
-			predicted_distance -= predicted_speed * MOTION_MPC_STEP_S;
-			cost += 0.02f * speed_delta * speed_delta;
-			if (predicted_distance < 0.0f) {
-				cost += MOTION_MPC_OVERSHOOT_WEIGHT *
-				        predicted_distance * predicted_distance;
-			}
-		}
-		cost += MOTION_MPC_TERMINAL_DISTANCE_WEIGHT *
-		        predicted_distance * predicted_distance +
-		        MOTION_MPC_TERMINAL_SPEED_WEIGHT * predicted_speed *
-		        predicted_speed;
-		if (distance_m > MOTION_MPC_CRUISE_PREFERENCE_DISTANCE_M) {
-			float cruise_speed_error = cruise_speed_mps - target_speed;
-			cost += MOTION_MPC_CRUISE_PREFERENCE_GAIN *
-			        cruise_speed_error * cruise_speed_error;
-		}
-		if ((distance_m > MOTION_MPC_LOW_SPEED_PREFERENCE_DISTANCE_M) &&
-		        (target_speed < MOTION_MPC_LOW_SPEED_PREFERENCE_SPEED_MPS)) {
-			float low_speed_error =
-			        MOTION_MPC_LOW_SPEED_PREFERENCE_SPEED_MPS - target_speed;
-			cost += MOTION_MPC_LOW_SPEED_PREFERENCE_GAIN *
-			        low_speed_error * low_speed_error;
-		}
-		if (cost < best_cost) {
-			best_cost = cost;
-			best_speed = target_speed;
-		}
-	}
-	if ((distance_m > POSITION_PLANNER_NEAR_TARGET_DISTANCE_M) &&
-	        (best_speed < POSITION_PLANNER_MIN_SPEED_MPS)) {
-		best_speed = POSITION_PLANNER_MIN_SPEED_MPS;
-	}
-	return best_speed;
-}
-
-static float mpc_yaw_rate_limit(float angle_error_rad, float yaw_rate_rad_s)
-{
-	float sign = angle_error_rad >= 0.0f ? 1.0f : -1.0f;
-	float best_magnitude = 0.0f;
-	float best_cost = 1.0e30f;
-	float braking_limit;
-	uint8_t candidate_index;
-
-	if (fabsf(angle_error_rad) < 0.0001f) {
-		return ClampFloat(fabsf(yaw_rate_rad_s), 0.25f,
-		        ATTITUDE_PID_MAX_OUTPUT);
-	}
-	for (candidate_index = 0U; candidate_index < 5U; candidate_index++) {
-		float target_rate = sign * ATTITUDE_PID_MAX_OUTPUT *
-		        (float)candidate_index * 0.25f;
-		float predicted_error = angle_error_rad;
-		float predicted_rate = yaw_rate_rad_s;
-		float cost = 0.0f;
-		uint8_t step;
-
-		for (step = 0U; step < MOTION_MPC_HORIZON_STEPS; step++) {
-			float rate_delta = ClampFloat(target_rate - predicted_rate,
-			        -MOTION_MPC_MAX_ANG_ACCEL_RAD_S2 * MOTION_MPC_STEP_S,
-			        MOTION_MPC_MAX_ANG_ACCEL_RAD_S2 * MOTION_MPC_STEP_S);
-			predicted_rate += rate_delta;
-			predicted_error -= predicted_rate * MOTION_MPC_STEP_S;
-			cost += 0.02f * rate_delta * rate_delta;
-			if (predicted_error * sign < 0.0f) {
-				cost += 120.0f * predicted_error * predicted_error;
-			}
-		}
-		cost += 160.0f * predicted_error * predicted_error +
-		        3.0f * predicted_rate * predicted_rate;
-		if (cost < best_cost) {
-			best_cost = cost;
-			best_magnitude = fabsf(target_rate);
-		}
-	}
-	braking_limit = sqrtf(2.0f * ATTITUDE_PLANNER_MAX_DECEL_RAD_S2 *
-	        fabsf(angle_error_rad));
-	best_magnitude = fmaxf(best_magnitude, braking_limit);
-	best_magnitude = fmaxf(best_magnitude, fabsf(yaw_rate_rad_s));
-	return ClampFloat(best_magnitude, 0.25f, ATTITUDE_PID_MAX_OUTPUT);
-}
-
-static void PositionPlanner_Reset(void) {
+static void PositionTrajectory_Reset(void) {
 	motion_plan_reset();
-	feedforward_reset();
-}
-
-static float PositionSpeedPlan_Update(float distance_error_m, float dt) {
-	if (distance_error_m <= raceh ||
-	        distance_error_m <= POSITION_PLANNER_NEAR_TARGET_DISTANCE_M) {
-		PositionPlanner_Reset();
-		return 0.0f;
-	}
-	return motion_plan_update(distance_error_m, dt);
 }
 
 /** 位置控制模块。 */
@@ -884,7 +675,7 @@ void PositionControl_Init(void) {
 	position_control.target_x = 0.0f;
 	position_control.target_y = 0.0f;
 	position_control.last_update_time = HAL_GetTick();
-	motion_plan_init(POSITION_PLANNER_CRUISE_SPEED_MPS);
+	motion_plan_init(POSITION_TRAJECTORY_CRUISE_SPEED_MPS);
 
 	is_position_control_enabled = 0;
 }
@@ -897,11 +688,9 @@ void PositionControl_Enable(uint8_t enable) {
 
 		position_control.pid_x.integral = 0.0f;
 		position_control.pid_x.prev_error = 0.0f;
-		position_control.pid_x.fuzzy_rate = 0.0f;
 		position_control.pid_y.integral = 0.0f;
 		position_control.pid_y.prev_error = 0.0f;
-		position_control.pid_y.fuzzy_rate = 0.0f;
-		PositionPlanner_Reset();
+		PositionTrajectory_Reset();
 
 		stop();
 	} else {
@@ -910,7 +699,7 @@ void PositionControl_Enable(uint8_t enable) {
 }
 
 void PositionControl_SetMaxSpeed(float max_speed_mps) {
-	max_speed_mps = ClampFloat(max_speed_mps, POSITION_PLANNER_MIN_SPEED_MPS,
+	max_speed_mps = ClampFloat(max_speed_mps, 0.0f,
 	        POSITION_MAX_LINEAR_SPEED_MPS);
 	position_control.pid_x.max_output = max_speed_mps;
 	position_control.pid_y.max_output = max_speed_mps;
@@ -921,10 +710,15 @@ void SetTargetPosition(float x, float y) {
 	if (ai_tune_apply_pending()) {
 		const ai_tune_param_t *param = ai_tune_get_active();
 
-		position_control.pid_x.Kp = param->kp;
-		position_control.pid_x.Kd = param->kd;
-		position_control.pid_y.Kp = param->kp;
-		position_control.pid_y.Kd = param->kd;
+		position_control.pid_x.Kp = param->position_kp;
+		position_control.pid_x.Ki = param->position_ki;
+		position_control.pid_x.Kd = param->position_kd;
+		position_control.pid_y.Kp = param->position_kp;
+		position_control.pid_y.Ki = param->position_ki;
+		position_control.pid_y.Kd = param->position_kd;
+		attitude_control.yaw_pid.Kp = param->yaw_kp;
+		attitude_control.yaw_pid.Ki = param->yaw_ki;
+		attitude_control.yaw_pid.Kd = param->yaw_kd;
 	}
 	ai_tune_segment_start();
 
@@ -934,11 +728,30 @@ void SetTargetPosition(float x, float y) {
 	target_velocity.omega = 0.0f;
 	position_control.pid_x.integral = 0.0f;
 	position_control.pid_x.prev_error = 0.0f;
-	position_control.pid_x.fuzzy_rate = 0.0f;
 	position_control.pid_y.integral = 0.0f;
 	position_control.pid_y.prev_error = 0.0f;
-	position_control.pid_y.fuzzy_rate = 0.0f;
-	PositionPlanner_Reset();
+	if (!motion_path.active) {
+		float start_x_m = odometer_ctx.pose.pos_x_mm * 0.001f;
+		float start_y_m = odometer_ctx.pose.pos_y_mm * 0.001f;
+		float target_x_m = x * 0.001f;
+		float target_y_m = y * 0.001f;
+		float distance_m = sqrtf((target_x_m - start_x_m) *
+		        (target_x_m - start_x_m) + (target_y_m - start_y_m) *
+		        (target_y_m - start_y_m));
+
+		position_trajectory_start_x_m = start_x_m;
+		position_trajectory_start_y_m = start_y_m;
+		if (distance_m > POSITION_TRAJECTORY_NEAR_TARGET_DISTANCE_M) {
+			position_trajectory_direction_x = (target_x_m - start_x_m) /
+			        distance_m;
+			position_trajectory_direction_y = (target_y_m - start_y_m) /
+			        distance_m;
+		} else {
+			position_trajectory_direction_x = 0.0f;
+			position_trajectory_direction_y = 0.0f;
+		}
+		motion_plan_start(distance_m);
+	}
 }
 
 uint8_t IsPositionReached(float tolerance_xy) {
@@ -960,83 +773,57 @@ uint8_t IsPositionReached(float tolerance_xy) {
 
 static uint8_t IsPositionControlFinished(float tolerance_xy) {
 	return IsPositionReached(tolerance_xy) &&
-	       (motion_plan_speed() <= POSITION_PLANNER_STOP_SPEED_MPS);
+	       (motion_plan_finished() != 0U);
 }
 
 void UpdatePositionControl(float dt) {
 	if (!position_control.is_enabled || dt <= 0) {
 		return;
 	}
-	motion_observer_update(dt);
-
-
 	float current_yaw_rad = odometer_get_yaw_deg() * 3.1415926f / 180.0f;
-
 	float current_x_global = odometer_ctx.pose.pos_x_mm * 0.001f;
 	float current_y_global = odometer_ctx.pose.pos_y_mm * 0.001f;
 	float target_x_global = position_control.target_x * 0.001f;
 	float target_y_global = position_control.target_y * 0.001f;
+	uint8_t path_enabled = motion_path.active;
+	float trajectory_x_global = target_x_global;
+	float trajectory_y_global = target_y_global;
+	float final_error_x_global = target_x_global - current_x_global;
+	float final_error_y_global = target_y_global - current_y_global;
+	float final_distance_m = sqrtf(final_error_x_global * final_error_x_global +
+	        final_error_y_global * final_error_y_global);
 
-	float error_x_global = target_x_global - current_x_global;
-	float error_y_global = target_y_global - current_y_global;
+	if (!path_enabled) {
+		motion_plan_update(dt);
+		trajectory_x_global = position_trajectory_start_x_m +
+		        position_trajectory_direction_x * motion_plan_progress();
+		trajectory_y_global = position_trajectory_start_y_m +
+		        position_trajectory_direction_y * motion_plan_progress();
+	}
+	float error_x_global = trajectory_x_global - current_x_global;
+	float error_y_global = trajectory_y_global - current_y_global;
 	float distance_error = sqrtf(error_x_global * error_x_global +
 	                             error_y_global * error_y_global);
-	uint8_t path_enabled = motion_path.active;
 	float position_tolerance_m = path_enabled ?
 	        MOTION_PATH_TRACK_TOLERANCE_M : raceh;
-	float planner_distance_m = path_enabled ?
-	        motion_path.remaining_distance_m + distance_error : distance_error;
 	control_ctx.error_x_global_m = error_x_global;
 	control_ctx.error_y_global_m = error_y_global;
-
-
 	float error_x_local = error_x_global * cosf(current_yaw_rad) +
 	                      error_y_global * sinf(current_yaw_rad);
 	float error_y_local = -error_x_global * sinf(current_yaw_rad) +
 	                      error_y_global * cosf(current_yaw_rad);
 	control_ctx.error_x_local_m = error_x_local;
 	control_ctx.error_y_local_m = error_y_local;
-
-
-	float plan_speed = PositionSpeedPlan_Update(planner_distance_m, dt);
-	float observed_speed = 0.0f;
-	float mpc_speed_limit;
-	if (path_enabled) {
-		observed_speed = motion_path.tangent_x *
-		        motion_observer.velocity_x_mps +
-		        motion_path.tangent_y * motion_observer.velocity_y_mps;
-	} else if (distance_error > 0.001f) {
-		observed_speed = (error_x_global * motion_observer.velocity_x_mps +
-		        error_y_global * motion_observer.velocity_y_mps) /
-		        distance_error;
-	}
-	mpc_speed_limit = mpc_linear_speed_limit(planner_distance_m, observed_speed,
-	        motion_plan_cruise());
-	feedforward_accel_update(dt);
+	float plan_speed = motion_plan_speed();
 	const ai_tune_param_t *param = ai_tune_get_active();
 	float plan_vx = 0.0f;
 	float plan_vy = 0.0f;
-	float feedforward_vx = 0.0f;
-	float feedforward_vy = 0.0f;
 	float desired_accel_x_local = 0.0f;
 	float desired_accel_y_local = 0.0f;
-	float accel_x_local = feedforward_accel_x() *
-	                              cosf(current_yaw_rad) +
-	                      feedforward_accel_y() *
-	                              sinf(current_yaw_rad);
-	float accel_y_local = -feedforward_accel_x() *
-	                              sinf(current_yaw_rad) +
-	                      feedforward_accel_y() *
-	                              cosf(current_yaw_rad);
 	float yaw_rate_rad_s = odometer_ctx.motion.yaw_rate_dps *
 	        0.017453292519943295f;
 	float yaw_accel_rad_s2 = odometer_ctx.motion.yaw_accel_dps2 *
 	        0.017453292519943295f;
-
-	float com_accel_x_local = -yaw_accel_rad_s2 * CHASSIS_CENTER_OF_MASS_Y_M -
-	        yaw_rate_rad_s * yaw_rate_rad_s * CHASSIS_CENTER_OF_MASS_X_M;
-	float com_accel_y_local = yaw_accel_rad_s2 * CHASSIS_CENTER_OF_MASS_X_M -
-	        yaw_rate_rad_s * yaw_rate_rad_s * CHASSIS_CENTER_OF_MASS_Y_M;
 	if (path_enabled) {
 		float tangent_x_local = motion_path.tangent_x * cosf(current_yaw_rad) +
 		        motion_path.tangent_y * sinf(current_yaw_rad);
@@ -1055,42 +842,69 @@ void UpdatePositionControl(float dt) {
 		        desired_accel_y_global * sinf(current_yaw_rad);
 		desired_accel_y_local = -desired_accel_x_global * sinf(current_yaw_rad) +
 		        desired_accel_y_global * cosf(current_yaw_rad);
-	} else if (distance_error > position_tolerance_m) {
-		plan_vx = error_x_local * plan_speed / distance_error;
-		plan_vy = error_y_local * plan_speed / distance_error;
-		desired_accel_x_local = error_x_local *
-		        motion_plan_accel() / distance_error;
-		desired_accel_y_local = error_y_local *
-		        motion_plan_accel() / distance_error;
+	} else {
+		float plan_velocity_x_global = position_trajectory_direction_x *
+		        plan_speed;
+		float plan_velocity_y_global = position_trajectory_direction_y *
+		        plan_speed;
+		float plan_accel_x_global = position_trajectory_direction_x *
+		        motion_plan_accel();
+		float plan_accel_y_global = position_trajectory_direction_y *
+		        motion_plan_accel();
+
+		plan_vx = plan_velocity_x_global * cosf(current_yaw_rad) +
+		        plan_velocity_y_global * sinf(current_yaw_rad);
+		plan_vy = -plan_velocity_x_global * sinf(current_yaw_rad) +
+		        plan_velocity_y_global * cosf(current_yaw_rad);
+		desired_accel_x_local = plan_accel_x_global * cosf(current_yaw_rad) +
+		        plan_accel_y_global * sinf(current_yaw_rad);
+		desired_accel_y_local = -plan_accel_x_global * sinf(current_yaw_rad) +
+		        plan_accel_y_global * cosf(current_yaw_rad);
 	}
-	if (path_enabled || (distance_error > position_tolerance_m)) {
-		float force_x_n = CHASSIS_MASS_KG *
-		        (desired_accel_x_local + com_accel_x_local +
-		                param->accel_feedback_gain *
-		                (desired_accel_x_local - accel_x_local));
-		float force_y_n = CHASSIS_MASS_KG *
-		        (desired_accel_y_local + com_accel_y_local +
-		                param->accel_feedback_gain *
-		                (desired_accel_y_local - accel_y_local));
-		feedforward_vx = force_x_n * param->force_to_speed_ff;
-		feedforward_vy = force_y_n * param->force_to_speed_ff;
-	}
-	float feedback_vx_global =
-	        fuzzy_pid_calc(&position_control.pid_x, error_x_global, dt,
-				POSITION_FUZZY_ERROR_FULL_M, POSITION_FUZZY_RATE_FULL_MPS,
-				POSITION_FUZZY_KP_MIN_SCALE, POSITION_FUZZY_KP_MAX_SCALE,
-				POSITION_FUZZY_KD_MIN_SCALE, POSITION_FUZZY_KD_MAX_SCALE, 0U);
-	float feedback_vy_global =
-	        fuzzy_pid_calc(&position_control.pid_y, error_y_global, dt,
-				POSITION_FUZZY_ERROR_FULL_M, POSITION_FUZZY_RATE_FULL_MPS,
-				POSITION_FUZZY_KP_MIN_SCALE, POSITION_FUZZY_KP_MAX_SCALE,
-				POSITION_FUZZY_KD_MIN_SCALE, POSITION_FUZZY_KD_MAX_SCALE, 0U);
-	float feedback_vx = feedback_vx_global * cosf(current_yaw_rad) +
+	float accel_ff_vx = 0.0f;
+	float accel_ff_vy = 0.0f;
+	float com_ff_vx = 0.0f;
+	float com_ff_vy = 0.0f;
+	float feedback_vx_global;
+	float feedback_vy_global;
+	float feedback_vx;
+	float feedback_vy;
+	float feedback_speed;
+	float pid_p_vx_global;
+	float pid_p_vy_global;
+	float pid_i_vx_global;
+	float pid_i_vy_global;
+	float pid_d_vx_global;
+	float pid_d_vy_global;
+	float target_vx_local;
+	float target_vy_local;
+	float velocity_x_local;
+	float velocity_y_local;
+	float velocity_feedback_scale;
+	float velocity_feedback_vx;
+	float velocity_feedback_vy;
+
+	feedforward_linear(desired_accel_x_local, desired_accel_y_local,
+	        yaw_rate_rad_s, yaw_accel_rad_s2, param->accel_ff_gain_s,
+	        param->com_ff_gain_s, &accel_ff_vx, &accel_ff_vy, &com_ff_vx,
+	        &com_ff_vy);
+	pid_p_vx_global = position_control.pid_x.Kp * error_x_global;
+	pid_p_vy_global = position_control.pid_y.Kp * error_y_global;
+	pid_i_vx_global = position_control.pid_x.Ki *
+	        (position_control.pid_x.integral + error_x_global * dt);
+	pid_i_vy_global = position_control.pid_y.Ki *
+	        (position_control.pid_y.integral + error_y_global * dt);
+	pid_d_vx_global = position_control.pid_x.Kd *
+	        (error_x_global - position_control.pid_x.prev_error) / dt;
+	pid_d_vy_global = position_control.pid_y.Kd *
+	        (error_y_global - position_control.pid_y.prev_error) / dt;
+	feedback_vx_global = pid_calc(&position_control.pid_x, error_x_global, dt);
+	feedback_vy_global = pid_calc(&position_control.pid_y, error_y_global, dt);
+	feedback_vx = feedback_vx_global * cosf(current_yaw_rad) +
 	        feedback_vy_global * sinf(current_yaw_rad);
-	float feedback_vy = -feedback_vx_global * sinf(current_yaw_rad) +
+	feedback_vy = -feedback_vx_global * sinf(current_yaw_rad) +
 	        feedback_vy_global * cosf(current_yaw_rad);
-	float feedback_speed =
-	        sqrtf(feedback_vx * feedback_vx + feedback_vy * feedback_vy);
+	feedback_speed = sqrtf(feedback_vx * feedback_vx + feedback_vy * feedback_vy);
 
 	if (feedback_speed > POSITION_FEEDBACK_MAX_SPEED_MPS) {
 
@@ -1099,33 +913,34 @@ void UpdatePositionControl(float dt) {
 		feedback_vx *= feedback_ratio;
 		feedback_vy *= feedback_ratio;
 	}
-	if ((distance_error > position_tolerance_m) &&
-	        (distance_error <= POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M) &&
-	        (feedback_speed < param->static_friction_speed_mps)) {
-
-		float static_friction_scale =
-		        param->static_friction_speed_mps / distance_error;
-		feedforward_vx += error_x_local * static_friction_scale;
-		feedforward_vy += error_y_local * static_friction_scale;
-	}
-
-	float vx_local = plan_vx + feedforward_vx + feedback_vx;
-	float vy_local = plan_vy + feedforward_vy + feedback_vy;
+	/* 世界系里程计速度旋转到车体系，闭合轨迹目标速度与实测速度的误差。 */
+	velocity_x_local = odometer_ctx.motion.vel_x_mps * cosf(current_yaw_rad) +
+	        odometer_ctx.motion.vel_y_mps * sinf(current_yaw_rad);
+	velocity_y_local = -odometer_ctx.motion.vel_x_mps * sinf(current_yaw_rad) +
+	        odometer_ctx.motion.vel_y_mps * cosf(current_yaw_rad);
+	target_vx_local = plan_vx + feedback_vx;
+	target_vy_local = plan_vy + feedback_vy;
+	velocity_feedback_scale = ClampFloat(final_distance_m /
+	        POSITION_VELOCITY_FEEDBACK_FADE_DISTANCE_M, 0.0f, 1.0f);
+	velocity_feedback_vx = velocity_feedback_scale *
+	        POSITION_VELOCITY_FEEDBACK_GAIN *
+	        (target_vx_local - velocity_x_local);
+	velocity_feedback_vy = velocity_feedback_scale *
+	        POSITION_VELOCITY_FEEDBACK_GAIN *
+	        (target_vy_local - velocity_y_local);
+	float vx_local = target_vx_local + accel_ff_vx + com_ff_vx +
+	        velocity_feedback_vx;
+	float vy_local = target_vy_local + accel_ff_vy + com_ff_vy +
+	        velocity_feedback_vy;
 	float linear_speed = sqrtf(vx_local * vx_local + vy_local * vy_local);
-	float command_speed_limit = sqrtf(2.0f *
-	        POSITION_COMMAND_BRAKE_DECEL_MPS2 * planner_distance_m);
-	command_speed_limit = ClampFloat(command_speed_limit, 0.0f,
-	        motion_plan_cruise());
-	command_speed_limit = ClampFloat(command_speed_limit, 0.0f,
-	        mpc_speed_limit);
-	if (linear_speed > command_speed_limit) {
-
-		float ratio = command_speed_limit / linear_speed;
+	if (linear_speed > POSITION_MAX_LINEAR_SPEED_MPS) {
+		float ratio = POSITION_MAX_LINEAR_SPEED_MPS / linear_speed;
 		vx_local *= ratio;
 		vy_local *= ratio;
-		linear_speed = command_speed_limit;
+		linear_speed = POSITION_MAX_LINEAR_SPEED_MPS;
 	}
-	if (distance_error <= position_tolerance_m &&
+	if ((motion_plan_finished() != 0U) &&
+	        (final_distance_m <= position_tolerance_m) &&
 	        (!path_enabled || motion_path.reference_complete)) {
 		vx_local = 0.0f;
 		vy_local = 0.0f;
@@ -1134,7 +949,7 @@ void UpdatePositionControl(float dt) {
 
 	vx_local *= pose_coordination.sync_scale;
 	vy_local *= pose_coordination.sync_scale;
-	if (ai_tune_guard_update(planner_distance_m, linear_speed, dt)) {
+	if (ai_tune_guard_update(final_distance_m, linear_speed, dt)) {
 		vx_local = 0.0f;
 		vy_local = 0.0f;
 	}
@@ -1144,6 +959,8 @@ void UpdatePositionControl(float dt) {
 		        .time_ms = HAL_GetTick(),
 		        .target_x_m = target_x_global,
 		        .target_y_m = target_y_global,
+		        .trajectory_x_m = trajectory_x_global,
+		        .trajectory_y_m = trajectory_y_global,
 		        .position_x_m = current_x_global,
 		        .position_y_m = current_y_global,
 		        .target_yaw_deg = attitude_control.target_yaw,
@@ -1152,15 +969,38 @@ void UpdatePositionControl(float dt) {
 		        .error_y_local_m = error_y_local,
 		        .velocity_x_mps = odometer_ctx.motion.vel_x_mps,
 		        .velocity_y_mps = odometer_ctx.motion.vel_y_mps,
-		        .plan_accel_mps2 = motion_plan_accel(),
-		        .accel_x_mps2 = accel_x_local,
-		        .accel_y_mps2 = accel_y_local,
-		        .feedforward_vx_mps = feedforward_vx,
-		        .feedforward_vy_mps = feedforward_vy,
-		        .feedback_vx_mps = feedback_vx,
-		        .feedback_vy_mps = feedback_vy,
+		        .plan_vx_mps = plan_vx,
+		        .plan_vy_mps = plan_vy,
+		        .plan_accel_x_mps2 = desired_accel_x_local,
+		        .plan_accel_y_mps2 = desired_accel_y_local,
+		        .accel_ff_vx_mps = accel_ff_vx,
+		        .accel_ff_vy_mps = accel_ff_vy,
+		        .com_ff_vx_mps = com_ff_vx,
+		        .com_ff_vy_mps = com_ff_vy,
+		        .pid_p_vx_mps = pid_p_vx_global * cosf(current_yaw_rad) +
+		                pid_p_vy_global * sinf(current_yaw_rad),
+		        .pid_p_vy_mps = -pid_p_vx_global * sinf(current_yaw_rad) +
+		                pid_p_vy_global * cosf(current_yaw_rad),
+		        .pid_i_vx_mps = pid_i_vx_global * cosf(current_yaw_rad) +
+		                pid_i_vy_global * sinf(current_yaw_rad),
+		        .pid_i_vy_mps = -pid_i_vx_global * sinf(current_yaw_rad) +
+		                pid_i_vy_global * cosf(current_yaw_rad),
+		        .pid_d_vx_mps = pid_d_vx_global * cosf(current_yaw_rad) +
+		                pid_d_vy_global * sinf(current_yaw_rad),
+		        .pid_d_vy_mps = -pid_d_vx_global * sinf(current_yaw_rad) +
+		                pid_d_vy_global * cosf(current_yaw_rad),
+		        .pid_vx_mps = feedback_vx,
+		        .pid_vy_mps = feedback_vy,
+		        .velocity_feedback_vx_mps = velocity_feedback_vx,
+		        .velocity_feedback_vy_mps = velocity_feedback_vy,
+		        .yaw_plan_rate_rad_s = yaw_ff_rad_s,
+		        .yaw_p_rad_s = yaw_pid_p_rad_s,
+		        .yaw_i_rad_s = yaw_pid_i_rad_s,
+		        .yaw_d_rad_s = yaw_pid_d_rad_s,
+		        .yaw_pid_rad_s = yaw_pid_rad_s,
 		        .command_vx_mps = vx_local,
 		        .command_vy_mps = vy_local,
+		        .command_omega_rad_s = attitude_correction,
 		        .motor_rpm = {motor1.speed_rpm, motor2.speed_rpm,
 		                motor3.speed_rpm, motor4.speed_rpm},
 		        .position_reached = IsPositionControlFinished(raceh),
@@ -1178,7 +1018,6 @@ void UpdatePositionControl(float dt) {
 
 	if (IsPositionControlFinished(position_tolerance_m)) {
 		testflag = 1;
-		PositionPlanner_Reset();
 	}
 }
 
@@ -1220,7 +1059,6 @@ void SetTargetYaw(float target) {
 
 	attitude_control.yaw_pid.integral = 0.0f;
 	attitude_control.yaw_pid.prev_error = 0.0f;
-	attitude_control.yaw_pid.fuzzy_rate = 0.0f;
 	yaw_plan_reset(odometer_get_yaw_deg());
 }
 uint8_t IsYawReached(float target_yaw, float tolerance_degrees) {
@@ -1248,7 +1086,6 @@ void EnableAttitudeStabilization(uint8_t enable) {
 
 		attitude_control.yaw_pid.integral = 0.0f;
 		attitude_control.yaw_pid.prev_error = 0.0f;
-		attitude_control.yaw_pid.fuzzy_rate = 0.0f;
 		yaw_plan_reset(attitude_control.target_yaw);
 	}
 }
@@ -1256,10 +1093,13 @@ void EnableAttitudeStabilization(uint8_t enable) {
 void UpdateAttitudeStabilization(float dt) {
 	if (!attitude_control.is_enabled || dt <= 0) {
 		attitude_correction = 0.0f;
+		yaw_ff_rad_s = 0.0f;
+		yaw_pid_p_rad_s = 0.0f;
+		yaw_pid_i_rad_s = 0.0f;
+		yaw_pid_d_rad_s = 0.0f;
+		yaw_pid_rad_s = 0.0f;
 		return;
 	}
-	motion_observer_update(dt);
-
 	float current_yaw = odometer_get_yaw_deg();
 
 	float planned_yaw = motion_path.active ? attitude_control.target_yaw :
@@ -1270,7 +1110,6 @@ void UpdateAttitudeStabilization(float dt) {
 	float error_rad;
 	float yaw_rate_rad_s;
 	float target_error_deg;
-	float mpc_rate_limit;
 	float omega_command;
 
 
@@ -1278,7 +1117,7 @@ void UpdateAttitudeStabilization(float dt) {
 		error -= 360.0f;
 	while (error < -180.0f)
 		error += 360.0f;
-	yaw_rate_rad_s = motion_observer.yaw_rate_rad_s;
+	yaw_rate_rad_s = odometer_ctx.motion.yaw_rate_dps * 0.017453292519943295f;
 	target_error_deg = NormalizeYawError(attitude_control.target_yaw -
 	        current_yaw);
 	control_ctx.yaw_error_deg = target_error_deg;
@@ -1288,6 +1127,11 @@ void UpdateAttitudeStabilization(float dt) {
 		yaw_plan_reset(current_yaw);
 		attitude_control.yaw_pid.integral = 0.0f;
 		attitude_correction = 0.0f;
+		yaw_ff_rad_s = 0.0f;
+		yaw_pid_p_rad_s = 0.0f;
+		yaw_pid_i_rad_s = 0.0f;
+		yaw_pid_d_rad_s = 0.0f;
+		yaw_pid_rad_s = 0.0f;
 		control_ctx.yaw_error_deg = target_error_deg;
 		return;
 	}
@@ -1296,22 +1140,26 @@ void UpdateAttitudeStabilization(float dt) {
 	        (fabsf(yaw_rate_rad_s) < 0.03f)) {
 		attitude_control.yaw_pid.integral = 0.0f;
 		attitude_correction = 0.0f;
+		yaw_ff_rad_s = 0.0f;
+		yaw_pid_p_rad_s = 0.0f;
+		yaw_pid_i_rad_s = 0.0f;
+		yaw_pid_d_rad_s = 0.0f;
+		yaw_pid_rad_s = 0.0f;
 		return;
 	}
 
 	error_rad = error * 0.017453292519943295f;
-	mpc_rate_limit = mpc_yaw_rate_limit(target_error_deg *
-	        0.017453292519943295f, yaw_rate_rad_s);
-	mpc_rate_limit = fmaxf(mpc_rate_limit, fabsf(desired_yaw_rate_rad_s));
-	omega_command = desired_yaw_rate_rad_s +
-			attitude_control.yaw_pid.Kp * error_rad -
-			attitude_control.yaw_pid.Kd * yaw_rate_rad_s;
+	yaw_ff_rad_s = desired_yaw_rate_rad_s *
+			ai_tune_get_active()->yaw_rate_ff_gain;
+	yaw_pid_p_rad_s = attitude_control.yaw_pid.Kp * error_rad;
+	yaw_pid_i_rad_s = attitude_control.yaw_pid.Ki *
+			(attitude_control.yaw_pid.integral + error_rad * dt);
+	yaw_pid_d_rad_s = attitude_control.yaw_pid.Kd *
+			(error_rad - attitude_control.yaw_pid.prev_error) / dt;
+	yaw_pid_rad_s = pid_calc(&attitude_control.yaw_pid, error_rad, dt);
+	omega_command = yaw_ff_rad_s + yaw_pid_rad_s;
 	attitude_correction = ClampFloat(omega_command,
 			-ATTITUDE_PID_MAX_OUTPUT, ATTITUDE_PID_MAX_OUTPUT);
-	if (fabsf(attitude_correction) > mpc_rate_limit) {
-		attitude_correction = (attitude_correction >= 0.0f) ?
-				mpc_rate_limit : -mpc_rate_limit;
-	}
 }
 
 /** 位姿协调模块。 */
@@ -1373,7 +1221,8 @@ void UpdatePoseCoordination(float dt) {
 	pose_coordination.sync_scale =
 	        ClampFloat((pos_scale < yaw_scale) ? pos_scale : yaw_scale,
 	                pose_coordination.min_scale, 1.0f);
-	yaw_rate_scale = 1.0f - fabsf(motion_observer.yaw_rate_rad_s) /
+	yaw_rate_scale = 1.0f - fabsf(odometer_ctx.motion.yaw_rate_dps *
+	        0.017453292519943295f) /
 	        POSE_SYNC_YAW_RATE_FULL_RAD_S;
 	yaw_rate_scale = ClampFloat(yaw_rate_scale,
 	        POSE_SYNC_YAW_RATE_MIN_SCALE, 1.0f);
