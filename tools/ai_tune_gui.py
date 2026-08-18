@@ -358,29 +358,8 @@ class TuneWindow(tk.Tk):
 
     @staticmethod
     def _derive_mpc_reference(samples):
-        reference_x = [samples[0].position_x_m]
-        reference_y = [samples[0].position_y_m]
-        previous = samples[0]
-        for current in samples[1:]:
-            dt = max(0.0, (current.timestamp_ms - previous.timestamp_ms) *
-                    0.001)
-            previous_yaw_rad = math.radians(previous.yaw_deg)
-            current_yaw_rad = math.radians(current.yaw_deg)
-            previous_vx = previous.plan_vx_mps * math.cos(previous_yaw_rad) - \
-                    previous.plan_vy_mps * math.sin(previous_yaw_rad)
-            previous_vy = previous.plan_vx_mps * math.sin(previous_yaw_rad) + \
-                    previous.plan_vy_mps * math.cos(previous_yaw_rad)
-            current_vx = current.plan_vx_mps * math.cos(current_yaw_rad) - \
-                    current.plan_vy_mps * math.sin(current_yaw_rad)
-            current_vy = current.plan_vx_mps * math.sin(current_yaw_rad) + \
-                    current.plan_vy_mps * math.cos(current_yaw_rad)
-
-            reference_x.append(reference_x[-1] + 0.5 *
-                    (previous_vx + current_vx) * dt)
-            reference_y.append(reference_y[-1] + 0.5 *
-                    (previous_vy + current_vy) * dt)
-            previous = current
-        return reference_x, reference_y
+        return ([sample.reference_x_m for sample in samples],
+                [sample.reference_y_m for sample in samples])
 
     @staticmethod
     def _fit_position_axis(axis, actual_values, reference_values):

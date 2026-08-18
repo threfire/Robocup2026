@@ -63,7 +63,9 @@
 
 /* 位置控制 PID 和轨迹规划参数 */
 #define POSITION_PID_DEFAULT_KP 10.50f /* 位置 PID 比例系数 */
+#define POSITION_PID_DEFAULT_KI 0.50f /* 位置 PID 积分系数 */
 #define POSITION_PID_DEFAULT_KD 0.88880f /* 位置 PID 微分系数 */
+#define POSITION_PID_INTEGRAL_LIMIT_M_S 0.30f /* 位置 PID 积分状态限幅，单位 m·s */
 #define POSITION_FUZZY_ERROR_FULL_M 0.30f /* 位置误差达到最高隶属度的阈值，单位 m */
 #define POSITION_FUZZY_RATE_FULL_MPS 1.00f /* 位置误差变化率达到最高隶属度的阈值，单位 m/s */
 #define POSITION_FUZZY_KP_MIN_SCALE 0.80f /* 位置小误差时 Kp 缩放系数 */
@@ -74,30 +76,31 @@
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.08f /* 速度规划器最小速度，单位 m/s */
 #define POSITION_PLANNER_CRUISE_SPEED_MPS 1.85f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_TRAJECTORY_CRUISE_SPEED_MPS POSITION_PLANNER_CRUISE_SPEED_MPS /* 任务代码巡航速度别名 */
-#define POSITION_PLANNER_MAX_ACCEL_MPS2 6.0f /* 速度规划器最大加速度，单位 m/s² */
-#define POSITION_PLANNER_MAX_DECEL_MPS2 8.0f /* 速度规划器最大减速度，单位 m/s² */
+#define POSITION_PLANNER_MAX_ACCEL_MPS2 9.0f /* 速度规划器最大加速度，单位 m/s² */
+#define POSITION_PLANNER_MAX_DECEL_MPS2 9.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 60.0f /* 速度规划器最大加加速度，单位 m/s³ */
-#define POSITION_COMMAND_BRAKE_DECEL_MPS2 1.750f /* 总速度命令制动包络，单位 m/s² */
+#define POSITION_COMMAND_BRAKE_DECEL_MPS2 10.00f /* 总速度命令制动包络，单位 m/s² */
 #define MOTION_OBSERVER_ALPHA 0.25f /* 车体状态观测器低通系数 */
 #define MOTION_MPC_MAX_ACCEL_MPS2 12.0f /* MPC 线加速度约束，单位 m/s² */
 #define POSITION_MPC_HORIZON_STEPS 40U /* 二维位置 MPC 预测步数，预测时域 0.4 s */
 #define POSITION_MPC_PERIOD_S 0.01f /* 二维位置 MPC 更新周期，单位 s */
 #define POSITION_MPC_STAGE_POSITION_WEIGHT 8.0f /* 预测过程位置代价权重 */
 #define POSITION_MPC_TERMINAL_POSITION_WEIGHT 220.0f /* 终端位置代价权重 */
-#define POSITION_MPC_TERMINAL_SPEED_WEIGHT 7.0f /* 终端速度代价权重 */
+#define POSITION_MPC_TERMINAL_SPEED_WEIGHT 3.0f /* 终端速度代价权重 */
 #define POSITION_MPC_ACCEL_WEIGHT 0.02f /* 加速度代价权重 */
+#define POSITION_MPC_MIN_ACCEL_MPS2 0.6f /* 未到点时 MPC 最小非零加速度，单位 m/s² */
 #define POSITION_MPC_MAX_JERK_MPS3 80.0f /* 二维位置 MPC 加加速度约束，单位 m/s³ */
-#define POSITION_MPC_ACCEL_CHANGE_WEIGHT 0.08f /* 二维位置 MPC 加速度变化代价权重 */
-#define POSITION_MPC_OVERSHOOT_WEIGHT 0.01f /* 二维位置 MPC 越过终点代价权重 */
+#define POSITION_MPC_ACCEL_CHANGE_WEIGHT 0.02f /* 二维位置 MPC 加速度变化代价权重 */
+#define POSITION_MPC_OVERSHOOT_WEIGHT 0.005f /* 二维位置 MPC 越过终点代价权重 */
 #define POSITION_MPC_VELOCITY_FILTER_ALPHA 0.40f /* 二维位置 MPC 参考低通系数 */
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.02f /* 近目标距离阈值，单位 m */
 #define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
 #define POSITION_VELOCITY_FEEDBACK_GAIN 0.40f /* 车体速度内环比例增益 */
 #define POSITION_VELOCITY_FEEDBACK_FADE_DISTANCE_M 0.030f /* 速度反馈开始衰减的位置误差，单位 m */
-#define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.010f /* 静摩擦补偿启用距离，单位 m */
-#define POSITION_STATIC_FRICTION_ENABLE_SPEED_MPS 0.010f /* 静摩擦补偿启用实测速度，单位 m/s */
-#define POSITION_STATIC_FRICTION_SPEED_MPS 0.00500433f /* 静摩擦补偿速度，单位 m/s */
+#define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.050f /* 静摩擦补偿启用距离，单位 m */
+#define POSITION_STATIC_FRICTION_ENABLE_SPEED_MPS 0.030f /* 静摩擦补偿启用实测速度，单位 m/s */
+#define POSITION_STATIC_FRICTION_SPEED_MPS 0.01500433f /* 静摩擦补偿速度，单位 m/s */
 #define CHASSIS_MASS_KG 5.88f /* 底盘质量，单位 kg */
 #define CHASSIS_CENTER_OF_MASS_X_M - 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
@@ -109,11 +112,11 @@
 #define POSITION_FINE_REACHED_TOLERANCE_M 0.003f /* 精确到点容差，单位 m */
 #define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f /* 回程到点容差，单位 m */
 /* 姿态协同参数 */
-#define POSE_SYNC_SLOW_DISTANCE_M 0.25f /* 位姿协同降速距离，单位 m */
+#define POSE_SYNC_SLOW_DISTANCE_M 0.55f /* 位姿协同降速距离，单位 m */
 #define POSE_SYNC_SLOW_YAW_DEG 34.0f    /* 位姿协同降速偏航误差，单位 deg */
 #define POSE_SYNC_MIN_SCALE 1.00f       /* 位姿协同最小速度缩放系数 */
 #define POSE_SYNC_YAW_RATE_FULL_RAD_S 3.0f /* 偏航角速度满量程，单位 rad/s */
-#define POSE_SYNC_YAW_RATE_MIN_SCALE 0.80f /* 偏航运动时平移最低缩放系数 */
+#define POSE_SYNC_YAW_RATE_MIN_SCALE 0.55f /* 偏航运动时平移最低缩放系数 */
 #define POSE_YAW_TOLERANCE_DEG 1.0f     /* 位姿到点偏航容差，单位 deg */
 #define POSE_YAW_DEAD_ZONE_DEG 0.05f     /* 位姿偏航死区，单位 deg */
 #define MAKEUP_FOR_ANGLE 2.0f           /* 偏航角补偿量，单位 deg */
@@ -128,7 +131,7 @@
 /* EMM 速度与位置模式参数。 */
 /* EMM 输出轴相对轮速模型存在约 1.8 倍的速度换算比例。 */
 #define CHASSIS_OPEN_LOOP_WHEEL_SPEED_SCALE 1.80f   /* 开环 EMM 转速到轮速换算系数 */
-#define CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE 2.00f /* 闭环 EMM 转速到轮速换算系数 */
+#define CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE 2.10f /* 闭环 EMM 转速到轮速换算系数 */
 #define CHASSIS_OPEN_LOOP_MAX_RPM 700.0f    /* 开环速度模式最大转速，单位 RPM */
 #define CHASSIS_CLOSED_LOOP_MAX_RPM 1000.0f /* 闭环控制最大转速，单位 RPM */
 /* 速度斜坡由位置规划器生成，EMM 采用 0 以避免内部 RPM 斜坡叠加延迟。 */

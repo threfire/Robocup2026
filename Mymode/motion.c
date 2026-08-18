@@ -75,6 +75,8 @@ static MotionPathState_t motion_path;
  */
 typedef struct
 {
+	float start_position_x_m;
+	float start_position_y_m;
 	float position_x_m;
 	float position_y_m;
 	float velocity_x_mps;
@@ -87,11 +89,20 @@ typedef struct
 	float accel_y_mps2;
 	float update_accumulator_s;
 	uint8_t initialized;
+	uint8_t reference_x_complete;
+	uint8_t reference_y_complete;
 	uint8_t reference_complete;
 } PositionMpcState_t;
 
 static PositionMpcState_t position_mpc;
 static uint8_t position_arrival_latched;
+
+/** 二维 MPC 非均匀加速度候选，兼顾大范围响应与小误差收敛。 */
+static const float position_mpc_accel_candidate_mps2[] = {
+	-12.0f, -6.0f, -2.0f, -POSITION_MPC_MIN_ACCEL_MPS2, 0.0f,
+	POSITION_MPC_MIN_ACCEL_MPS2, 2.0f, 6.0f, 12.0f
+};
+#define POSITION_MPC_ACCEL_CANDIDATE_COUNT 9U
 
 /**
  * @brief 根据大圆和槽口几何计算底盘中心曲线。
@@ -825,6 +836,24 @@ static void position_mpc_limit_accel_change(float *delta_accel_x_mps2,
 }
 
 /**
+ * @brief 将单轴 MPC 参考位置限制在本次运动目标点。
+ *
+ * @return 参考位置到达目标点时返回 1，否则返回 0。
+ */
+static uint8_t position_mpc_clamp_target(float start_position_m,
+		float target_position_m, float *reference_position_m)
+{
+	if (((target_position_m >= start_position_m) &&
+	        (*reference_position_m >= target_position_m)) ||
+	        ((target_position_m < start_position_m) &&
+	        (*reference_position_m <= target_position_m))) {
+		*reference_position_m = target_position_m;
+		return 1U;
+	}
+	return 0U;
+}
+
+/**
  * @brief 对二维 MPC 规划速度执行一阶低通。
  */
 static void position_mpc_filter_velocity(void)
@@ -849,6 +878,8 @@ static void position_mpc_filter_velocity(void)
 static void position_mpc_reset(float position_x_m, float position_y_m)
 {
 	memset(&position_mpc, 0, sizeof(position_mpc));
+	position_mpc.start_position_x_m = position_x_m;
+	position_mpc.start_position_y_m = position_y_m;
 	position_mpc.position_x_m = position_x_m;
 	position_mpc.position_y_m = position_y_m;
 	position_mpc.velocity_x_mps = odometer_ctx.motion.vel_x_mps;
@@ -911,15 +942,19 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 		float best_target_accel_y_mps2 = 0.0f;
 		float target_error_x_m = target_x_m - current_x_m;
 		float target_error_y_m = target_y_m - current_y_m;
-		int8_t candidate_x;
-		int8_t candidate_y;
+		uint8_t candidate_x;
+		uint8_t candidate_y;
 
-		for (candidate_x = -2; candidate_x <= 2; candidate_x++) {
-			for (candidate_y = -2; candidate_y <= 2; candidate_y++) {
-				float target_accel_x_mps2 = (float)candidate_x *
-				        MOTION_MPC_MAX_ACCEL_MPS2 * 0.5f;
-				float target_accel_y_mps2 = (float)candidate_y *
-				        MOTION_MPC_MAX_ACCEL_MPS2 * 0.5f;
+		for (candidate_x = 0U;
+		        candidate_x < POSITION_MPC_ACCEL_CANDIDATE_COUNT;
+		        candidate_x++) {
+			for (candidate_y = 0U;
+			        candidate_y < POSITION_MPC_ACCEL_CANDIDATE_COUNT;
+			        candidate_y++) {
+				float target_accel_x_mps2 =
+				        position_mpc_accel_candidate_mps2[candidate_x];
+				float target_accel_y_mps2 =
+				        position_mpc_accel_candidate_mps2[candidate_y];
 				float predicted_x_m = current_x_m;
 				float predicted_y_m = current_y_m;
 				float predicted_vx_mps = current_velocity_x_mps;
@@ -988,11 +1023,25 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 			}
 		}
 		{
-			float delta_accel_x_mps2 = best_target_accel_x_mps2 -
-			        position_mpc.accel_x_mps2;
-			float delta_accel_y_mps2 = best_target_accel_y_mps2 -
-			        position_mpc.accel_y_mps2;
+			float best_accel_mps2 = sqrtf(best_target_accel_x_mps2 *
+			        best_target_accel_x_mps2 + best_target_accel_y_mps2 *
+			        best_target_accel_y_mps2);
+			float target_distance_m = sqrtf(target_error_x_m * target_error_x_m +
+			        target_error_y_m * target_error_y_m);
+			float delta_accel_x_mps2;
+			float delta_accel_y_mps2;
 
+			if ((best_accel_mps2 < POSITION_MPC_MIN_ACCEL_MPS2) &&
+			        (target_distance_m > raceh)) {
+				best_target_accel_x_mps2 = POSITION_MPC_MIN_ACCEL_MPS2 *
+				        target_error_x_m / target_distance_m;
+				best_target_accel_y_mps2 = POSITION_MPC_MIN_ACCEL_MPS2 *
+				        target_error_y_m / target_distance_m;
+			}
+			delta_accel_x_mps2 = best_target_accel_x_mps2 -
+			        position_mpc.accel_x_mps2;
+			delta_accel_y_mps2 = best_target_accel_y_mps2 -
+			        position_mpc.accel_y_mps2;
 			position_mpc_limit_accel_change(&delta_accel_x_mps2,
 			        &delta_accel_y_mps2);
 			position_mpc.accel_x_mps2 += delta_accel_x_mps2;
@@ -1000,9 +1049,6 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 		}
 	}
 	{
-		float previous_error_x_m = target_x_m - current_x_m;
-		float previous_error_y_m = target_y_m - current_y_m;
-
 		position_mpc.position_x_m = current_x_m + current_velocity_x_mps *
 		        POSITION_MPC_PERIOD_S + 0.5f * position_mpc.accel_x_mps2 *
 		        POSITION_MPC_PERIOD_S * POSITION_MPC_PERIOD_S;
@@ -1017,19 +1063,28 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 		        POSITION_MPC_PERIOD_S;
 		position_mpc_limit_speed(&position_mpc.velocity_x_mps,
 		        &position_mpc.velocity_y_mps, max_speed_mps);
-		if ((previous_error_x_m * (target_x_m - position_mpc.position_x_m) +
-		        previous_error_y_m * (target_y_m - position_mpc.position_y_m)) <=
-		        0.0f) {
+		if ((position_mpc.reference_x_complete != 0U) ||
+		        position_mpc_clamp_target(position_mpc.start_position_x_m,
+		        target_x_m, &position_mpc.position_x_m)) {
 			position_mpc.position_x_m = target_x_m;
-			position_mpc.position_y_m = target_y_m;
 			position_mpc.velocity_x_mps = 0.0f;
-			position_mpc.velocity_y_mps = 0.0f;
 			position_mpc.filtered_velocity_x_mps = 0.0f;
-			position_mpc.filtered_velocity_y_mps = 0.0f;
 			position_mpc.filtered_position_x_m = target_x_m;
-			position_mpc.filtered_position_y_m = target_y_m;
 			position_mpc.accel_x_mps2 = 0.0f;
+			position_mpc.reference_x_complete = 1U;
+		}
+		if ((position_mpc.reference_y_complete != 0U) ||
+		        position_mpc_clamp_target(position_mpc.start_position_y_m,
+		        target_y_m, &position_mpc.position_y_m)) {
+			position_mpc.position_y_m = target_y_m;
+			position_mpc.velocity_y_mps = 0.0f;
+			position_mpc.filtered_velocity_y_mps = 0.0f;
+			position_mpc.filtered_position_y_m = target_y_m;
 			position_mpc.accel_y_mps2 = 0.0f;
+			position_mpc.reference_y_complete = 1U;
+		}
+		if ((position_mpc.reference_x_complete != 0U) &&
+		        (position_mpc.reference_y_complete != 0U)) {
 			position_mpc.reference_complete = 1U;
 			return;
 		}
@@ -1054,11 +1109,17 @@ static float PositionSpeedPlan_Update(float distance_error_m, float dt) {
 /** 位置控制模块。 */
 void PositionControl_Init(void) {
 
-	pid_init(&position_control.pid_x, POSITION_PID_DEFAULT_KP, 0.00f,
+	pid_init(&position_control.pid_x, POSITION_PID_DEFAULT_KP,
+	        POSITION_PID_DEFAULT_KI,
 	        POSITION_PID_DEFAULT_KD, HIGHESTSPEED);
 
-	pid_init(&position_control.pid_y, POSITION_PID_DEFAULT_KP, 0.00f,
+	pid_init(&position_control.pid_y, POSITION_PID_DEFAULT_KP,
+	        POSITION_PID_DEFAULT_KI,
 	        POSITION_PID_DEFAULT_KD, HIGHESTSPEED);
+	pid_set_integral_limit(&position_control.pid_x,
+	        POSITION_PID_INTEGRAL_LIMIT_M_S);
+	pid_set_integral_limit(&position_control.pid_y,
+	        POSITION_PID_INTEGRAL_LIMIT_M_S);
 
 	position_control.is_enabled = 0;
 	position_control.target_x = 0.0f;
@@ -1172,8 +1233,12 @@ void UpdatePositionControl(float dt) {
 	float distance_error = sqrtf(error_x_global * error_x_global +
 	                             error_y_global * error_y_global);
 	if ((distance_error <= position_tolerance_m) &&
-	        ((path_enabled == 0U) || motion_path.reference_complete)) {
+	        ((path_enabled == 0U) || motion_path.reference_complete) &&
+	        (position_arrival_latched == 0U)) {
 		position_arrival_latched = 1U;
+		position_control.pid_x.integral = 0.0f;
+		position_control.pid_y.integral = 0.0f;
+		Emm_V5_Stop_Now(0U, 0U);
 	}
 	if (path_enabled == 0U) {
 		position_mpc_update(current_x_global, current_y_global,

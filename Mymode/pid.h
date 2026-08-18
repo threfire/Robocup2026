@@ -15,6 +15,7 @@ typedef struct {
     float Ki;
     float Kd;
     float integral;
+    float integral_limit;
     float prev_error;
     float fuzzy_rate;
     float max_output;
@@ -22,6 +23,8 @@ typedef struct {
 
 /** 初始化标准 PID 参数。 */
 void pid_init(PID_Controller *pid, float kp, float ki, float kd, float max_output);
+/** 设置 PID 积分状态限幅。 */
+void pid_set_integral_limit(PID_Controller *pid, float integral_limit);
 /** 初始化带二次比例项的视觉 PID 参数。 */
 void pid_init_cam(PID_Controller *pid, float kp, float kp2, float ki, float kd,
         float max_output);

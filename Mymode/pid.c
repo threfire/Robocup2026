@@ -27,9 +27,19 @@ void pid_init(PID_Controller *pid, float kp, float ki, float kd, float max_outpu
     pid->Ki = ki;
     pid->Kd = kd;
     pid->integral = 0.0f;
+    pid->integral_limit = 0.0f;
     pid->prev_error = 0.0f;
     pid->fuzzy_rate = 0.0f;
     pid->max_output = max_output;
+}
+
+/** 设置 PID 积分状态限幅，非正值表示关闭独立积分限幅。 */
+void pid_set_integral_limit(PID_Controller *pid, float integral_limit)
+{
+    if (pid == 0) {
+        return;
+    }
+    pid->integral_limit = fabsf(integral_limit);
 }
 
 /** 初始化视觉 PID 的二次比例项。 */
@@ -49,6 +59,9 @@ float pid_calc(PID_Controller *pid, float error, float dt)
         return 0.0f;
     }
     pid->integral += error * dt;
+    if (pid->integral_limit > 0.0f) {
+        pid->integral = pid_limit(pid->integral, pid->integral_limit);
+    }
     output = pid->Kp * error + pid->Ki * pid->integral +
             pid->Kd * (error - pid->prev_error) / dt;
     pid->prev_error = error;
@@ -67,6 +80,9 @@ float pid_calc_cam(PID_Controller *pid, float error, float dt)
         return 0.0f;
     }
     pid->integral += error * dt;
+    if (pid->integral_limit > 0.0f) {
+        pid->integral = pid_limit(pid->integral, pid->integral_limit);
+    }
     output = pid->Kp * error + pid->Kp2 * error * fabsf(error) +
             pid->Ki * pid->integral + pid->Kd * (error - pid->prev_error) / dt;
     pid->prev_error = error;
