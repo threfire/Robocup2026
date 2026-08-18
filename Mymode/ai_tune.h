@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 /** USART5 上位机在线调试模式开关：0 为比赛模式，1 为调试模式。 */
-#define AI_TUNE_MODE_ENABLE 1U
+#define AI_TUNE_MODE_ENABLE 0U
 
 typedef struct {
     uint32_t version;                 /* 上位机参数版本号 */

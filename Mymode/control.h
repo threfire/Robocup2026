@@ -34,10 +34,10 @@
 #define TASK1_EMM_BACKWARD_SPEED_RPM 200U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
 #define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
-#define TASK1_START_CRUISE_SPEED_MPS 1.05f /* 出发巡航速度，单位 m/s */
+#define TASK1_START_CRUISE_SPEED_MPS 1.25f /* 出发巡航速度，单位 m/s */
 #define TASK1_QRCODE_TIMEOUT_MS 1000U /* 二维码到点等待超时，单位 ms */
-#define TASK1_HOME_CRUISE_SPEED_MPS 1.30f /* 回家巡航速度，单位 m/s */
-#define TASK1_HOME_APPROACH_SPEED_MPS 1.05f /* 回家接近速度，单位 m/s */
+#define TASK1_HOME_CRUISE_SPEED_MPS 1.45f /* 回家巡航速度，单位 m/s */
+#define TASK1_HOME_APPROACH_SPEED_MPS 1.25f /* 回家接近速度，单位 m/s */
 #define TASK1_HOME_APPROACH_DISTANCE_M 0.50f /* 回家降速距离，单位 m */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 
