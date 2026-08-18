@@ -13,7 +13,7 @@
 #define ATTITUDE_DEAD_ZONE_DEG 0.5f    /* 姿态闭环死区，单位 deg */
 #define ATTITUDE_PID_DEFAULT_KP 15.750f /* 姿态角度环比例系数，单位 rad/s/rad */
 #define ATTITUDE_PID_DEFAULT_KI 0.05f   /* 姿态角度环积分系数 */
-#define ATTITUDE_PID_DEFAULT_KD 1.85f /* 姿态角度环角速度阻尼系数，单位 s */
+#define ATTITUDE_PID_DEFAULT_KD 0.75f /* 姿态角度环角速度阻尼系数，单位 s */
 #define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
 #define ATTITUDE_ACCEL_FEEDFORWARD_GAIN 1.0f /* 偏航 J·α 加速度前馈系数 */
 #define ATTITUDE_ACCEL_FEEDBACK_GAIN 0.15f /* 偏航加速度反馈增益 */
@@ -36,8 +36,8 @@
 #define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
 #define TASK1_START_CRUISE_SPEED_MPS 1.05f /* 出发巡航速度，单位 m/s */
 #define TASK1_QRCODE_TIMEOUT_MS 1000U /* 二维码到点等待超时，单位 ms */
-#define TASK1_HOME_CRUISE_SPEED_MPS 1.60f /* 回家巡航速度，单位 m/s */
-#define TASK1_HOME_APPROACH_SPEED_MPS 1.45f /* 回家接近速度，单位 m/s */
+#define TASK1_HOME_CRUISE_SPEED_MPS 1.30f /* 回家巡航速度，单位 m/s */
+#define TASK1_HOME_APPROACH_SPEED_MPS 1.05f /* 回家接近速度，单位 m/s */
 #define TASK1_HOME_APPROACH_DISTANCE_M 0.50f /* 回家降速距离，单位 m */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 
@@ -64,7 +64,7 @@
 /* 位置控制 PID 和轨迹规划参数 */
 #define POSITION_PID_DEFAULT_KP 10.50f /* 位置 PID 比例系数 */
 #define POSITION_PID_DEFAULT_KI 0.50f /* 位置 PID 积分系数 */
-#define POSITION_PID_DEFAULT_KD 0.88880f /* 位置 PID 微分系数 */
+#define POSITION_PID_DEFAULT_KD 1.0550f /* 位置 PID 微分系数 */
 #define POSITION_PID_INTEGRAL_LIMIT_M_S 0.30f /* 位置 PID 积分状态限幅，单位 m·s */
 #define POSITION_FUZZY_ERROR_FULL_M 0.30f /* 位置误差达到最高隶属度的阈值，单位 m */
 #define POSITION_FUZZY_RATE_FULL_MPS 1.00f /* 位置误差变化率达到最高隶属度的阈值，单位 m/s */
@@ -74,13 +74,13 @@
 #define POSITION_FUZZY_KD_MAX_SCALE 1.00f /* 位置快速变化时 Kd 缩放系数 */
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.10f /* 位置误差变化率滤波系数 */
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.08f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.85f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.25f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_TRAJECTORY_CRUISE_SPEED_MPS POSITION_PLANNER_CRUISE_SPEED_MPS /* 任务代码巡航速度别名 */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 9.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 9.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 60.0f /* 速度规划器最大加加速度，单位 m/s³ */
 #define POSITION_COMMAND_BRAKE_DECEL_MPS2 20.00f /* 总速度命令制动包络，单位 m/s² */
-#define MOTION_OBSERVER_ALPHA 0.25f /* 车体状态观测器低通系数 */
+#define MOTION_OBSERVER_ALPHA 0.1f /* 车体状态观测器低通系数 */
 #define MOTION_MPC_MAX_ACCEL_MPS2 12.0f /* MPC 线加速度约束，单位 m/s² */
 #define POSITION_MPC_HORIZON_STEPS 40U /* 二维位置 MPC 预测步数，预测时域 0.4 s */
 #define POSITION_MPC_PERIOD_S 0.01f /* 二维位置 MPC 更新周期，单位 s */
@@ -95,8 +95,8 @@
 #define POSITION_MPC_VELOCITY_FILTER_ALPHA 0.40f /* 二维位置 MPC 参考低通系数 */
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.02f /* 近目标距离阈值，单位 m */
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.90f /* 速度反馈参与上限，单位 m/s */
-#define POSITION_VELOCITY_FEEDBACK_GAIN 0.90f /* 车体速度内环比例增益 */
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.95f /* 速度反馈参与上限，单位 m/s */
+#define POSITION_VELOCITY_FEEDBACK_GAIN 0.95f /* 车体速度内环比例增益 */
 #define POSITION_VELOCITY_FEEDBACK_FADE_DISTANCE_M 0.030f /* 速度反馈开始衰减的位置误差，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.050f /* 静摩擦补偿启用距离，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_SPEED_MPS 0.030f /* 静摩擦补偿启用实测速度，单位 m/s */
