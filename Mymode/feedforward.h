@@ -1,21 +1,23 @@
 /**
  ******************************************************************************
  * @file    feedforward.h
- * @brief   平移加速度与质心补偿前馈接口
+ * @brief   平移与偏航前馈接口
  ******************************************************************************
  */
 
 #ifndef FEEDFORWARD_H
 #define FEEDFORWARD_H
 
-/**
- * @brief 计算局部速度前馈。
- *
- * 规划加速度生成平移前馈，偏航运动根据质心偏置生成附加补偿。
- */
-void feedforward_linear(float desired_accel_x_mps2, float desired_accel_y_mps2,
-        float yaw_rate_rad_s, float yaw_accel_rad_s2, float accel_gain_s,
-        float com_gain_s, float *accel_vx_mps, float *accel_vy_mps,
-        float *com_vx_mps, float *com_vy_mps);
+/** 清除加速度和偏航前馈历史量。 */
+void feedforward_reset(void);
+/** 用里程计速度更新平移加速度反馈。 */
+void feedforward_accel_update(float dt);
+/** 获取世界坐标系 X 轴加速度。 */
+float feedforward_accel_x(void);
+/** 获取世界坐标系 Y 轴加速度。 */
+float feedforward_accel_y(void);
+/** 根据规划角加速度和底盘惯量生成角速度前馈。 */
+float feedforward_yaw(float desired_accel_rad_s2, float dt, float wheel_dist_x_m,
+        float wheel_dist_y_m, float k_omega_m);
 
 #endif /* FEEDFORWARD_H */

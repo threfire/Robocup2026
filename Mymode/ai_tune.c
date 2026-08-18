@@ -21,9 +21,10 @@
 #define AI_TUNE_TELEMETRY 0x81U
 #define AI_TUNE_ACK 0x82U
 #define AI_TUNE_RX_BUFFER_SIZE 64U
-#define AI_TUNE_TX_BUFFER_SIZE 64U
+#define AI_TUNE_TX_BUFFER_SIZE 76U
 #define AI_TUNE_TELEMETRY_PERIOD_MS 5U
-#define AI_TUNE_PARAM_PAYLOAD_SIZE 40U
+#define AI_TUNE_TELEMETRY_PAYLOAD_SIZE 68U
+#define AI_TUNE_PARAM_PAYLOAD_SIZE 24U
 #define AI_TUNE_START_PAYLOAD_SIZE 12U
 #endif
 #define AI_TUNE_INCREASE_GUARD_MS 150U
@@ -35,15 +36,11 @@
 
 static const ai_tune_param_t ai_tune_default_param = {
         .version = 0U,
-        .position_kp = POSITION_PID_DEFAULT_KP,
-        .position_ki = 0.0f,
-        .position_kd = POSITION_PID_DEFAULT_KD,
-        .accel_ff_gain_s = POSITION_ACCEL_FEEDFORWARD_GAIN,
-        .com_ff_gain_s = POSITION_COM_FEEDFORWARD_GAIN,
-        .yaw_kp = ATTITUDE_PID_DEFAULT_KP,
-        .yaw_ki = ATTITUDE_PID_DEFAULT_KI,
-        .yaw_kd = ATTITUDE_PID_DEFAULT_KD,
-        .yaw_rate_ff_gain = ATTITUDE_RATE_FEEDFORWARD_GAIN,
+        .kp = POSITION_PID_DEFAULT_KP,
+        .kd = POSITION_PID_DEFAULT_KD,
+        .accel_feedback_gain = POSITION_ACCEL_FEEDBACK_GAIN,
+        .force_to_speed_ff = POSITION_FORCE_TO_SPEED_FF_MPS_PER_N,
+        .static_friction_speed_mps = POSITION_STATIC_FRICTION_SPEED_MPS,
 };
 
 static ai_tune_param_t ai_tune_active_param;
@@ -65,7 +62,6 @@ static uint32_t ai_tune_segment_start_ms;
 #if (AI_TUNE_MODE_ENABLE != 0U)
 static uint32_t ai_tune_last_telemetry_ms;
 static uint16_t ai_tune_tx_sequence;
-static uint8_t ai_tune_telemetry_frame_type;
 static volatile uint8_t ai_tune_ack_pending;
 static volatile uint8_t ai_tune_ack_command;
 static volatile uint8_t ai_tune_ack_status;
@@ -126,20 +122,6 @@ static void ai_tune_write_u32(uint8_t *data, uint16_t *index, uint32_t value)
     data[(*index)++] = (uint8_t)(value >> 24U);
 }
 
-static void ai_tune_write_scaled_i16(uint8_t *data, uint16_t *index,
-        float value, float scale)
-{
-    float scaled_value = value * scale;
-
-    if (scaled_value > 32767.0f) {
-        scaled_value = 32767.0f;
-    }
-    if (scaled_value < -32768.0f) {
-        scaled_value = -32768.0f;
-    }
-    ai_tune_write_u16(data, index, (uint16_t)(int16_t)scaled_value);
-}
-
 static void ai_tune_queue_ack(uint8_t command, uint8_t status,
         uint16_t sequence, uint32_t version)
 {
@@ -152,29 +134,21 @@ static void ai_tune_queue_ack(uint8_t command, uint8_t status,
 
 static uint8_t ai_tune_param_valid(const ai_tune_param_t *param)
 {
-    if ((param->position_kp != param->position_kp) ||
-            (param->position_ki != param->position_ki) ||
-            (param->position_kd != param->position_kd) ||
-            (param->accel_ff_gain_s != param->accel_ff_gain_s) ||
-            (param->com_ff_gain_s != param->com_ff_gain_s) ||
-            (param->yaw_kp != param->yaw_kp) ||
-            (param->yaw_ki != param->yaw_ki) ||
-            (param->yaw_kd != param->yaw_kd) ||
-            (param->yaw_rate_ff_gain != param->yaw_rate_ff_gain)) {
+    if ((param->kp != param->kp) || (param->kd != param->kd) ||
+            (param->accel_feedback_gain != param->accel_feedback_gain) ||
+            (param->force_to_speed_ff != param->force_to_speed_ff) ||
+            (param->static_friction_speed_mps !=
+            param->static_friction_speed_mps)) {
         return 0U;
     }
-    if ((param->position_kp < 0.0f) || (param->position_kp > 30.0f) ||
-            (param->position_ki < 0.0f) || (param->position_ki > 10.0f) ||
-            (param->position_kd < 0.0f) || (param->position_kd > 10.0f) ||
-            (param->accel_ff_gain_s < 0.0f) ||
-            (param->accel_ff_gain_s > 1.0f) ||
-            (param->com_ff_gain_s < 0.0f) ||
-            (param->com_ff_gain_s > 1.0f) ||
-            (param->yaw_kp < 0.0f) || (param->yaw_kp > 30.0f) ||
-            (param->yaw_ki < 0.0f) || (param->yaw_ki > 10.0f) ||
-            (param->yaw_kd < 0.0f) || (param->yaw_kd > 10.0f) ||
-            (param->yaw_rate_ff_gain < 0.0f) ||
-            (param->yaw_rate_ff_gain > 2.0f)) {
+    if ((param->kp < 2.0f) || (param->kp > 10.0f) ||
+            (param->kd < 0.0f) || (param->kd > 0.10f) ||
+            (param->accel_feedback_gain < 0.0f) ||
+            (param->accel_feedback_gain > 0.40f) ||
+            (param->force_to_speed_ff < 0.0f) ||
+            (param->force_to_speed_ff > 0.040f) ||
+            (param->static_friction_speed_mps < 0.04f) ||
+            (param->static_friction_speed_mps > 0.16f)) {
         return 0U;
     }
     return 1U;
@@ -191,15 +165,11 @@ static void ai_tune_parse_frame(const uint8_t *frame, uint8_t payload_length)
         ai_tune_param_t param;
 
         param.version = ai_tune_read_u32(&payload[0]);
-        param.position_kp = ai_tune_read_float(&payload[4]);
-        param.position_ki = ai_tune_read_float(&payload[8]);
-        param.position_kd = ai_tune_read_float(&payload[12]);
-        param.accel_ff_gain_s = ai_tune_read_float(&payload[16]);
-        param.com_ff_gain_s = ai_tune_read_float(&payload[20]);
-        param.yaw_kp = ai_tune_read_float(&payload[24]);
-        param.yaw_ki = ai_tune_read_float(&payload[28]);
-        param.yaw_kd = ai_tune_read_float(&payload[32]);
-        param.yaw_rate_ff_gain = ai_tune_read_float(&payload[36]);
+        param.kp = ai_tune_read_float(&payload[4]);
+        param.kd = ai_tune_read_float(&payload[8]);
+        param.accel_feedback_gain = ai_tune_read_float(&payload[12]);
+        param.force_to_speed_ff = ai_tune_read_float(&payload[16]);
+        param.static_friction_speed_mps = ai_tune_read_float(&payload[20]);
         if (ai_tune_param_valid(&param)) {
             ai_tune_pending_param = param;
             ai_tune_pending_valid = 1U;
@@ -287,7 +257,6 @@ void ai_tune_init(void)
     ai_tune_start_pending = 0U;
 #if (AI_TUNE_MODE_ENABLE != 0U)
     ai_tune_tx_sequence = 0U;
-    ai_tune_telemetry_frame_type = 0U;
     ai_tune_ack_pending = 0U;
     ai_tune_last_telemetry_ms = HAL_GetTick();
     memset(ai_tune_rx_buffer, 0, sizeof(ai_tune_rx_buffer));
@@ -442,88 +411,54 @@ void ai_tune_send_telemetry(const ai_tune_telemetry_t *telemetry)
     ai_tune_tx_buffer[index++] = AI_TUNE_FRAME_HEAD0;
     ai_tune_tx_buffer[index++] = AI_TUNE_FRAME_HEAD1;
     ai_tune_tx_buffer[index++] = AI_TUNE_TELEMETRY;
-    ai_tune_tx_buffer[index++] = 0U;
+    ai_tune_tx_buffer[index++] = AI_TUNE_TELEMETRY_PAYLOAD_SIZE;
     ai_tune_write_u16(ai_tune_tx_buffer, &index, ai_tune_tx_sequence++);
-    ai_tune_tx_buffer[index++] = ai_tune_telemetry_frame_type;
     ai_tune_write_u32(ai_tune_tx_buffer, &index, telemetry->time_ms);
     ai_tune_write_u32(ai_tune_tx_buffer, &index, ai_tune_active_param.version);
-
-    if (ai_tune_telemetry_frame_type == 0U) {
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->target_x_m * 1000.0f)));
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->target_y_m * 1000.0f)));
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->trajectory_x_m * 1000.0f)));
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->trajectory_y_m * 1000.0f)));
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->position_x_m * 1000.0f)));
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->position_y_m * 1000.0f)));
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->target_yaw_deg * 1000.0f)));
-        ai_tune_write_u32(ai_tune_tx_buffer, &index,
-                (uint32_t)((int32_t)(telemetry->yaw_deg * 1000.0f)));
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->error_x_local_m, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->error_y_local_m, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->velocity_x_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->velocity_y_mps, 1000.0f);
-        ai_tune_tx_buffer[index++] = telemetry->position_reached;
-        ai_tune_tx_buffer[index++] = ai_tune_guarded;
-    } else if (ai_tune_telemetry_frame_type == 1U) {
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->plan_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->plan_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->plan_accel_x_mps2, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->plan_accel_y_mps2, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->accel_ff_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->accel_ff_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->com_ff_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->com_ff_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_p_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_p_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_i_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_i_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_d_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_d_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->pid_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->velocity_feedback_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->velocity_feedback_vy_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->command_vx_mps, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index, telemetry->command_vy_mps, 1000.0f);
-    } else {
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->yaw_plan_rate_rad_s, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->yaw_p_rad_s, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->yaw_i_rad_s, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->yaw_d_rad_s, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->yaw_pid_rad_s, 1000.0f);
-        ai_tune_write_scaled_i16(ai_tune_tx_buffer, &index,
-                telemetry->command_omega_rad_s, 1000.0f);
-        ai_tune_write_u16(ai_tune_tx_buffer, &index,
-                (uint16_t)telemetry->motor_rpm[0]);
-        ai_tune_write_u16(ai_tune_tx_buffer, &index,
-                (uint16_t)telemetry->motor_rpm[1]);
-        ai_tune_write_u16(ai_tune_tx_buffer, &index,
-                (uint16_t)telemetry->motor_rpm[2]);
-        ai_tune_write_u16(ai_tune_tx_buffer, &index,
-                (uint16_t)telemetry->motor_rpm[3]);
-        ai_tune_tx_buffer[index++] = telemetry->position_reached;
-        ai_tune_tx_buffer[index++] = ai_tune_guarded;
-    }
-    ai_tune_tx_buffer[3] = (uint8_t)(index - 6U);
-    ai_tune_telemetry_frame_type = (uint8_t)((ai_tune_telemetry_frame_type + 1U) % 3U);
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->target_x_m * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->target_y_m * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->position_x_m * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->position_y_m * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->target_yaw_deg * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->yaw_deg * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->velocity_x_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->velocity_y_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->command_vx_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->command_vy_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->plan_accel_mps2 * 1000.0f)));
+    ai_tune_tx_buffer[index++] = telemetry->position_reached;
+    ai_tune_tx_buffer[index++] = ai_tune_guarded;
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->plan_vx_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->plan_vy_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->feedforward_vx_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->feedforward_vy_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->feedback_vx_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->feedback_vy_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->velocity_feedback_vx_mps * 1000.0f)));
+    ai_tune_write_u16(ai_tune_tx_buffer, &index,
+            (uint16_t)((int16_t)(telemetry->velocity_feedback_vy_mps * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->reference_x_m * 1000.0f)));
+    ai_tune_write_u32(ai_tune_tx_buffer, &index,
+            (uint32_t)((int32_t)(telemetry->reference_y_m * 1000.0f)));
     crc = ai_tune_crc16(&ai_tune_tx_buffer[2], index - 2U);
     ai_tune_write_u16(ai_tune_tx_buffer, &index, crc);
     HAL_UART_Transmit_DMA(&huart5, ai_tune_tx_buffer, index);
