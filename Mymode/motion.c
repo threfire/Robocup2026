@@ -952,8 +952,6 @@ static void position_mpc_reset(float position_x_m, float position_y_m)
 static void position_mpc_update(float current_x_m, float current_y_m,
 		float target_x_m, float target_y_m, float dt)
 {
-	float current_velocity_x_mps = odometer_ctx.motion.vel_x_mps;
-	float current_velocity_y_mps = odometer_ctx.motion.vel_y_mps;
 	float max_speed_mps = motion_plan_cruise();
 
 	if (position_mpc.initialized == 0U) {
@@ -994,8 +992,8 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 		float best_cost = 1.0e30f;
 		float best_target_accel_x_mps2 = 0.0f;
 		float best_target_accel_y_mps2 = 0.0f;
-		float target_error_x_m = target_x_m - current_x_m;
-		float target_error_y_m = target_y_m - current_y_m;
+		float target_error_x_m = target_x_m - position_mpc.position_x_m;
+		float target_error_y_m = target_y_m - position_mpc.position_y_m;
 		uint8_t candidate_x;
 		uint8_t candidate_y;
 
@@ -1009,10 +1007,10 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 				        position_mpc_accel_candidate_mps2[candidate_x];
 				float target_accel_y_mps2 =
 				        position_mpc_accel_candidate_mps2[candidate_y];
-				float predicted_x_m = current_x_m;
-				float predicted_y_m = current_y_m;
-				float predicted_vx_mps = current_velocity_x_mps;
-				float predicted_vy_mps = current_velocity_y_mps;
+				float predicted_x_m = position_mpc.position_x_m;
+				float predicted_y_m = position_mpc.position_y_m;
+				float predicted_vx_mps = position_mpc.velocity_x_mps;
+				float predicted_vy_mps = position_mpc.velocity_y_mps;
 				float predicted_accel_x_mps2 = position_mpc.accel_x_mps2;
 				float predicted_accel_y_mps2 = position_mpc.accel_y_mps2;
 				float cost = 0.0f;
@@ -1103,17 +1101,15 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 		}
 	}
 	{
-		position_mpc.position_x_m = current_x_m + current_velocity_x_mps *
+		position_mpc.position_x_m += position_mpc.velocity_x_mps *
 		        POSITION_MPC_PERIOD_S + 0.5f * position_mpc.accel_x_mps2 *
 		        POSITION_MPC_PERIOD_S * POSITION_MPC_PERIOD_S;
-		position_mpc.position_y_m = current_y_m + current_velocity_y_mps *
+		position_mpc.position_y_m += position_mpc.velocity_y_mps *
 		        POSITION_MPC_PERIOD_S + 0.5f * position_mpc.accel_y_mps2 *
 		        POSITION_MPC_PERIOD_S * POSITION_MPC_PERIOD_S;
-		position_mpc.velocity_x_mps = current_velocity_x_mps +
-		        position_mpc.accel_x_mps2 *
+		position_mpc.velocity_x_mps += position_mpc.accel_x_mps2 *
 		        POSITION_MPC_PERIOD_S;
-		position_mpc.velocity_y_mps = current_velocity_y_mps +
-		        position_mpc.accel_y_mps2 *
+		position_mpc.velocity_y_mps += position_mpc.accel_y_mps2 *
 		        POSITION_MPC_PERIOD_S;
 		position_mpc_limit_speed(&position_mpc.velocity_x_mps,
 		        &position_mpc.velocity_y_mps, max_speed_mps);
