@@ -95,8 +95,8 @@
 #define POSITION_MPC_VELOCITY_FILTER_ALPHA 0.40f /* 二维位置 MPC 参考低通系数 */
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.02f /* 近目标距离阈值，单位 m */
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
-#define POSITION_VELOCITY_FEEDBACK_GAIN 0.40f /* 车体速度内环比例增益 */
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.80f /* 速度反馈参与上限，单位 m/s */
+#define POSITION_VELOCITY_FEEDBACK_GAIN 0.80f /* 车体速度内环比例增益 */
 #define POSITION_VELOCITY_FEEDBACK_FADE_DISTANCE_M 0.030f /* 速度反馈开始衰减的位置误差，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.050f /* 静摩擦补偿启用距离，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_SPEED_MPS 0.030f /* 静摩擦补偿启用实测速度，单位 m/s */
@@ -131,7 +131,7 @@
 /* EMM 速度与位置模式参数。 */
 /* EMM 输出轴相对轮速模型存在约 1.8 倍的速度换算比例。 */
 #define CHASSIS_OPEN_LOOP_WHEEL_SPEED_SCALE 1.80f   /* 开环 EMM 转速到轮速换算系数 */
-#define CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE 2.10f /* 闭环 EMM 转速到轮速换算系数 */
+#define CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE 2.15f /* 闭环 EMM 转速到轮速换算系数 */
 #define CHASSIS_OPEN_LOOP_MAX_RPM 700.0f    /* 开环速度模式最大转速，单位 RPM */
 #define CHASSIS_CLOSED_LOOP_MAX_RPM 1000.0f /* 闭环控制最大转速，单位 RPM */
 /* 速度斜坡由位置规划器生成，EMM 采用 0 以避免内部 RPM 斜坡叠加延迟。 */
