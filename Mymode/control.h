@@ -10,10 +10,10 @@
 #define MATERIAL_LOOKING_ANGLE 700U    /* 视觉搜索角度命令 */
 
 /* 姿态控制参数 */
-#define ATTITUDE_DEAD_ZONE_DEG 0.8f    /* 姿态闭环死区，单位 deg */
+#define ATTITUDE_DEAD_ZONE_DEG 0.5f    /* 姿态闭环死区，单位 deg */
 #define ATTITUDE_PID_DEFAULT_KP 15.750f /* 姿态角度环比例系数，单位 rad/s/rad */
 #define ATTITUDE_PID_DEFAULT_KI 0.05f   /* 姿态角度环积分系数 */
-#define ATTITUDE_PID_DEFAULT_KD 0.65f /* 姿态角度环角速度阻尼系数，单位 s */
+#define ATTITUDE_PID_DEFAULT_KD 1.95f /* 姿态角度环角速度阻尼系数，单位 s */
 #define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
 #define ATTITUDE_ACCEL_FEEDFORWARD_GAIN 1.0f /* 偏航 J·α 加速度前馈系数 */
 #define ATTITUDE_ACCEL_FEEDBACK_GAIN 0.15f /* 偏航加速度反馈增益 */
@@ -79,7 +79,7 @@
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 9.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 9.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 60.0f /* 速度规划器最大加加速度，单位 m/s³ */
-#define POSITION_COMMAND_BRAKE_DECEL_MPS2 10.00f /* 总速度命令制动包络，单位 m/s² */
+#define POSITION_COMMAND_BRAKE_DECEL_MPS2 20.00f /* 总速度命令制动包络，单位 m/s² */
 #define MOTION_OBSERVER_ALPHA 0.25f /* 车体状态观测器低通系数 */
 #define MOTION_MPC_MAX_ACCEL_MPS2 12.0f /* MPC 线加速度约束，单位 m/s² */
 #define POSITION_MPC_HORIZON_STEPS 40U /* 二维位置 MPC 预测步数，预测时域 0.4 s */

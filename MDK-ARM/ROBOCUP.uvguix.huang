@@ -3616,7 +3616,7 @@
       <Doc>
         <Name>..\Mymode\control.h</Name>
         <ColumnNumber>43</ColumnNumber>
-        <TopLine>60</TopLine>
+        <TopLine>46</TopLine>
         <CurrentLine>82</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
@@ -3696,9 +3696,9 @@
       </Doc>
       <Doc>
         <Name>..\Mymode\motion.c</Name>
-        <ColumnNumber>36</ColumnNumber>
-        <TopLine>1476</TopLine>
-        <CurrentLine>1520</CurrentLine>
+        <ColumnNumber>34</ColumnNumber>
+        <TopLine>1477</TopLine>
+        <CurrentLine>1521</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>

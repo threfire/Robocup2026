@@ -836,6 +836,60 @@ static void position_mpc_limit_accel_change(float *delta_accel_x_mps2,
 }
 
 /**
+ * @brief 将 MPC 位置、速度和加速度参考投影到本次点到点直线。
+ */
+static void position_mpc_project_reference(float target_x_m, float target_y_m)
+{
+	float path_x_m = target_x_m - position_mpc.start_position_x_m;
+	float path_y_m = target_y_m - position_mpc.start_position_y_m;
+	float path_length_m = sqrtf(path_x_m * path_x_m + path_y_m * path_y_m);
+	float path_unit_x;
+	float path_unit_y;
+	float progress_m;
+	float filtered_progress_m;
+	float velocity_mps;
+	float filtered_velocity_mps;
+	float accel_mps2;
+
+	if (path_length_m <= 0.000001f) {
+		return;
+	}
+	path_unit_x = path_x_m / path_length_m;
+	path_unit_y = path_y_m / path_length_m;
+	progress_m = (position_mpc.position_x_m -
+	        position_mpc.start_position_x_m) * path_unit_x +
+	        (position_mpc.position_y_m - position_mpc.start_position_y_m) *
+	        path_unit_y;
+	filtered_progress_m = (position_mpc.filtered_position_x_m -
+	        position_mpc.start_position_x_m) * path_unit_x +
+	        (position_mpc.filtered_position_y_m -
+	        position_mpc.start_position_y_m) * path_unit_y;
+	progress_m = ClampFloat(progress_m, 0.0f, path_length_m);
+	filtered_progress_m = ClampFloat(filtered_progress_m, 0.0f, path_length_m);
+	velocity_mps = position_mpc.velocity_x_mps * path_unit_x +
+	        position_mpc.velocity_y_mps * path_unit_y;
+	filtered_velocity_mps = position_mpc.filtered_velocity_x_mps * path_unit_x +
+	        position_mpc.filtered_velocity_y_mps * path_unit_y;
+	accel_mps2 = position_mpc.accel_x_mps2 * path_unit_x +
+	        position_mpc.accel_y_mps2 * path_unit_y;
+
+	position_mpc.position_x_m = position_mpc.start_position_x_m +
+	        progress_m * path_unit_x;
+	position_mpc.position_y_m = position_mpc.start_position_y_m +
+	        progress_m * path_unit_y;
+	position_mpc.filtered_position_x_m = position_mpc.start_position_x_m +
+	        filtered_progress_m * path_unit_x;
+	position_mpc.filtered_position_y_m = position_mpc.start_position_y_m +
+	        filtered_progress_m * path_unit_y;
+	position_mpc.velocity_x_mps = velocity_mps * path_unit_x;
+	position_mpc.velocity_y_mps = velocity_mps * path_unit_y;
+	position_mpc.filtered_velocity_x_mps = filtered_velocity_mps * path_unit_x;
+	position_mpc.filtered_velocity_y_mps = filtered_velocity_mps * path_unit_y;
+	position_mpc.accel_x_mps2 = accel_mps2 * path_unit_x;
+	position_mpc.accel_y_mps2 = accel_mps2 * path_unit_y;
+}
+
+/**
  * @brief 将单轴 MPC 参考位置限制在本次运动目标点。
  *
  * @return 参考位置到达目标点时返回 1，否则返回 0。
@@ -911,14 +965,14 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 	}
 	position_mpc.update_accumulator_s -= POSITION_MPC_PERIOD_S;
 	if (position_arrival_latched != 0U) {
-		position_mpc.position_x_m = current_x_m;
-		position_mpc.position_y_m = current_y_m;
+		position_mpc.position_x_m = target_x_m;
+		position_mpc.position_y_m = target_y_m;
 		position_mpc.velocity_x_mps = 0.0f;
 		position_mpc.velocity_y_mps = 0.0f;
 		position_mpc.filtered_velocity_x_mps = 0.0f;
 		position_mpc.filtered_velocity_y_mps = 0.0f;
-		position_mpc.filtered_position_x_m = current_x_m;
-		position_mpc.filtered_position_y_m = current_y_m;
+		position_mpc.filtered_position_x_m = target_x_m;
+		position_mpc.filtered_position_y_m = target_y_m;
 		position_mpc.accel_x_mps2 = 0.0f;
 		position_mpc.accel_y_mps2 = 0.0f;
 		return;
@@ -1063,6 +1117,7 @@ static void position_mpc_update(float current_x_m, float current_y_m,
 		        POSITION_MPC_PERIOD_S;
 		position_mpc_limit_speed(&position_mpc.velocity_x_mps,
 		        &position_mpc.velocity_y_mps, max_speed_mps);
+		position_mpc_project_reference(target_x_m, target_y_m);
 		if ((position_mpc.reference_x_complete != 0U) ||
 		        position_mpc_clamp_target(position_mpc.start_position_x_m,
 		        target_x_m, &position_mpc.position_x_m)) {
