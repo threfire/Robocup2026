@@ -148,12 +148,20 @@ static void odometer_update_pose(float x_mm, float y_mm, float yaw_deg,
 	float offset_y_world_mm = ODOMETER_SENSOR_OFFSET_X_MM * yaw_sin +
 	        ODOMETER_SENSOR_OFFSET_Y_MM * yaw_cos;
 	float gyro_rad_s = gyro_dps * 0.017453292519943295f;
-	float chassis_vel_x_mmps = vel_x_mmps + gyro_rad_s * offset_y_world_mm;
-	float chassis_vel_y_mmps = vel_y_mmps - gyro_rad_s * offset_x_world_mm;
+	float sensor_vel_x_world_mmps = vel_x_mmps * yaw_cos -
+	        vel_y_mmps * yaw_sin;
+	float sensor_vel_y_world_mmps = vel_x_mmps * yaw_sin +
+	        vel_y_mmps * yaw_cos;
+	float chassis_vel_x_mmps = sensor_vel_x_world_mmps +
+	        gyro_rad_s * offset_y_world_mm;
+	float chassis_vel_y_mmps = sensor_vel_y_world_mmps -
+	        gyro_rad_s * offset_x_world_mm;
 
-	/* 外部里程计给出传感器中心位姿，旋转安装偏移后换算车体中心并保持清零点不变。 */
-	odometer_ctx.pose.pos_x_mm = x_mm - offset_x_world_mm;
-	odometer_ctx.pose.pos_y_mm = y_mm - offset_y_world_mm;
+	/* 以清零时的车体中心为世界原点，旋转安装偏移后换算车体中心位姿。 */
+	odometer_ctx.pose.pos_x_mm = x_mm - offset_x_world_mm +
+	        ODOMETER_SENSOR_OFFSET_X_MM;
+	odometer_ctx.pose.pos_y_mm = y_mm - offset_y_world_mm +
+	        ODOMETER_SENSOR_OFFSET_Y_MM;
 	odometer_ctx.pose.yaw_deg = yaw_deg;
 	odometer_ctx.pose.yaw_gyro_dps = gyro_dps;
 	odometer_ctx.pose.data_updated = 1U;
@@ -168,6 +176,7 @@ static void odometer_update_pose(float x_mm, float y_mm, float yaw_deg,
 	}
 	odometer_observer_update(odometer_ctx.pose.pos_x_mm * 0.001f,
 	        odometer_ctx.pose.pos_y_mm * 0.001f, gyro_dps);
+	/* 上传线速度为车体系，旋转到世界系后供轨迹规划和前馈使用。 */
 	odometer_ctx.motion.vel_x_mps = chassis_vel_x_mmps * 0.001f;
 	odometer_ctx.motion.vel_y_mps = chassis_vel_y_mmps * 0.001f;
 }

@@ -19,10 +19,10 @@ ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
         .material_position_pulses = {
                 0U,
-                720U,
-                1150U,
-                1580U,
-                2010U,
+                700U,
+                1250U,
+                1600U,
+                2050U,
                 2500U,
                 2950U, /* 识别第四个物料的虚拟转盘位置 */
         },

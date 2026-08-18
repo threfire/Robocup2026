@@ -22,12 +22,19 @@ Dialog DLL:      TCM.DLL V1.56.4.0
  
 <h2>Project:</h2>
 C:\Users\huang\Desktop\RC\2026\Robocup2026\MDK-ARM\ROBOCUP.uvprojx
-Project File Date:  08/04/2026
+Project File Date:  08/17/2026
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 5 (build 528)', folder: 'D:\Keil5\ARM\ARMCC\Bin'
 Build target 'ROBOCUP'
-"ROBOCUP\ROBOCUP.axf" - 0 Error(s), 0 Warning(s).
+compiling task1.c...
+..\Mymode\task1.c(329): warning:  #177-D: function "task1_qrcode_servo_slowdown"  was declared but never referenced
+  static void task1_qrcode_servo_slowdown(void) {
+..\Mymode\task1.c: 1 warning, 0 errors
+linking...
+Program Size: Code=43396 RO-data=5696 RW-data=1244 ZI-data=34300  
+FromELF: creating hex file...
+"ROBOCUP\ROBOCUP.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -50,7 +57,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:00
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>

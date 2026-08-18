@@ -10,6 +10,17 @@
 
 #include <stdint.h>
 
+/** 视觉 X/Y 轴 PID 一次比例系数。 */
+#define VISION_PID_KP 0.15f
+/** 视觉 X/Y 轴 PID 二次比例系数。 */
+#define VISION_PID_KP2 0.0f
+/** 视觉 X/Y 轴 PID 积分系数。 */
+#define VISION_PID_KI 0.0f
+/** 视觉 X/Y 轴 PID 微分系数。 */
+#define VISION_PID_KD 0.001f
+/** 视觉 X/Y 轴 PID 输出限幅。 */
+#define VISION_PID_MAX_OUTPUT 20.0f
+
 /** 初始化视觉控制器和误差窗口。 */
 void vision_init(void);
 /** 设置视觉校正使能状态。 */

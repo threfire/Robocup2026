@@ -76,8 +76,8 @@ void Servo_Action_Group(uint8_t num)
     }
     else if (num == 2U)/* 放地上 */
     {
-        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1030);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1840);
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1050);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1870);
     }
     else if (num == 3U) /* 举起来（冠军台） */
     {

@@ -41,26 +41,49 @@
 #define TASK1_EMM_BACKWARD_SPEED_RPM 200U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
 #define TASK1_EMM_BACKWARD_WAIT_MS 400U  /* 任务一 EMM 后退等待时间，单位 ms */
-#define TASK1_HOME_CRUISE_SPEED_MPS 2.20f /* 回家巡航速度，单位 m/s */
-#define TASK1_HOME_APPROACH_SPEED_MPS 1.50f /* 回家接近速度，单位 m/s */
+#define TASK1_START_CRUISE_SPEED_MPS 1.05f /* 出发巡航速度，单位 m/s */
+#define TASK1_QRCODE_TIMEOUT_MS 1000U /* 二维码到点等待超时，单位 ms */
+#define TASK1_HOME_CRUISE_SPEED_MPS 1.60f /* 回家巡航速度，单位 m/s */
+#define TASK1_HOME_APPROACH_SPEED_MPS 1.45f /* 回家接近速度，单位 m/s */
 #define TASK1_HOME_APPROACH_DISTANCE_M 0.50f /* 回家降速距离，单位 m */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
+
+/* 任务一圆弧径向循迹参数 */
+#define TASK1_ARC_SPEED_MPS (-0.90f) /* 圆弧循迹车体前向速度，单位 m/s */
+#define TASK1_ARC_PID_KP 25.0f /* 圆弧径向 PID 比例系数，输入单位 m */
+#define TASK1_ARC_PID_KI 0.1f /* 圆弧径向 PID 积分系数 */
+#define TASK1_ARC_PID_KD 0.5f /* 圆弧径向 PID 微分系数 */
+#define TASK1_ARC_PID_INTEGRAL_LIMIT 0.50f /* 圆弧 PID 积分限幅，单位 m·s */
+#define TASK1_ARC_PID_MAX_OMEGA_RAD_S 5.50f /* 圆弧 PID 角速度输出限幅，单位 rad/s */
+#define TASK1_ARC_SLOT_X_MM (-308.58f) /* 槽口中心相对车体中心的 X 坐标，单位 mm */
+#define TASK1_ARC_SLOT_Y_MM 0.0f /* 槽口中心相对车体中心的 Y 坐标，单位 mm */
+#define TASK1_MATERIAL_ARC_CENTER_X_MM (-576.29f) /* 五圆柱目标圆心 X 坐标，单位 mm */
+#define TASK1_MATERIAL_ARC_CENTER_Y_MM 1074.43f /* 五圆柱目标圆心 Y 坐标，单位 mm */
+#define TASK1_MATERIAL_ARC_RADIUS_MM 948.49f /* 五圆柱目标圆弧半径，单位 mm */
+#define TASK1_MATERIAL_ARC_DIRECTION (-1) /* 五圆柱圆弧旋转方向 */
+#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.5f) /* 五圆柱圆弧基础角速度，单位 rad/s */
+#define TASK1_TROPHY_ARC_CENTER_X_MM 615.51f /* 奖杯目标圆心 X 坐标，单位 mm */
+#define TASK1_TROPHY_ARC_CENTER_Y_MM 1075.00f /* 奖杯目标圆心 Y 坐标，单位 mm */
+#define TASK1_TROPHY_ARC_RADIUS_MM 948.49f /* 奖杯目标圆弧半径，单位 mm */
+#define TASK1_TROPHY_ARC_DIRECTION 1 /* 奖杯圆弧旋转方向 */
+#define TASK1_TROPHY_ARC_BASE_OMEGA_RAD_S 2.5f /* 奖杯圆弧基础角速度，单位 rad/s */
+
 /* 位置控制 PID 和轨迹规划参数 */
 #define POSITION_PID_DEFAULT_KP 10.50f /* 位置 PID 比例系数 */
-#define POSITION_PID_DEFAULT_KD 1.4555565f /* 位置 PID 微分系数 */
+#define POSITION_PID_DEFAULT_KD 1.5555565f /* 位置 PID 微分系数 */
 #define POSITION_FUZZY_ERROR_FULL_M 0.30f /* 位置误差达到最高隶属度的阈值，单位 m */
 #define POSITION_FUZZY_RATE_FULL_MPS 1.00f /* 位置误差变化率达到最高隶属度的阈值，单位 m/s */
 #define POSITION_FUZZY_KP_MIN_SCALE 0.90f /* 位置小误差时 Kp 缩放系数 */
 #define POSITION_FUZZY_KP_MAX_SCALE 1.50f /* 位置大误差时 Kp 缩放系数 */
-#define POSITION_FUZZY_KD_MIN_SCALE 0.80f /* 位置平稳时 Kd 缩放系数 */
-#define POSITION_FUZZY_KD_MAX_SCALE 1.50f /* 位置快速变化时 Kd 缩放系数 */
+#define POSITION_FUZZY_KD_MIN_SCALE 0.90f /* 位置平稳时 Kd 缩放系数 */
+#define POSITION_FUZZY_KD_MAX_SCALE 1.60f /* 位置快速变化时 Kd 缩放系数 */
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.35f /* 位置误差变化率滤波系数 */
-#define POSITION_PLANNER_MIN_SPEED_MPS 0.40f /* 速度规划器最小速度，单位 m/s */
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.95f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_MIN_SPEED_MPS 0.50f /* 速度规划器最小速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.45f /* 速度规划器巡航速度，单位 m/s */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 12.0f /* 速度规划器最大加速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_DECEL_MPS2 18.0f /* 速度规划器最大减速度，单位 m/s² */
 #define POSITION_PLANNER_MAX_JERK_MPS3 3000.0f /* 速度规划器最大加加速度，单位 m/s³ */
-#define POSITION_COMMAND_BRAKE_DECEL_MPS2 5.00f /* 总速度命令制动包络，单位 m/s² */
+#define POSITION_COMMAND_BRAKE_DECEL_MPS2 2.00f /* 总速度命令制动包络，单位 m/s² */
 #define MOTION_OBSERVER_ALPHA 0.25f /* 车体状态观测器低通系数 */
 #define MOTION_MPC_HORIZON_STEPS 50U /* MPC 预测步数 */
 #define MOTION_MPC_STEP_S 0.01f /* MPC 预测步长，单位 s */
@@ -78,16 +101,16 @@
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.005f /* 近目标距离阈值，单位 m */
 #define POSITION_FEEDBACK_MAX_SPEED_MPS 0.70f /* 速度反馈参与上限，单位 m/s */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.030f /* 静摩擦补偿启用距离，单位 m */
-#define POSITION_STATIC_FRICTION_SPEED_MPS 0.0700433f /* 静摩擦补偿速度，单位 m/s */
-#define CHASSIS_MASS_KG 5.0f /* 底盘质量，单位 kg */
+#define POSITION_STATIC_FRICTION_SPEED_MPS 0.0100433f /* 静摩擦补偿速度，单位 m/s */
+#define CHASSIS_MASS_KG 5.88f /* 底盘质量，单位 kg */
 #define CHASSIS_CENTER_OF_MASS_X_M - 0.050f /* 质心相对车体中心的前向偏移，单位 m */
 #define CHASSIS_CENTER_OF_MASS_Y_M 0.0f /* 质心相对车体中心的右向偏移，单位 m */
 #define POSITION_ACCEL_FEEDBACK_GAIN 0.274512f /* 位置环加速度反馈增益 */
 #define POSITION_FORCE_TO_SPEED_FF_MPS_PER_N 0.0103671f /* 作用力前馈转速度系数，单位 m/(s·N) */
 #define POSITION_ACCEL_FEEDBACK_FILTER_ALPHA 0.15f /* 加速度反馈低通滤波系数 */
 
-#define POSITION_REACHED_TOLERANCE_M 0.003f /* 常规到点容差，单位 m */
-#define POSITION_FINE_REACHED_TOLERANCE_M 0.003f /* 精确到点容差，单位 m */
+#define POSITION_REACHED_TOLERANCE_M 0.004f /* 常规到点容差，单位 m */
+#define POSITION_FINE_REACHED_TOLERANCE_M 0.004f /* 精确到点容差，单位 m */
 #define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f /* 回程到点容差，单位 m */
 
 /* 姿态协同参数 */
@@ -110,7 +133,7 @@
 /* EMM 速度与位置模式参数。 */
 /* EMM 输出轴相对轮速模型存在约 1.8 倍的速度换算比例。 */
 #define CHASSIS_OPEN_LOOP_WHEEL_SPEED_SCALE 1.80f   /* 开环 EMM 转速到轮速换算系数 */
-#define CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE 2.00f /* 闭环 EMM 转速到轮速换算系数 */
+#define CHASSIS_CLOSED_LOOP_WHEEL_SPEED_SCALE 2.10f /* 闭环 EMM 转速到轮速换算系数 */
 #define CHASSIS_OPEN_LOOP_MAX_RPM 700.0f    /* 开环速度模式最大转速，单位 RPM */
 #define CHASSIS_CLOSED_LOOP_MAX_RPM 1000.0f /* 闭环控制最大转速，单位 RPM */
 /* 速度斜坡由位置规划器生成，EMM 采用 0 以避免内部 RPM 斜坡叠加延迟。 */
@@ -125,8 +148,8 @@
 /* 转盘 ZDT 电机 5 的绝对位置参数，位置单位为驱动器脉冲。 */
 #define TURNPLATE_MOTOR_ADDR 5U
 #define TURNPLATE_DIRECTION 0U
-#define TURNPLATE_SPEED_RPM 200U
-#define TURNPLATE_ACCEL 150U
+#define TURNPLATE_SPEED_RPM 300U
+#define TURNPLATE_ACCEL 200U
 #define TURNPLATE_SLOT_COUNT 6U
 /* 转盘单圈零点保存与上电回零配置。 */
 #define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 0U /* 首次标定后改为 0U */

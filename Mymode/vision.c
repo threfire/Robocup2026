@@ -134,8 +134,10 @@ static uint8_t vision_is_reached(int tolerance_x, int tolerance_y,
 /** 初始化视觉 PID 和运行状态。 */
 void vision_init(void)
 {
-    pid_init_cam(&cam_stabilization.pid_x, 0.15f, 0.0f, 0.0f, 0.001f, 20.0f);
-    pid_init_cam(&cam_stabilization.pid_y, 0.15f, 0.0f, 0.0f, 0.001f, 20.0f);
+    pid_init_cam(&cam_stabilization.pid_x, VISION_PID_KP, VISION_PID_KP2,
+            VISION_PID_KI, VISION_PID_KD, VISION_PID_MAX_OUTPUT);
+    pid_init_cam(&cam_stabilization.pid_y, VISION_PID_KP, VISION_PID_KP2,
+            VISION_PID_KI, VISION_PID_KD, VISION_PID_MAX_OUTPUT);
     cam_stabilization.is_enabled = 0U;
     cam_correction_x = 0.0f;
     cam_correction_y = 0.0f;

@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 /** USART5 上位机在线调试模式开关：0 为比赛模式，1 为调试模式。 */
-#define AI_TUNE_MODE_ENABLE 1U
+#define AI_TUNE_MODE_ENABLE 0U
 
 typedef struct {
     uint32_t version;                 /* 上位机参数版本号 */
@@ -32,8 +32,8 @@ typedef struct {
     float yaw_deg;                    /* 实际偏航角，单位 deg */
     float error_x_local_m;            /* 车体系 X 误差，单位 m */
     float error_y_local_m;            /* 车体系 Y 误差，单位 m */
-    float velocity_x_mps;             /* 里程计车体系 X 速度，单位 m/s */
-    float velocity_y_mps;             /* 里程计车体系 Y 速度，单位 m/s */
+    float velocity_x_mps;             /* 里程计世界系 X 速度，单位 m/s */
+    float velocity_y_mps;             /* 里程计世界系 Y 速度，单位 m/s */
     float plan_accel_mps2;            /* 规划加速度，单位 m/s² */
     float accel_x_mps2;               /* 实测车体系 X 加速度，单位 m/s² */
     float accel_y_mps2;               /* 实测车体系 Y 加速度，单位 m/s² */

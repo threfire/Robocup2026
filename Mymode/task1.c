@@ -16,9 +16,6 @@
 #include <math.h>
 #include <string.h>
 
-/** 圆弧循迹车体前向速度，单位 m/s。 */
-#define TASK1_ARC_SPEED_MPS (-0.80f)
-
 /** 圆弧径向循迹配置。 */
 typedef struct {
 	float center_x_mm;
@@ -43,35 +40,35 @@ struct task1_arc_control_s {
 
 /** step 2 五圆柱目标圆弧。 */
 static const task1_arc_config_t task1_material_arc = {
-		.center_x_mm = -576.29f,
-	.center_y_mm = 1074.43f,
-	.radius_mm = 948.49f,
-	.direction = -1,
+	.center_x_mm = TASK1_MATERIAL_ARC_CENTER_X_MM,
+	.center_y_mm = TASK1_MATERIAL_ARC_CENTER_Y_MM,
+	.radius_mm = TASK1_MATERIAL_ARC_RADIUS_MM,
+	.direction = TASK1_MATERIAL_ARC_DIRECTION,
 	.base_omega_rad_s = TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S,
 };
 
 /** step 28 奖杯目标圆弧。 */
 static const task1_arc_config_t task1_trophy_arc = {
-		.center_x_mm = 615.51f,
-		.center_y_mm = 1075.00f,
-		.radius_mm = 948.49f,
-		.direction = 1,
-		.base_omega_rad_s = TASK1_TROPHY_ARC_BASE_OMEGA_RAD_S,
+	.center_x_mm = TASK1_TROPHY_ARC_CENTER_X_MM,
+	.center_y_mm = TASK1_TROPHY_ARC_CENTER_Y_MM,
+	.radius_mm = TASK1_TROPHY_ARC_RADIUS_MM,
+	.direction = TASK1_TROPHY_ARC_DIRECTION,
+	.base_omega_rad_s = TASK1_TROPHY_ARC_BASE_OMEGA_RAD_S,
 };
 
 /** 任务一路径点，单位 mm。 */
 static const Point2D_t task1_targets[] = {
         {-650.0f, 255.25f, 0.0f},
-        {-416.8f, 941.44f, -54.0f},
-        {-211.12f, 660.19f, -54.0f},
-        {354.75f, 898.77f, -68.0f},
-        {471.22f, 615.22f, -68.0f},
-        {974.56f, 686.34f, -68.0f},
+        {-449.36f, 985.96f, -54.0f},
+        {-243.68f, 704.72f, -54.0f},
+        {336.69f, 949.89f, -68.0f},
+        {450.51f, 668.22f, -68.0f},
+        {953.85f, 737.46f, -68.0f},
         {650.0f, 250.25f, 0.0f},
         {1021.66f + 75.0f, 348.24f, -145.0f},
-        {270.0f-25.0f, 1710.0f + 20.0f, -90.0f},
-        {0.0f-20.0f, 1695.0f + 25.0f, -90.0f},
-        {-270.0f-20.0f, 1715.0f + 25.0f, -90.0f},
+        {270.0f-25.0f, 1816.29f + 20.0f, -90.0f},
+        {0.0f-20.0f, 1816.29f + 25.0f, -90.0f},
+        {-270.0f-20.0f, 1816.29f + 25.0f, -90.0f},
         {0.0f, -20.0f, -90.0f},
 
 };
@@ -79,9 +76,10 @@ static const Point2D_t task1_targets[] = {
 /** 伸缩环 PWM 位置表。 */
 const int Telescopic_ring[] = {1500, 1800, 1340};
 static uint8_t task1_vision_timeout;
-static uint8_t task1_fourth_color_state;
 static servo_smooth_move_t task1_qrcode_servo_move;
 static uint8_t task1_qrcode_servo_move_started;
+/** 到达二维码点后的等待起始时间，单位 ms。 */
+static uint32_t task1_qrcode_wait_start_ms;
 static uint8_t task1_turnplate_last_slot = 0xFFU;
 task1_arc_control_t task1_arc_control;
 
@@ -244,10 +242,11 @@ void start_task1(void) {
 	task1_state.completed = 0;
 	task1_state.step_start = HAL_GetTick();
 	task1_vision_timeout = 0U;
-	task1_fourth_color_state = 0U;
-	PositionControl_SetMaxSpeed(1.70f);
+	PositionControl_SetMaxSpeed(TASK1_START_CRUISE_SPEED_MPS);
 	memset(&task1_qrcode_servo_move, 0, sizeof(task1_qrcode_servo_move));
 	task1_qrcode_servo_move_started = 0U;
+	task1_qrcode_wait_start_ms = 0U;
+	qanum = 0U;
 	task1_arc_control_stop();
 	motion_path_stop();
 	is_hasgetcolor = 0U;
@@ -284,10 +283,10 @@ void run_task1(void) {
 	case 28: task1_pick_trophies(); break;
 	case 31: task1_go_second_podium(); break;
 	case 32: task1_wait_vision(8); break;
-	case 33: task1_relative_action(3, 100U); break;
+	case 33: task1_relative_action(2, 100U); break;
 	case 34: task1_go_champion_podium(); break;
 	case 35: task1_wait_vision(9); break;
-	case 36: task1_relative_action(3, 0U); break;
+	case 36: task1_relative_action(2, 0U); break;
 	case 37: task1_go_third_podium(); break;
 	case 38: task1_wait_vision(10); break;
 	case 39: task1_relative_action(0, 0U); break;
@@ -340,29 +339,34 @@ static void task1_qrcode_servo_slowdown(void) {
 
 /** 前往第一个二维码点。 */
 static void task1_go_first_qrcode(void) {
-
 	EnableAttitudeStabilization(1);
 	SetTargetYaw(0.0f);
 	Move_to_turnplate(1);
 	if (!task1_qrcode_servo_move_started) {
-		Servo_Action_Group(1);
+		Servo_Action_Group(2);
 	}
 	servo_init();
 	tasknum = 1;
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
-	if (task1_move_target(0, 0.0f, 0.0f)) {
-		PositionControl_SetMaxSpeed(POSITION_PLANNER_CRUISE_SPEED_MPS);
-		Servo_Action_Group(2);
-		if (qanum == 0U) {
+	if (task1_qrcode_wait_start_ms == 0U) {
+		if (!task1_move_target(0, 0.0f, 0.0f)) {
 			return;
 		}
 
-		task1_next_step();
-		HAL_Delay (50);
+		PositionControl_SetMaxSpeed(POSITION_PLANNER_CRUISE_SPEED_MPS);
+		task1_qrcode_wait_start_ms = HAL_GetTick();
+	}
+
+	if (((qanum == 0U) || (qanum > 16U)) &&
+	        ((HAL_GetTick() - task1_qrcode_wait_start_ms) <
+	                TASK1_QRCODE_TIMEOUT_MS)) {
 		return;
 	}
 
-	task1_qrcode_servo_slowdown();
+	task1_qrcode_wait_start_ms = 0U;
+	Servo_Action_Group(2);
+	task1_next_step();
+	HAL_Delay(50U);
 }
 
 
@@ -375,26 +379,31 @@ static void task1_prepare_material_turnplate(void) {
 
 	osDelay(300U);
 	Move_to_turnplate(2U);
-	osDelay(600U);
-
-	osDelay(200U);
+	
+	osDelay(550);
 	Move_to_turnplate(3U);
-	osDelay(550U);
-
-	Move_to_turnplate(4U);
-	osDelay(600U);
+	
+	
+	osDelay(550);
 	Get_Materialcolor(0U);
-	osDelay(300U);
-	Move_to_turnplate(5U);
-	osDelay(300U);
-	Get_Materialcolor(1U);
-	osDelay(100U);
+	Move_to_turnplate(4U);
+	
 
+	osDelay(550);
+	Get_Materialcolor(1U);
+	Move_to_turnplate(5U);
+	
+	osDelay(550);
+	Get_Materialcolor(2U);
 	Move_to_turnplate(6U);
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+	
 	task1_arc_control_stop();
 	motion_reset();
 	osDelay(300U);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
+	Get_Materialcolor(3U);
+	Get_Materialcolor(4U);
+	Move_to_turnplate(0U);
 	task1_state.current_step = 11U;
 	task1_state.step_start = HAL_GetTick();
 }
@@ -406,35 +415,14 @@ static void task1_go_first_material_point(void) {
 	Get_Materialcolor(2U);
 	is_hasgetcolor = 1U;
 	task1_go_material_point(1, 1);
-	HAL_Delay (100);
 }
 
 
 static void task1_go_material_point(
         uint8_t target_index, uint8_t material_index) {
-	if (target_index == 1U) {
-		if ((task1_fourth_color_state == 0U) &&
-		        IsPositionReached(0.8f)) {
-			Move_to_turnplate(6U);
-			task1_fourth_color_state = 1U;
-		}
-
-		if ((task1_fourth_color_state == 1U) &&
-		        IsPositionReached(0.2f)) {
-			Get_Materialcolor(3U);
-			Get_Materialcolor(4U);
-			__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
-			Move_to_turnplate(6U);
-			task1_fourth_color_state = 2U;
-		}
-	}
 
 	if (task1_move_target(target_index, 0.0f,
 	        task1_targets[target_index].yaw_deg)) {
-		if ((target_index == 1U) && (task1_fourth_color_state != 2U)) {
-			return;
-		}
-
 		task1_next_step();
 	}
 }
@@ -493,11 +481,7 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 	}
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
 
-	if (task1_state.current_step != 25U){
-		Move_to_turnplate(6U);
-	}else{
-		Move_to_turnplate(5);
-	}
+	Move_to_turnplate(0);
 
 	if (servo_after != 0U) {
 		Servo_Action_Group(servo_after);
@@ -511,12 +495,30 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 
 /** 前往第二个二维码点。 */
 static void task1_go_second_qrcode(void) {
-	tasknum = 2;
-	if (task1_move_target(6, 0.0f, 0.0f)) {
-		Move_to_turnplate(5);
-		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
-		task1_next_step();
+	if (tasknum != 2U) {
+		tasknum = 2U;
+		qanum = 0U;
+		task1_qrcode_wait_start_ms = 0U;
 	}
+
+	if (task1_qrcode_wait_start_ms == 0U) {
+		if (!task1_move_target(6, 0.0f, 0.0f)) {
+			return;
+		}
+
+		task1_qrcode_wait_start_ms = HAL_GetTick();
+	}
+
+	if (((qanum == 0U) || (qanum > 6U)) &&
+	        ((HAL_GetTick() - task1_qrcode_wait_start_ms) <
+	                TASK1_QRCODE_TIMEOUT_MS)) {
+		return;
+	}
+
+	task1_qrcode_wait_start_ms = 0U;
+	Move_to_turnplate(5U);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[1]);
+	task1_next_step();
 }
 
 
@@ -534,18 +536,15 @@ static void task1_pick_trophies(void) {
 	EnableAttitudeStabilization(0U);
 	task1_arc_control_start(&task1_trophy_arc);
 
-	osDelay(300U);
-	Move_to_turnplate(4U);
-	osDelay(300U);
 	osDelay(400U);
+	Move_to_turnplate(4U);
+	osDelay(600U);
 
 	Move_to_turnplate(3U);
-	osDelay(500U);
-	osDelay(250U);
+	osDelay(600U);
 
 	task1_arc_control_stop();
 	motion_reset();
-	osDelay(100U);
 	task1_state.current_step = 31U;
 	task1_state.step_start = HAL_GetTick();
 }
@@ -554,21 +553,21 @@ static void task1_pick_trophies(void) {
 /** 前往亚军台。 */
 static void task1_go_second_podium(void) {
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
-	task1_go_podium_point(8, 6, 5, 0.6f);
+	task1_go_podium_point(8, 2, 2, 0.6f);
 }
 
 
 /** 前往冠军台。 */
 static void task1_go_champion_podium(void) {
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
-	task1_go_podium_point(9, 4, 0, 0.0f);
+	task1_go_podium_point(9, 2, 2, 0.0f);
 }
 
 
 /** 前往季军台。 */
 static void task1_go_third_podium(void) {
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
-	task1_go_podium_point(10, 7, 0, 0.0f);
+	task1_go_podium_point(10, 2, 2, 0.0f);
 }
 
 
