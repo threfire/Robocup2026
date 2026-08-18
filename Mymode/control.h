@@ -13,7 +13,7 @@
 #define ATTITUDE_DEAD_ZONE_DEG 0.5f    /* 姿态闭环死区，单位 deg */
 #define ATTITUDE_PID_DEFAULT_KP 15.750f /* 姿态角度环比例系数，单位 rad/s/rad */
 #define ATTITUDE_PID_DEFAULT_KI 0.05f   /* 姿态角度环积分系数 */
-#define ATTITUDE_PID_DEFAULT_KD 1.95f /* 姿态角度环角速度阻尼系数，单位 s */
+#define ATTITUDE_PID_DEFAULT_KD 1.85f /* 姿态角度环角速度阻尼系数，单位 s */
 #define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
 #define ATTITUDE_ACCEL_FEEDFORWARD_GAIN 1.0f /* 偏航 J·α 加速度前馈系数 */
 #define ATTITUDE_ACCEL_FEEDBACK_GAIN 0.15f /* 偏航加速度反馈增益 */
@@ -95,8 +95,8 @@
 #define POSITION_MPC_VELOCITY_FILTER_ALPHA 0.40f /* 二维位置 MPC 参考低通系数 */
 #define POSITION_PLANNER_STOP_SPEED_MPS 0.04f /* 判定停止的规划速度，单位 m/s */
 #define POSITION_PLANNER_NEAR_TARGET_DISTANCE_M 0.02f /* 近目标距离阈值，单位 m */
-#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.80f /* 速度反馈参与上限，单位 m/s */
-#define POSITION_VELOCITY_FEEDBACK_GAIN 0.80f /* 车体速度内环比例增益 */
+#define POSITION_FEEDBACK_MAX_SPEED_MPS 0.90f /* 速度反馈参与上限，单位 m/s */
+#define POSITION_VELOCITY_FEEDBACK_GAIN 0.90f /* 车体速度内环比例增益 */
 #define POSITION_VELOCITY_FEEDBACK_FADE_DISTANCE_M 0.030f /* 速度反馈开始衰减的位置误差，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_DISTANCE_M 0.050f /* 静摩擦补偿启用距离，单位 m */
 #define POSITION_STATIC_FRICTION_ENABLE_SPEED_MPS 0.030f /* 静摩擦补偿启用实测速度，单位 m/s */
