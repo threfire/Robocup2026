@@ -69,15 +69,20 @@ void servo_smooth_move_update(servo_smooth_move_t *move)
 
 void Servo_Action_Group(uint8_t num)
 {
-    if (num == 1U)
+	
+		if (num == 0U)
+		{
+      __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2200);
+		}
+		else if (num == 1U)
     {
-        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1060);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2460);
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1220);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2200);
     }
     else if (num == 2U)/* 放地上 */
     {
-        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1050);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1870);
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1220);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1790);
     }
     else if (num == 3U) /* 举起来（冠军台） */
     {

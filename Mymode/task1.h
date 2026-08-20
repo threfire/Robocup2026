@@ -22,6 +22,8 @@ void run_task1(void);
 void task1_arc_control_update(float dt);
 /** 动态设置圆弧闭环基础角速度，单位 rad/s。 */
 void task1_arc_set_omega(float base_omega_rad_s);
+/** 同步转盘当前槽位，不下发电机命令。 */
+void turnplate_sync_position(uint8_t num);
 /** 获取任务一激活状态。 */
 uint8_t is_task1_active(void);
 

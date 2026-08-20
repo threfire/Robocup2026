@@ -19,10 +19,10 @@ ControlContext_t control_ctx = {
         .race_tolerance_m = POSITION_REACHED_TOLERANCE_M,
         .material_position_pulses = {
                 0U,
-                685U,
-                1142,
+                675U,
+                1132,
                 1599,
-                2056,
+                2046,
                 2513U,
                 2970U, /* 识别第四个物料的虚拟转盘位置 */
 								3200,
@@ -77,7 +77,9 @@ void POS_move(void) {
 	Is_vel_mode = 0;
 	Pos_moveconctrl(0U, TASK1_EMM_BACKWARD_SPEED_RPM,
 	        TASK1_EMM_BACKWARD_PULSES);
-	HAL_Delay(TASK1_EMM_BACKWARD_WAIT_MS);
+	HAL_Delay(TASK1_EMM_BACKWARD_WAIT_MS / 2);
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[4]);
+	HAL_Delay(TASK1_EMM_BACKWARD_WAIT_MS / 2);
 	motion_reset();
 	Is_vel_mode = 1;
 }

@@ -6,7 +6,7 @@ int detected_colors[5];
 int detected_championcup[3];
 
 /** 颜色滤波窗口长度，必须为奇数。 */
-#define COLOR_FILTER_WINDOW_SIZE 7U
+#define COLOR_FILTER_WINDOW_SIZE 1U
 
 /** 黑色最大明度，HSV 的 V 范围为 0 至 255。 */
 #define COLOR_BLACK_VALUE_MAX 110U

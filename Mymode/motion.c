@@ -1666,9 +1666,12 @@ void PoseCoordination_Enable(uint8_t enable) {
 }
 
 void SetTargetPose(float x, float y, float yaw) {
+	uint8_t has_yaw_change =
+	        fabsf(NormalizeYawError(yaw - attitude_control.target_yaw)) >
+	        POSE_YAW_DEAD_ZONE_DEG;
 
 	SetTargetPosition(x, y);
-	PoseCoordination_Enable(1);
+	PoseCoordination_Enable(has_yaw_change);
 	PositionControl_Enable(1);
 	EnableAttitudeStabilization(1);
 	SetTargetYaw(yaw);
@@ -1703,7 +1706,9 @@ void UpdatePoseCoordination(float dt) {
 
 
 	pos_scale = distance_error_m / pose_coordination.slow_distance_m;
-	yaw_scale = fabsf(yaw_error_deg) / pose_coordination.slow_yaw_deg;
+	/* 偏航误差越大，平移缩放越低；偏航归零后恢复完整平移速度。 */
+	yaw_scale = 1.0f - fabsf(yaw_error_deg) /
+	        pose_coordination.slow_yaw_deg;
 	pos_scale = ClampFloat(pos_scale, pose_coordination.min_scale, 1.0f);
 	yaw_scale = ClampFloat(yaw_scale, pose_coordination.min_scale, 1.0f);
 	pose_coordination.sync_scale =

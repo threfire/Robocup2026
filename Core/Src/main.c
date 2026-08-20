@@ -82,6 +82,8 @@ AppContext_t app_ctx = {
         .qa_tx_buf = {0x7E, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, 0xAB, 0xCD},
         .gy33_white_balance_cmd = {0xA5, 0xbb, 0x60},
         .gy33_read_cmd = {0xA5, 0xCC, 0x71},
+		.gy33_baud_9600_cmd = {0xA5, 0xAE, 0x54},
+		.gy33_range_24ms_cmd = {0xA5, 0x5B, 0x00},
         .chassis_velocity_mode = 1,
 				.debug_enable = AI_TUNE_MODE_ENABLE,
 };
@@ -286,7 +288,7 @@ int main(void)
 #if (TURNPLATE_ORIGIN_SAVE_ON_STARTUP != 0U)
 	Emm_V5_Origin_Set_O(TURNPLATE_MOTOR_ADDR, 1U);
 #else
-//	Emm_V5_Origin_Trigger_Return(TURNPLATE_MOTOR_ADDR,
+//	Emm_V5_Origin_Trigger_Return(TURNPLATE_sMOTOR_ADDR,
 //	        TURNPLATE_ORIGIN_MODE, 0U);
 //					Emm_V5_Origin_Modify_Params(TURNPLATE_MOTOR_ADDR, 1U, 0, 0, );
 #endif
@@ -298,6 +300,7 @@ int main(void)
 					Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_DIRECTION,
 	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
 	        control_ctx.material_position_pulses[1] , 1U, 0U);
+	turnplate_sync_position(1U);
 	odometer_init();
 	/* 控制环模块初始化：视觉、位置、位姿协同和姿态环。 */
 	vision_init();
@@ -310,6 +313,11 @@ int main(void)
 	HAL_UART_Receive_IT(&huart3, rx_data, 1);
 	/* USART3 颜色传感器白平衡校准。 */
 //	HAL_UART_Transmit(&huart3, gy33sendbuffer1, APP_GY33_CMD_LEN, 100U);
+	/* GY-33 固定为 9600 bps，并将采集量程设置为 24 ms。 */
+//	HAL_UART_Transmit(&huart3, gy33baudbuffer,
+//	        APP_GY33_CMD_LEN, 100U);
+//	HAL_UART_Transmit(&huart3, gy33rangebuffer,
+//	        APP_GY33_CMD_LEN, 100U);
 	vision_enable(0U);
 //	servo_init();
 	LCD_DisplayText(48, 0, "Init Success!");
@@ -431,6 +439,7 @@ void Robot_RealtimeControl(float dt) {
 		if (camtim_button) {
 			camtim += TIM6_TICK_MS;
 		}
+		Update_Materialcolor();
 		motion_path_update(dt);
 		UpdatePoseCoordination(dt);
 		if (is_position_control_enabled) {

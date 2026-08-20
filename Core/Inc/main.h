@@ -72,6 +72,8 @@ typedef struct {
 	uint32_t run_time_ms;
 	uint8_t gy33_white_balance_cmd[APP_GY33_CMD_LEN];
 	uint8_t gy33_read_cmd[APP_GY33_CMD_LEN];
+	uint8_t gy33_baud_9600_cmd[APP_GY33_CMD_LEN];
+	uint8_t gy33_range_24ms_cmd[APP_GY33_CMD_LEN];
 	uint8_t chassis_velocity_mode;
 } AppContext_t;
 
@@ -93,6 +95,8 @@ extern AppContext_t app_ctx;
 #define timcount app_ctx.run_time_ms
 #define gy33sendbuffer1 app_ctx.gy33_white_balance_cmd
 #define gy33sendbuffer2 app_ctx.gy33_read_cmd
+#define gy33baudbuffer app_ctx.gy33_baud_9600_cmd
+#define gy33rangebuffer app_ctx.gy33_range_24ms_cmd
 #define Is_vel_mode app_ctx.chassis_velocity_mode
 /* USER CODE END Includes */
 
