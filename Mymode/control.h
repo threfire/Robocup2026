@@ -13,7 +13,7 @@
 #define ATTITUDE_DEAD_ZONE_DEG 0.5f    /* 姿态闭环死区，单位 deg */
 #define ATTITUDE_PID_DEFAULT_KP 15.750f /* 姿态角度环比例系数，单位 rad/s/rad */
 #define ATTITUDE_PID_DEFAULT_KI 0.05f   /* 姿态角度环积分系数 */
-#define ATTITUDE_PID_DEFAULT_KD 0.60f /* 姿态角度环角速度阻尼系数，单位 s */
+#define ATTITUDE_PID_DEFAULT_KD 0.65f /* 姿态角度环角速度阻尼系数，单位 s */
 #define ATTITUDE_PID_MAX_OUTPUT 9.00f   /* 姿态角度环输出上限，单位 rad/s */
 #define ATTITUDE_ACCEL_FEEDFORWARD_GAIN 1.0f /* 偏航 J·α 加速度前馈系数 */
 #define ATTITUDE_ACCEL_FEEDBACK_GAIN 0.15f /* 偏航加速度反馈增益 */
@@ -34,7 +34,7 @@
 #define TASK1_EMM_BACKWARD_SPEED_RPM 250U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
 #define TASK1_EMM_BACKWARD_WAIT_MS 500U  /* 任务一 EMM 后退等待时间，单位 ms */
-#define TASK1_START_CRUISE_SPEED_MPS 0.7f /* 出发巡航速度，单位 m/s */
+#define TASK1_START_CRUISE_SPEED_MPS 0.4f /* 出发巡航速度，单位 m/s */
 #define TASK1_QRCODE_TIMEOUT_MS 1000U /* 二维码到点等待超时，单位 ms */
 #define TASK1_QRCODE_TRANSITION_TOLERANCE_M 0.1f /* 二维码前过渡点到点容差，单位 m */
 
@@ -44,8 +44,8 @@
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
 
 /* 任务一圆弧径向循迹参数 */
-#define TASK1_ARC_SPEED_MPS (-0.85f) /* 圆弧循迹车体前向速度，单位 m/s */
-#define TASK1_ARC_PID_KP 22.0f /* 圆弧径向 PID 比例系数，输入单位 m */
+#define TASK1_ARC_SPEED_MPS (-0.823f) /* 圆弧循迹车体前向速度，单位 m/s */
+#define TASK1_ARC_PID_KP 22.50f /* 圆弧径向 PID 比例系数，输入单位 m */
 #define TASK1_ARC_PID_KI 0.1f /* 圆弧径向 PID 积分系数 */
 #define TASK1_ARC_PID_KD 0.5f /* 圆弧径向 PID 微分系数 */
 #define TASK1_ARC_PID_INTEGRAL_LIMIT 0.50f /* 圆弧 PID 积分限幅，单位 m·s */
@@ -56,7 +56,7 @@
 #define TASK1_MATERIAL_ARC_CENTER_Y_MM 1074.43f /* 五圆柱目标圆心 Y 坐标，单位 mm */
 #define TASK1_MATERIAL_ARC_RADIUS_MM 948.49f /* 五圆柱目标圆弧半径，单位 mm */
 #define TASK1_MATERIAL_ARC_DIRECTION (-1) /* 五圆柱圆弧旋转方向 */
-#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.45f) /* 五圆柱圆弧基础角速度，单位 rad/s */
+#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.6f) /* 五圆柱圆弧基础角速度，单位 rad/s */
 #define TASK1_TROPHY_ARC_CENTER_X_MM 615.51f /* 奖杯目标圆心 X 坐标，单位 mm */
 #define TASK1_TROPHY_ARC_CENTER_Y_MM 1075.00f /* 奖杯目标圆心 Y 坐标，单位 mm */
 #define TASK1_TROPHY_ARC_RADIUS_MM 948.49f /* 奖杯目标圆弧半径，单位 mm */
@@ -77,7 +77,7 @@
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.10f /* 位置误差变化率滤波系数 */
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.08f /* 速度规划器最小速度，单位 m/s */
 
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.20f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.2f /* 速度规划器巡航速度，单位 m/s */
 
 #define POSITION_TRAJECTORY_CRUISE_SPEED_MPS POSITION_PLANNER_CRUISE_SPEED_MPS /* 任务代码巡航速度别名 */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 10.5f /* 速度规划器最大加速度，单位 m/s² */
@@ -112,16 +112,16 @@
 #define POSITION_FORCE_TO_SPEED_FF_MPS_PER_N 0.0103671f /* 作用力前馈转速度系数，单位 m/(s·N) */
 #define POSITION_ACCEL_FEEDBACK_FILTER_ALPHA 0.05f /* 加速度反馈低通滤波系数 */
 
-#define POSITION_REACHED_TOLERANCE_M 0.004f /* 常规到点容差，单位 m */
-#define POSITION_FINE_REACHED_TOLERANCE_M 0.004f /* 精确到点容差，单位 m */
+#define POSITION_REACHED_TOLERANCE_M 0.003f /* 常规到点容差，单位 m */
+#define POSITION_FINE_REACHED_TOLERANCE_M 0.003f /* 精确到点容差，单位 m */
 #define POSITION_RETURN_REACHED_TOLERANCE_M 0.200f /* 回程到点容差，单位 m */
 /* 姿态协同参数 */
-#define POSE_SYNC_SLOW_DISTANCE_M 0.55f /* 位姿协同降速距离，单位 m */
-#define POSE_SYNC_SLOW_YAW_DEG 36.0f    /* 位姿协同降速偏航误差，单位 deg */
+#define POSE_SYNC_SLOW_DISTANCE_M 0.65f /* 位姿协同降速距离，单位 m */
+#define POSE_SYNC_SLOW_YAW_DEG 45.0f    /* 位姿协同降速偏航误差，单位 deg */
 #define POSE_SYNC_MIN_SCALE 1.00f       /* 位姿协同最小速度缩放系数 */
 #define POSE_SYNC_YAW_RATE_FULL_RAD_S 3.0f /* 偏航角速度满量程，单位 rad/s */
-#define POSE_SYNC_YAW_RATE_MIN_SCALE 0.55f /* 偏航运动时旋转最低缩放系数 */
-#define POSE_YAW_TOLERANCE_DEG 1.0f     /* 位姿到点偏航容差，单位 deg */
+#define POSE_SYNC_YAW_RATE_MIN_SCALE 0.6f /* 偏航运动时旋转最低缩放系数 */
+#define POSE_YAW_TOLERANCE_DEG 0.5f     /* 位姿到点偏航容差，单位 deg */
 #define POSE_YAW_DEAD_ZONE_DEG 0.05f     /* 位姿偏航死区，单位 deg */
 #define MAKEUP_FOR_ANGLE 2.0f           /* 偏航角补偿量，单位 deg */
 
@@ -150,7 +150,7 @@
 /* 转盘 ZDT 电机 5 的单圈位置参数，位置单位为驱动器脉冲。 */
 #define TURNPLATE_MOTOR_ADDR 5U
 #define TURNPLATE_DIRECTION 0U
-#define TURNPLATE_SPEED_RPM 100U
+#define TURNPLATE_SPEED_RPM 200U
 #define TURNPLATE_ACCEL 50U
 #define TURNPLATE_SLOT_COUNT 6U
 #define TURNPLATE_POSITION_COUNT 8U

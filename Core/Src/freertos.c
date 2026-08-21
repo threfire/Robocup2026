@@ -128,7 +128,7 @@ void StartDefaultTask(void const * argument)
 	/* Infinite loop */
 	for (;;) {
 		Robot_ServiceTick();
-		osDelay(5);
+		osDelay(3);
 	}
   /* USER CODE END StartDefaultTask */
 }

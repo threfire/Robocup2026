@@ -72,12 +72,12 @@ void Servo_Action_Group(uint8_t num)
 	
 		if (num == 0U)
 		{
-      __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2200);
+      __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2100);
 		}
 		else if (num == 1U)
     {
         __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1220);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2200);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2000);
     }
     else if (num == 2U)/* 放地上 */
     {
