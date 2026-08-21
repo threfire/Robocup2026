@@ -155,9 +155,8 @@ void Emm_V5_Vel_Control(uint8_t addr, uint8_t dir, uint16_t vel, uint8_t acc, bo
   cmd[6] =  snF;                        // 多机同步运动标志
   cmd[7] =  0x6B;                       // 校验字节
   
-  // 发送命令
-  huart4.gState = HAL_UART_STATE_READY;
-  HAL_UART_Transmit_DMA(&huart4, (uint8_t *)cmd, 8);
+  /* 阻塞发送保证四个电机命令按调用顺序完整发送。 */
+  HAL_UART_Transmit(&huart4, (uint8_t *)cmd, 8, 10U);
 }
 void Emm_V5_Vel_Control2(uint8_t addr, uint8_t dir, uint16_t vel, uint8_t acc, bool snF)
 {
@@ -206,8 +205,8 @@ void Emm_V5_Pos_Control(uint8_t addr, uint8_t dir, uint16_t vel, uint8_t acc, ui
   cmd[11] =  snF;                       // 多机同步运动标志，false为不启用，true为启用
   cmd[12] =  0x6B;                      // 校验字节
   
-  // 发送命令
-  HAL_UART_Transmit_DMA(&huart4, (uint8_t *)cmd, 13);
+  /* 阻塞发送保证局部命令缓冲区在传输完成前持续有效。 */
+  HAL_UART_Transmit(&huart4, (uint8_t *)cmd, 13, 10U);
 }
 
 void Emm_V5_Pos_Control2(uint8_t addr, uint8_t dir, uint16_t vel, uint8_t acc, uint32_t clk, bool raF, bool snF)

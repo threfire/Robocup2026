@@ -31,11 +31,11 @@
 #define POSITION_SPEED_MID_MPS 2.0f     /* 中速位置控制速度，单位 m/s */
 #define POSITION_SPEED_LOW_MPS 1.5f     /* 低速位置控制速度，单位 m/s */
 #define POSITION_SPEED_LOWEST_MPS 0.65f /* 最低位置控制速度，单位 m/s */
-#define TASK1_EMM_BACKWARD_SPEED_RPM 270U /* 任务一 EMM 后退转速，单位 RPM */
+#define TASK1_EMM_BACKWARD_SPEED_RPM 300U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
-#define TASK1_EMM_BACKWARD_WAIT_MS 500U  /* 任务一 EMM 后退等待时间，单位 ms */
-#define TASK1_START_CRUISE_SPEED_MPS 0.5f /* 出发巡航速度，单位 m/s */
-#define TASK1_QRCODE_TIMEOUT_MS 1000U /* 二维码到点等待超时，单位 ms */
+#define TASK1_EMM_BACKWARD_WAIT_MS 800U  /* 任务一 EMM 后退等待时间，单位 ms */
+#define TASK1_START_CRUISE_SPEED_MPS 0.4f /* 出发巡航速度，单位 m/s */
+#define TASK1_QRCODE_TIMEOUT_MS 1500U /* 二维码到点等待超时，单位 ms */
 #define TASK1_QRCODE_TRANSITION_TOLERANCE_M 0.1f /* 二维码前过渡点到点容差，单位 m */
 
 #define TASK1_HOME_CRUISE_SPEED_MPS 1.1f /* 回家巡航速度，单位 m/s */
@@ -46,8 +46,8 @@
 
 
 /* 任务一圆弧径向循迹参数 */
-#define TASK1_MATERIAL_ARC_SPEED_MPS (-0.8f) /* 五圆柱圆弧线速度，单位 m/s */
-#define TASK1_TROPHY_ARC_SPEED_MPS (-0.45f) /* 奖杯圆弧线速度，单位 m/s */
+#define TASK1_MATERIAL_ARC_SPEED_MPS (-0.75f) /* 五圆柱圆弧线速度，单位 m/s */
+#define TASK1_TROPHY_ARC_SPEED_MPS (-0.5f) /* 奖杯圆弧线速度，单位 m/s */
 #define TASK1_ARC_PID_KP 22.50f /* 圆弧径向 PID 比例系数，输入单位 m */
 #define TASK1_ARC_PID_KI 0.1f /* 圆弧径向 PID 积分系数 */
 #define TASK1_ARC_PID_KD 0.5f /* 圆弧径向 PID 微分系数 */
@@ -59,12 +59,12 @@
 #define TASK1_MATERIAL_ARC_CENTER_Y_MM 1074.43f /* 五圆柱目标圆心 Y 坐标，单位 mm */
 #define TASK1_MATERIAL_ARC_RADIUS_MM 948.49f /* 五圆柱目标圆弧半径，单位 mm */
 #define TASK1_MATERIAL_ARC_DIRECTION (-1) /* 五圆柱圆弧旋转方向 */
-#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.5f) /* 五圆柱圆弧基础角速度，单位 rad/s */
+#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.775f) /* 五圆柱圆弧基础角速度，单位 rad/s */
 #define TASK1_TROPHY_ARC_CENTER_X_MM 615.51f /* 奖杯目标圆心 X 坐标，单位 mm */
 #define TASK1_TROPHY_ARC_CENTER_Y_MM 1075.00f /* 奖杯目标圆心 Y 坐标，单位 mm */
-#define TASK1_TROPHY_ARC_RADIUS_MM 948.49f /* 奖杯目标圆弧半径，单位 mm */
+#define TASK1_TROPHY_ARC_RADIUS_MM 968.49f /* 奖杯目标圆弧半径，单位 mm */
 #define TASK1_TROPHY_ARC_DIRECTION 1 /* 奖杯圆弧旋转方向 */
-#define TASK1_TROPHY_ARC_BASE_OMEGA_RAD_S 2.0f /* 奖杯圆弧基础角速度，单位 rad/s */
+#define TASK1_TROPHY_ARC_BASE_OMEGA_RAD_S 1.86f /* 奖杯圆弧基础角速度，单位 rad/s */
 
 /* 位置控制 PID 和轨迹规划参数 */
 #define POSITION_PID_DEFAULT_KP 10.50f /* 位置 PID 比例系数 */
@@ -133,7 +133,7 @@
 #define CAM_MAX_MIN_ERROR 3             /* 视觉误差波动上限 */
 #define ERROR_QUEUE_SIZE 10U            /* 视觉误差队列长度 */
 #define UART_WAIT_TIMEOUT_MS 800U       /* 串口等待超时，单位 ms */
-#define CAM_STABILIZE_TIMEOUT_MS 1200U  /* 视觉稳定超时，单位 ms */
+#define CAM_STABILIZE_TIMEOUT_MS 2000U  /* 视觉稳定超时，单位 ms */
 
 /* EMM 速度与位置模式参数。 */
 /* EMM 输出轴相对轮速模型存在约 1.8 倍的速度换算比例。 */
@@ -160,7 +160,7 @@
 #define TURNPLATE_POSITION_COUNT 8U
 #define TURNPLATE_PULSES_PER_REV 3200U /* 转盘一圈对应的驱动器脉冲数 */
 /* 转盘单圈零点保存与上电回零配置。 */
-#define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 0U /* 首次标定后改为 0U */
+#define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 0 /* 首次标定后改为 0U */
 #define TURNPLATE_ORIGIN_MODE 0U
 
 /* 兼容旧任务代码的速度宏 */

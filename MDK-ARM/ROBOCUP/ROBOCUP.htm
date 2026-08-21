@@ -3,7 +3,7 @@
 <title>Static Call Graph - [ROBOCUP\ROBOCUP.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image ROBOCUP\ROBOCUP.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Fri Aug 21 17:02:05 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Sat Aug 22 03:56:03 2026
 <BR><P>
 <H3>Maximum Stack Usage =        344 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -554,10 +554,10 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = __aeabi_memcpy4
 </UL>
 <BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_ReceiveFifo0
-<LI><a href="#[18e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_init
+<LI><a href="#[18d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_init
 <LI><a href="#[11d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_FREERTOS_Init
-<LI><a href="#[17f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_guard_update
-<LI><a href="#[160]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_apply_pending
+<LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_guard_update
+<LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_apply_pending
 </UL>
 
 <P><STRONG><a name="[217]"></a>__aeabi_memcpy8</STRONG> (Thumb, 0 bytes, Stack size 8 bytes, rt_memcpy_w.o(.text), UNUSED)
@@ -581,23 +581,23 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[bd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_MspInit
 <LI><a href="#[a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_MspInit
-<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
 <LI><a href="#[199]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_init
-<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
+<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
 <LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM2_Init
 <LI><a href="#[127]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
 <LI><a href="#[126]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM14_Init
 <LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM13_Init
 <LI><a href="#[124]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM11_Init
 <LI><a href="#[120]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
-<LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
+<LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
 <LI><a href="#[fc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_MspInit
 <LI><a href="#[e7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_MspPostInit
 <LI><a href="#[d7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_MspInit
 <LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_MspInit
 <LI><a href="#[1de]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_center
 <LI><a href="#[113]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_GPIO_Init
-<LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_reset
+<LI><a href="#[162]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_reset
 <LI><a href="#[19f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_reset
 <LI><a href="#[1a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_observer_reset
 </UL>
@@ -626,9 +626,9 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_errno_addr
 </UL>
 <BR>[Called By]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
-<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
 </UL>
 
 <P><STRONG><a name="[81]"></a>_printf_int_common</STRONG> (Thumb, 178 bytes, Stack size 32 bytes, _printf_intcommon.o(.text))
@@ -802,7 +802,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Receive_DMA
 <LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
 <P><STRONG><a name="[b]"></a>DebugMon_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_it.o(i.DebugMon_Handler))
@@ -823,7 +823,7 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
-<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
 </UL>
 
 <P><STRONG><a name="[9e]"></a>Emm_V5_Stop_Now</STRONG> (Thumb, 48 bytes, Stack size 24 bytes, emm_v5.o(i.Emm_V5_Stop_Now))
@@ -831,7 +831,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_SendCmd
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
 <P><STRONG><a name="[9f]"></a>Emm_V5_Synchronous_motion</STRONG> (Thumb, 44 bytes, Stack size 24 bytes, emm_v5.o(i.Emm_V5_Synchronous_motion))
@@ -839,7 +839,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_SendCmd
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
+<BR>[Called By]<UL><LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
 </UL>
 
 <P><STRONG><a name="[a0]"></a>Emm_V5_Vel_Control</STRONG> (Thumb, 62 bytes, Stack size 32 bytes, emm_v5.o(i.Emm_V5_Vel_Control))
@@ -857,15 +857,15 @@ Global Symbols
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_get_yaw_deg
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
-<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 <LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_prepare_material_turnplate
 <LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_pick_trophies
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
 <LI><a href="#[1a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;move_to_pose_target
-<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
+<LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
 </UL>
 
 <P><STRONG><a name="[fe]"></a>Error_Handler</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, main.o(i.Error_Handler))
@@ -960,37 +960,37 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_ConvCpltCallback
 </UL>
 
-<P><STRONG><a name="[197]"></a>HAL_CAN_ActivateNotification</STRONG> (Thumb, 36 bytes, Stack size 0 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_ActivateNotification))
+<P><STRONG><a name="[196]"></a>HAL_CAN_ActivateNotification</STRONG> (Thumb, 36 bytes, Stack size 0 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_ActivateNotification))
 <BR><BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[191]"></a>HAL_CAN_AddTxMessage</STRONG> (Thumb, 188 bytes, Stack size 20 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_AddTxMessage))
+<P><STRONG><a name="[190]"></a>HAL_CAN_AddTxMessage</STRONG> (Thumb, 188 bytes, Stack size 20 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_AddTxMessage))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = HAL_CAN_AddTxMessage
 </UL>
 <BR>[Called By]<UL><LI><a href="#[bf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_tx_kick
 </UL>
 
-<P><STRONG><a name="[171]"></a>HAL_CAN_ConfigFilter</STRONG> (Thumb, 262 bytes, Stack size 8 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_ConfigFilter))
+<P><STRONG><a name="[170]"></a>HAL_CAN_ConfigFilter</STRONG> (Thumb, 262 bytes, Stack size 8 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_ConfigFilter))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = HAL_CAN_ConfigFilter
 </UL>
-<BR>[Called By]<UL><LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USER_CAN1_Filter_Init
+<BR>[Called By]<UL><LI><a href="#[16f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USER_CAN1_Filter_Init
 </UL>
 
 <P><STRONG><a name="[bb]"></a>HAL_CAN_ErrorCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_ErrorCallback))
 <BR><BR>[Called By]<UL><LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_IRQHandler
 </UL>
 
-<P><STRONG><a name="[190]"></a>HAL_CAN_GetRxFifoFillLevel</STRONG> (Thumb, 34 bytes, Stack size 0 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_GetRxFifoFillLevel))
+<P><STRONG><a name="[18f]"></a>HAL_CAN_GetRxFifoFillLevel</STRONG> (Thumb, 34 bytes, Stack size 0 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_GetRxFifoFillLevel))
 <BR><BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_ReceiveFifo0
 </UL>
 
-<P><STRONG><a name="[18f]"></a>HAL_CAN_GetRxMessage</STRONG> (Thumb, 244 bytes, Stack size 16 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_GetRxMessage))
+<P><STRONG><a name="[18e]"></a>HAL_CAN_GetRxMessage</STRONG> (Thumb, 244 bytes, Stack size 16 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_GetRxMessage))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = HAL_CAN_GetRxMessage
 </UL>
 <BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_ReceiveFifo0
 </UL>
 
-<P><STRONG><a name="[192]"></a>HAL_CAN_GetTxMailboxesFreeLevel</STRONG> (Thumb, 44 bytes, Stack size 0 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_GetTxMailboxesFreeLevel))
+<P><STRONG><a name="[191]"></a>HAL_CAN_GetTxMailboxesFreeLevel</STRONG> (Thumb, 44 bytes, Stack size 0 bytes, stm32f4xx_hal_can.o(i.HAL_CAN_GetTxMailboxesFreeLevel))
 <BR><BR>[Called By]<UL><LI><a href="#[bf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_tx_kick
 </UL>
 
@@ -1152,14 +1152,14 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 <LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 <LI><a href="#[1e0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_wait_for_uart
-<LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
+<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 <LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_relative_action
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
-<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
 </UL>
 
 <P><STRONG><a name="[ac]"></a>HAL_GPIO_Init</STRONG> (Thumb, 450 bytes, Stack size 40 bytes, stm32f4xx_hal_gpio.o(i.HAL_GPIO_Init))
@@ -1179,12 +1179,12 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[108]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Key_GetState
 </UL>
 
-<P><STRONG><a name="[150]"></a>HAL_GPIO_TogglePin</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, stm32f4xx_hal_gpio.o(i.HAL_GPIO_TogglePin))
-<BR><BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<P><STRONG><a name="[14f]"></a>HAL_GPIO_TogglePin</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, stm32f4xx_hal_gpio.o(i.HAL_GPIO_TogglePin))
+<BR><BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
 <P><STRONG><a name="[114]"></a>HAL_GPIO_WritePin</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, stm32f4xx_hal_gpio.o(i.HAL_GPIO_WritePin))
-<BR><BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<BR><BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 <LI><a href="#[120]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
 <LI><a href="#[115]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_WriteCommand
 <LI><a href="#[113]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_GPIO_Init
@@ -1192,21 +1192,21 @@ Global Symbols
 
 <P><STRONG><a name="[92]"></a>HAL_GetTick</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f4xx_hal.o(i.HAL_GetTick))
 <BR><BR>[Called By]<UL><LI><a href="#[bc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_Init
-<LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
-<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
-<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
+<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
+<LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
 <LI><a href="#[d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_OscConfig
 <LI><a href="#[d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_ClockConfig
 <LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[be]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_Start
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AttitudeStabilization_Init
-<LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 <LI><a href="#[102]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Transmit
 <LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_DMA_Init
 <LI><a href="#[c0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_DMA_Abort
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_WaitOnFlagUntilTimeout
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
 <LI><a href="#[1e0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_wait_for_uart
 <LI><a href="#[1de]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_center
 <LI><a href="#[1d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;servo_smooth_move_update
@@ -1216,9 +1216,9 @@ Global Symbols
 <LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_next_step
 <LI><a href="#[1ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_second_qrcode
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
-<LI><a href="#[162]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_segment_start
-<LI><a href="#[17f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_guard_update
-<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
+<LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_segment_start
+<LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_guard_update
+<LI><a href="#[171]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
 <LI><a href="#[19f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_reset
 <LI><a href="#[1a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_observer_update
 <LI><a href="#[1a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_observer_reset
@@ -1313,7 +1313,7 @@ Global Symbols
 <LI><a href="#[d3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_GetSysClockFreq
 <LI><a href="#[cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_InitTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
+<BR>[Called By]<UL><LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
 </UL>
 
 <P><STRONG><a name="[ce]"></a>HAL_RCC_GetClockConfig</STRONG> (Thumb, 54 bytes, Stack size 0 bytes, stm32f4xx_hal_rcc.o(i.HAL_RCC_GetClockConfig))
@@ -1326,7 +1326,7 @@ Global Symbols
 <LI><a href="#[fd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_SetConfig
 </UL>
 
-<P><STRONG><a name="[16f]"></a>HAL_RCC_GetPCLK2Freq</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, stm32f4xx_hal_rcc.o(i.HAL_RCC_GetPCLK2Freq))
+<P><STRONG><a name="[16e]"></a>HAL_RCC_GetPCLK2Freq</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, stm32f4xx_hal_rcc.o(i.HAL_RCC_GetPCLK2Freq))
 <BR><BR>[Called By]<UL><LI><a href="#[fd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_SetConfig
 </UL>
 
@@ -1343,7 +1343,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
+<BR>[Called By]<UL><LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
 </UL>
 
 <P><STRONG><a name="[d6]"></a>HAL_SPI_Init</STRONG> (Thumb, 188 bytes, Stack size 16 bytes, stm32f4xx_hal_spi.o(i.HAL_SPI_Init))
@@ -1607,12 +1607,12 @@ Global Symbols
 <LI><a href="#[35]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3_IRQHandler
 </UL>
 
-<P><STRONG><a name="[16d]"></a>HAL_UART_RxCpltCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_RxCpltCallback))
+<P><STRONG><a name="[16c]"></a>HAL_UART_RxCpltCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_RxCpltCallback))
 <BR><BR>[Called By]<UL><LI><a href="#[f6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_Receive_IT
 <LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_DMAReceiveCplt
 </UL>
 
-<P><STRONG><a name="[16e]"></a>HAL_UART_RxHalfCpltCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_RxHalfCpltCallback))
+<P><STRONG><a name="[16d]"></a>HAL_UART_RxHalfCpltCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_RxHalfCpltCallback))
 <BR><BR>[Called By]<UL><LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_DMARxHalfCplt
 </UL>
 
@@ -1622,11 +1622,11 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_WaitOnFlagUntilTimeout
 </UL>
-<BR>[Called By]<UL><LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
+<BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
 </UL>
 
-<P><STRONG><a name="[14f]"></a>HAL_UART_Transmit_IT</STRONG> (Thumb, 50 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_Transmit_IT))
-<BR><BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<P><STRONG><a name="[14e]"></a>HAL_UART_Transmit_IT</STRONG> (Thumb, 50 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_Transmit_IT))
+<BR><BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
 <P><STRONG><a name="[fa]"></a>HAL_UART_TxCpltCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_TxCpltCallback))
@@ -1653,7 +1653,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 <LI><a href="#[1db]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_qrcode_servo_slowdown
 </UL>
 
@@ -1678,7 +1678,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[108]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Key_GetState
 </UL>
-<BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<BR>[Called By]<UL><LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 </UL>
 
 <P><STRONG><a name="[10b]"></a>LCD_Clear</STRONG> (Thumb, 140 bytes, Stack size 16 bytes, lcd_spi_154.o(i.LCD_Clear))
@@ -1686,7 +1686,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetAddress
 </UL>
-<BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 <LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
@@ -1716,7 +1716,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2sprintf
 <LI><a href="#[111]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_DisplayString
 </UL>
-<BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<BR>[Called By]<UL><LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 </UL>
 
 <P><STRONG><a name="[111]"></a>LCD_DisplayString</STRONG> (Thumb, 50 bytes, Stack size 24 bytes, lcd_spi_154.o(i.LCD_DisplayString))
@@ -1747,12 +1747,12 @@ Global Symbols
 <LI><a href="#[10d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_DisplayChar
 </UL>
 
-<P><STRONG><a name="[158]"></a>LCD_SetBackColor</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, lcd_spi_154.o(i.LCD_SetBackColor))
-<BR><BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<P><STRONG><a name="[157]"></a>LCD_SetBackColor</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, lcd_spi_154.o(i.LCD_SetBackColor))
+<BR><BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 </UL>
 
-<P><STRONG><a name="[159]"></a>LCD_SetColor</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, lcd_spi_154.o(i.LCD_SetColor))
-<BR><BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<P><STRONG><a name="[158]"></a>LCD_SetColor</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, lcd_spi_154.o(i.LCD_SetColor))
+<BR><BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 </UL>
 
 <P><STRONG><a name="[117]"></a>LCD_SetDirection</STRONG> (Thumb, 128 bytes, Stack size 24 bytes, lcd_spi_154.o(i.LCD_SetDirection))
@@ -1761,7 +1761,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[118]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_WriteData_8bit
 <LI><a href="#[115]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_WriteCommand
 </UL>
-<BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 </UL>
 
 <P><STRONG><a name="[10e]"></a>LCD_WriteBuff</STRONG> (Thumb, 114 bytes, Stack size 20 bytes, lcd_spi_154.o(i.LCD_WriteBuff))
@@ -1776,7 +1776,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[114]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
 </UL>
-<BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 <LI><a href="#[117]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetDirection
 <LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetAddress
 </UL>
@@ -1786,7 +1786,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[118]"></a>LCD_WriteData_8bit</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, lcd_spi_154.o(i.LCD_WriteData_8bit))
-<BR><BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<BR><BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 <LI><a href="#[117]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetDirection
 </UL>
 
@@ -1990,7 +1990,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[198]"></a>Mecanum_Init</STRONG> (Thumb, 68 bytes, Stack size 0 bytes, motion.o(i.Mecanum_Init))
+<P><STRONG><a name="[197]"></a>Mecanum_Init</STRONG> (Thumb, 68 bytes, Stack size 0 bytes, motion.o(i.Mecanum_Init))
 <BR><BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
@@ -1999,7 +1999,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
 <P><STRONG><a name="[133]"></a>Mecanum_SendVelocity</STRONG> (Thumb, 100 bytes, Stack size 16 bytes, motion.o(i.Mecanum_SendVelocity))
@@ -2009,8 +2009,8 @@ Global Symbols
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Vel_Control
 </UL>
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 </UL>
 
 <P><STRONG><a name="[7]"></a>MemManage_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_it.o(i.MemManage_Handler))
@@ -2020,14 +2020,13 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[135]"></a>Move_to_turnplate</STRONG> (Thumb, 118 bytes, Stack size 24 bytes, task1.o(i.Move_to_turnplate))
-<BR><BR>[Stack]<UL><LI>Max Depth = 140<LI>Call Chain = Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<P><STRONG><a name="[135]"></a>Move_to_turnplate</STRONG> (Thumb, 128 bytes, Stack size 32 bytes, task1.o(i.Move_to_turnplate))
+<BR><BR>[Stack]<UL><LI>Max Depth = 148<LI>Call Chain = Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;turnplate_sync_position
-<LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Pos_Control
+<BR>[Calls]<UL><LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Pos_Control
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
-<LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
+<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 <LI><a href="#[1df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_select_material_turnplate
 <LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_relative_action
 <LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_prepare_material_turnplate
@@ -2044,112 +2043,112 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[137]"></a>POS_move</STRONG> (Thumb, 86 bytes, Stack size 8 bytes, control.o(i.POS_move))
-<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = POS_move &rArr; Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<P><STRONG><a name="[136]"></a>POS_move</STRONG> (Thumb, 90 bytes, Stack size 16 bytes, control.o(i.POS_move))
+<BR><BR>[Stack]<UL><LI>Max Depth = 164<LI>Call Chain = POS_move &rArr; Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Mecanum_SendVelocity
 <LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PoseCoordination_Enable
-<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PoseCoordination_Enable
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Pos_moveconctrl
 </UL>
 <BR>[Called By]<UL><LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_relative_action
 </UL>
 
-<P><STRONG><a name="[13b]"></a>Pos_moveconctrl</STRONG> (Thumb, 172 bytes, Stack size 32 bytes, control.o(i.Pos_moveconctrl))
+<P><STRONG><a name="[13a]"></a>Pos_moveconctrl</STRONG> (Thumb, 172 bytes, Stack size 32 bytes, control.o(i.Pos_moveconctrl))
 <BR><BR>[Stack]<UL><LI>Max Depth = 148<LI>Call Chain = Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Pos_Control
 <LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Synchronous_motion
 </UL>
-<BR>[Called By]<UL><LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<BR>[Called By]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 </UL>
 
-<P><STRONG><a name="[139]"></a>PoseCoordination_Enable</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, motion.o(i.PoseCoordination_Enable))
-<BR><BR>[Called By]<UL><LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<P><STRONG><a name="[138]"></a>PoseCoordination_Enable</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, motion.o(i.PoseCoordination_Enable))
+<BR><BR>[Called By]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 <LI><a href="#[1a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;move_to_pose_target
-<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
+<LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
 </UL>
 
 <P><STRONG><a name="[19b]"></a>PoseCoordination_Init</STRONG> (Thumb, 38 bytes, Stack size 0 bytes, motion.o(i.PoseCoordination_Init))
 <BR><BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[138]"></a>PositionControl_Enable</STRONG> (Thumb, 64 bytes, Stack size 8 bytes, motion.o(i.PositionControl_Enable))
+<P><STRONG><a name="[137]"></a>PositionControl_Enable</STRONG> (Thumb, 64 bytes, Stack size 8 bytes, motion.o(i.PositionControl_Enable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = PositionControl_Enable &rArr; PositionPlanner_Reset
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 <LI><a href="#[1de]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_center
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 <LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_prepare_material_turnplate
 <LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_pick_trophies
 <LI><a href="#[1a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;move_to_pose_target
-<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
+<LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
 </UL>
 
-<P><STRONG><a name="[13e]"></a>PositionControl_Init</STRONG> (Thumb, 144 bytes, Stack size 24 bytes, motion.o(i.PositionControl_Init))
+<P><STRONG><a name="[13d]"></a>PositionControl_Init</STRONG> (Thumb, 144 bytes, Stack size 24 bytes, motion.o(i.PositionControl_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = PositionControl_Init &rArr; __aeabi_memclr4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
-<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_set_integral_limit
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_set_integral_limit
 <LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_init
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_init
+<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_init
 </UL>
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[141]"></a>PositionControl_SetMaxSpeed</STRONG> (Thumb, 32 bytes, Stack size 8 bytes, motion.o(i.PositionControl_SetMaxSpeed))
+<P><STRONG><a name="[140]"></a>PositionControl_SetMaxSpeed</STRONG> (Thumb, 32 bytes, Stack size 8 bytes, motion.o(i.PositionControl_SetMaxSpeed))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = PositionControl_SetMaxSpeed
 </UL>
 <BR>[Calls]<UL><LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
-<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_set_cruise
+<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_set_cruise
 </UL>
-<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
-<LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 <LI><a href="#[1cd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_material_point
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
 </UL>
 
-<P><STRONG><a name="[145]"></a>Robot_RealtimeControl</STRONG> (Thumb, 288 bytes, Stack size 32 bytes, main.o(i.Robot_RealtimeControl))
+<P><STRONG><a name="[144]"></a>Robot_RealtimeControl</STRONG> (Thumb, 294 bytes, Stack size 32 bytes, main.o(i.Robot_RealtimeControl))
 <BR><BR>[Stack]<UL><LI>Max Depth = 328<LI>Call Chain = Robot_RealtimeControl &rArr; UpdatePositionControl &rArr; position_mpc_update &rArr; position_mpc_project_reference &rArr; __hardfp_sqrtf &rArr; __set_errno
 </UL>
-<BR>[Calls]<UL><LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_update
-<LI><a href="#[14d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_process_usart1_packet
-<LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
-<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
-<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Update_Materialcolor
-<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
-<LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
+<BR>[Calls]<UL><LI><a href="#[14d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_update
+<LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_process_usart1_packet
+<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
+<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
+<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Update_Materialcolor
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
+<LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
 <LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Mecanum_SendVelocity
 <LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Mecanum_Kinematics
-<LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Transmit_IT
-<LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_TogglePin
+<LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Transmit_IT
+<LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_TogglePin
 <LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DMA_resend
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartControlTask
 </UL>
 
-<P><STRONG><a name="[151]"></a>Robot_ServiceTick</STRONG> (Thumb, 146 bytes, Stack size 16 bytes, main.o(i.Robot_ServiceTick))
-<BR><BR>[Stack]<UL><LI>Max Depth = 204 + Unknown Stack Size
+<P><STRONG><a name="[150]"></a>Robot_ServiceTick</STRONG> (Thumb, 146 bytes, Stack size 16 bytes, main.o(i.Robot_ServiceTick))
+<BR><BR>[Stack]<UL><LI>Max Depth = 212 + Unknown Stack Size
 <LI>Call Chain = Robot_ServiceTick &rArr; run_task1 &rArr; task1_relative_action &rArr; POS_move &rArr; Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
-<LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
-<LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
-<LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_is_zeroed
-<LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
+<BR>[Calls]<UL><LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
+<LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_is_zeroed
+<LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
 <LI><a href="#[110]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_DisplayNumber
 <LI><a href="#[10a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Key_Tick
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
@@ -2158,7 +2157,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 </UL>
 
-<P><STRONG><a name="[157]"></a>SPI_LCD_Init</STRONG> (Thumb, 454 bytes, Stack size 8 bytes, lcd_spi_154.o(i.SPI_LCD_Init))
+<P><STRONG><a name="[156]"></a>SPI_LCD_Init</STRONG> (Thumb, 454 bytes, Stack size 8 bytes, lcd_spi_154.o(i.SPI_LCD_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = SPI_LCD_Init &rArr; LCD_GPIO_Init &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[114]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
@@ -2167,93 +2166,93 @@ Global Symbols
 <LI><a href="#[118]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_WriteData_8bit
 <LI><a href="#[115]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_WriteCommand
 <LI><a href="#[117]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetDirection
-<LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetColor
-<LI><a href="#[158]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetBackColor
+<LI><a href="#[158]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetColor
+<LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_SetBackColor
 <LI><a href="#[113]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_GPIO_Init
 </UL>
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[15a]"></a>Servo_Action_Group</STRONG> (Thumb, 314 bytes, Stack size 40 bytes, servo.o(i.Servo_Action_Group))
+<P><STRONG><a name="[159]"></a>Servo_Action_Group</STRONG> (Thumb, 326 bytes, Stack size 40 bytes, servo.o(i.Servo_Action_Group))
 <BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = Servo_Action_Group &rArr; HAL_Delay
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
-<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_podium_prepare_update
+<LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
 <LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_relative_action
 <LI><a href="#[1db]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_qrcode_servo_slowdown
 <LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_prepare_material_turnplate
 <LI><a href="#[1d3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_podium_point
 </UL>
 
-<P><STRONG><a name="[15b]"></a>SetTargetLinearVelocity</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, motion.o(i.SetTargetLinearVelocity))
-<BR><BR>[Calls]<UL><LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_linear_velocity
+<P><STRONG><a name="[15a]"></a>SetTargetLinearVelocity</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, motion.o(i.SetTargetLinearVelocity))
+<BR><BR>[Calls]<UL><LI><a href="#[15b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_linear_velocity
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[15d]"></a>SetTargetPose</STRONG> (Thumb, 98 bytes, Stack size 24 bytes, motion.o(i.SetTargetPose))
+<P><STRONG><a name="[15c]"></a>SetTargetPose</STRONG> (Thumb, 98 bytes, Stack size 24 bytes, motion.o(i.SetTargetPose))
 <BR><BR>[Stack]<UL><LI>Max Depth = 60<LI>Call Chain = SetTargetPose &rArr; SetTargetPosition &rArr; position_mpc_reset &rArr; __aeabi_memclr4
 </UL>
-<BR>[Calls]<UL><LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
+<BR>[Calls]<UL><LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
-<LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PoseCoordination_Enable
-<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
+<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PoseCoordination_Enable
+<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
 </UL>
 <BR>[Called By]<UL><LI><a href="#[1a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;move_to_pose_target
 </UL>
 
-<P><STRONG><a name="[15f]"></a>SetTargetPosition</STRONG> (Thumb, 154 bytes, Stack size 16 bytes, motion.o(i.SetTargetPosition))
+<P><STRONG><a name="[15e]"></a>SetTargetPosition</STRONG> (Thumb, 154 bytes, Stack size 16 bytes, motion.o(i.SetTargetPosition))
 <BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = SetTargetPosition &rArr; position_mpc_reset &rArr; __aeabi_memclr4
 </UL>
-<BR>[Calls]<UL><LI><a href="#[162]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_segment_start
-<LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_get_active
-<LI><a href="#[160]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_apply_pending
-<LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_reset
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
+<BR>[Calls]<UL><LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_segment_start
+<LI><a href="#[160]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_get_active
+<LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_apply_pending
+<LI><a href="#[162]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_reset
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
-</UL>
-
-<P><STRONG><a name="[164]"></a>SetTargetVelocity</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, motion.o(i.SetTargetVelocity))
-<BR><BR>[Calls]<UL><LI><a href="#[165]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_velocity
-</UL>
-<BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
+<BR>[Called By]<UL><LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
 </UL>
 
-<P><STRONG><a name="[153]"></a>SetTargetYaw</STRONG> (Thumb, 80 bytes, Stack size 16 bytes, motion.o(i.SetTargetYaw))
+<P><STRONG><a name="[163]"></a>SetTargetVelocity</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, motion.o(i.SetTargetVelocity))
+<BR><BR>[Calls]<UL><LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_velocity
+</UL>
+<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
+</UL>
+
+<P><STRONG><a name="[152]"></a>SetTargetYaw</STRONG> (Thumb, 80 bytes, Stack size 16 bytes, motion.o(i.SetTargetYaw))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = SetTargetYaw
 </UL>
 <BR>[Calls]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_get_yaw_deg
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_reset
-<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
+<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
 </UL>
-<BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<BR>[Called By]<UL><LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
-<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
+<LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
 </UL>
 
 <P><STRONG><a name="[6a]"></a>StartControlTask</STRONG> (Thumb, 34 bytes, Stack size 16 bytes, freertos.o(i.StartControlTask))
 <BR><BR>[Stack]<UL><LI>Max Depth = 344<LI>Call Chain = StartControlTask &rArr; Robot_RealtimeControl &rArr; UpdatePositionControl &rArr; position_mpc_update &rArr; position_mpc_project_reference &rArr; __hardfp_sqrtf &rArr; __set_errno
 </UL>
-<BR>[Calls]<UL><LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskGetTickCount
-<LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
-<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Calls]<UL><LI><a href="#[165]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskGetTickCount
+<LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> freertos.o(.constdata)
 </UL>
 <P><STRONG><a name="[69]"></a>StartDefaultTask</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, freertos.o(i.StartDefaultTask))
-<BR><BR>[Stack]<UL><LI>Max Depth = 204 + Unknown Stack Size
+<BR><BR>[Stack]<UL><LI>Max Depth = 212 + Unknown Stack Size
  + In Cycle
 <LI>Call Chain = StartDefaultTask &rArr;  StartDefaultTask (Cycle)
 </UL>
-<BR>[Calls]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
+<BR>[Calls]<UL><LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
 <LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
-<LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 </UL>
 <BR>[Called By]<UL><LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 </UL>
@@ -2262,11 +2261,11 @@ Global Symbols
 <P><STRONG><a name="[d]"></a>SysTick_Handler</STRONG> (Thumb, 38 bytes, Stack size 8 bytes, port.o(i.SysTick_Handler))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = SysTick_Handler &rArr; xTaskIncrementTick
 </UL>
-<BR>[Calls]<UL><LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
+<BR>[Calls]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[16a]"></a>SystemClock_Config</STRONG> (Thumb, 138 bytes, Stack size 88 bytes, main.o(i.SystemClock_Config))
+<P><STRONG><a name="[169]"></a>SystemClock_Config</STRONG> (Thumb, 138 bytes, Stack size 88 bytes, main.o(i.SystemClock_Config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 192<LI>Call Chain = SystemClock_Config &rArr; HAL_RCC_ClockConfig &rArr; HAL_InitTick &rArr; HAL_TIM_Base_Init &rArr; HAL_TIM_Base_MspInit &rArr; HAL_NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_OscConfig
@@ -2329,7 +2328,7 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 124<LI>Call Chain = UART4_IRQHandler &rArr; odometer_rx_parse &rArr; odometer_update_pose &rArr; odometer_observer_update &rArr; odometer_observer_reset &rArr; __aeabi_memclr4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Receive_DMA
-<LI><a href="#[16b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_rx_parse
+<LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_rx_parse
 <LI><a href="#[f5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_IRQHandler
 <LI><a href="#[f2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_DMAStop
 </UL>
@@ -2338,7 +2337,7 @@ Global Symbols
 <P><STRONG><a name="[43]"></a>UART5_IRQHandler</STRONG> (Thumb, 16 bytes, Stack size 8 bytes, stm32f4xx_it.o(i.UART5_IRQHandler))
 <BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = UART5_IRQHandler &rArr; HAL_UART_IRQHandler &rArr; HAL_DMA_Abort
 </UL>
-<BR>[Calls]<UL><LI><a href="#[16c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_uart_idle_irq
+<BR>[Calls]<UL><LI><a href="#[16b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_uart_idle_irq
 <LI><a href="#[f5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_IRQHandler
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
@@ -2380,74 +2379,74 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[170]"></a>USER_CAN1_Filter_Init</STRONG> (Thumb, 120 bytes, Stack size 64 bytes, can.o(i.USER_CAN1_Filter_Init))
+<P><STRONG><a name="[16f]"></a>USER_CAN1_Filter_Init</STRONG> (Thumb, 120 bytes, Stack size 64 bytes, can.o(i.USER_CAN1_Filter_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = USER_CAN1_Filter_Init &rArr; HAL_CAN_ConfigFilter
 </UL>
-<BR>[Calls]<UL><LI><a href="#[171]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_ConfigFilter
+<BR>[Calls]<UL><LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_ConfigFilter
 </UL>
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[14c]"></a>UpdateAttitudeStabilization</STRONG> (Thumb, 310 bytes, Stack size 40 bytes, motion.o(i.UpdateAttitudeStabilization))
+<P><STRONG><a name="[14b]"></a>UpdateAttitudeStabilization</STRONG> (Thumb, 310 bytes, Stack size 40 bytes, motion.o(i.UpdateAttitudeStabilization))
 <BR><BR>[Stack]<UL><LI>Max Depth = 88<LI>Call Chain = UpdateAttitudeStabilization &rArr; yaw_plan_update &rArr; __hardfp_sqrtf &rArr; __set_errno
 </UL>
 <BR>[Calls]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_get_yaw_deg
-<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
+<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_reset
-<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
-<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
+<LI><a href="#[171]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
+<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
-<P><STRONG><a name="[148]"></a>UpdatePoseCoordination</STRONG> (Thumb, 266 bytes, Stack size 32 bytes, motion.o(i.UpdatePoseCoordination))
+<P><STRONG><a name="[147]"></a>UpdatePoseCoordination</STRONG> (Thumb, 266 bytes, Stack size 32 bytes, motion.o(i.UpdatePoseCoordination))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = UpdatePoseCoordination &rArr; __hardfp_powf &rArr; __set_errno
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
-<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_get_yaw_deg
-<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
+<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
-<P><STRONG><a name="[149]"></a>UpdatePositionControl</STRONG> (Thumb, 1560 bytes, Stack size 120 bytes, motion.o(i.UpdatePositionControl))
+<P><STRONG><a name="[148]"></a>UpdatePositionControl</STRONG> (Thumb, 1560 bytes, Stack size 120 bytes, motion.o(i.UpdatePositionControl))
 <BR><BR>[Stack]<UL><LI>Max Depth = 296<LI>Call Chain = UpdatePositionControl &rArr; position_mpc_update &rArr; position_mpc_project_reference &rArr; __hardfp_sqrtf &rArr; __set_errno
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
-<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
 <LI><a href="#[9e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Stop_Now
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_get_yaw_deg
-<LI><a href="#[180]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_is_guarded
-<LI><a href="#[17f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_guard_update
-<LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_get_active
-<LI><a href="#[15b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetLinearVelocity
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
-<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
+<LI><a href="#[17f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_is_guarded
+<LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_guard_update
+<LI><a href="#[160]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_get_active
+<LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetLinearVelocity
+<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<LI><a href="#[171]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
-<LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_accel_y
-<LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_accel_x
-<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_accel_update
-<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_update
-<LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_cruise
-<LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_accel
-<LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
+<LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_accel_y
+<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_accel_x
+<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_accel_update
+<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_update
+<LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_cruise
+<LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_accel
+<LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
-<P><STRONG><a name="[146]"></a>Update_Materialcolor</STRONG> (Thumb, 264 bytes, Stack size 88 bytes, qama.o(i.Update_Materialcolor))
+<P><STRONG><a name="[145]"></a>Update_Materialcolor</STRONG> (Thumb, 264 bytes, Stack size 88 bytes, qama.o(i.Update_Materialcolor))
 <BR><BR>[Stack]<UL><LI>Max Depth = 108<LI>Call Chain = Update_Materialcolor &rArr; color_classify
 </UL>
-<BR>[Calls]<UL><LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;color_median
-<LI><a href="#[181]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;color_classify
+<BR>[Calls]<UL><LI><a href="#[181]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;color_median
+<LI><a href="#[180]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;color_classify
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
 <P><STRONG><a name="[9]"></a>UsageFault_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_it.o(i.UsageFault_Handler))
@@ -2457,80 +2456,80 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[196]"></a>Usart4_DMA_IDLE_Init</STRONG> (Thumb, 22 bytes, Stack size 8 bytes, usart_manager.o(i.Usart4_DMA_IDLE_Init))
+<P><STRONG><a name="[195]"></a>Usart4_DMA_IDLE_Init</STRONG> (Thumb, 22 bytes, Stack size 8 bytes, usart_manager.o(i.Usart4_DMA_IDLE_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = Usart4_DMA_IDLE_Init
 </UL>
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[184]"></a>__ARM_fpclassifyf</STRONG> (Thumb, 38 bytes, Stack size 0 bytes, fpclassifyf.o(i.__ARM_fpclassifyf))
-<BR><BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
-<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
+<P><STRONG><a name="[183]"></a>__ARM_fpclassifyf</STRONG> (Thumb, 38 bytes, Stack size 0 bytes, fpclassifyf.o(i.__ARM_fpclassifyf))
+<BR><BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
 </UL>
 
-<P><STRONG><a name="[183]"></a>__hardfp_atan2f</STRONG> (Thumb, 502 bytes, Stack size 16 bytes, atan2f.o(i.__hardfp_atan2f))
+<P><STRONG><a name="[182]"></a>__hardfp_atan2f</STRONG> (Thumb, 502 bytes, Stack size 16 bytes, atan2f.o(i.__hardfp_atan2f))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = __hardfp_atan2f
 </UL>
-<BR>[Calls]<UL><LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
-<LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan2
-<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
+<BR>[Calls]<UL><LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
+<LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan2
+<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
 </UL>
 
-<P><STRONG><a name="[175]"></a>__hardfp_cosf</STRONG> (Thumb, 280 bytes, Stack size 8 bytes, cosf.o(i.__hardfp_cosf))
+<P><STRONG><a name="[174]"></a>__hardfp_cosf</STRONG> (Thumb, 280 bytes, Stack size 8 bytes, cosf.o(i.__hardfp_cosf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = __hardfp_cosf &rArr; __mathlib_rredf2
 </UL>
-<BR>[Calls]<UL><LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_rredf2
-<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
-<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan
+<BR>[Calls]<UL><LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_rredf2
+<LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
-<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
+<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 <LI><a href="#[19e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_circle_eval
 <LI><a href="#[1ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_update_pose
 </UL>
 
-<P><STRONG><a name="[18a]"></a>__hardfp_fmaxf</STRONG> (Thumb, 72 bytes, Stack size 16 bytes, fmaxf.o(i.__hardfp_fmaxf))
+<P><STRONG><a name="[189]"></a>__hardfp_fmaxf</STRONG> (Thumb, 72 bytes, Stack size 16 bytes, fmaxf.o(i.__hardfp_fmaxf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = __hardfp_fmaxf &rArr; __ARM_fcmp4
 </UL>
-<BR>[Calls]<UL><LI><a href="#[18b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fcmp4
+<BR>[Calls]<UL><LI><a href="#[18a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fcmp4
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
+<BR>[Called By]<UL><LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
 </UL>
 
-<P><STRONG><a name="[174]"></a>__hardfp_powf</STRONG> (Thumb, 1606 bytes, Stack size 32 bytes, powf.o(i.__hardfp_powf))
+<P><STRONG><a name="[173]"></a>__hardfp_powf</STRONG> (Thumb, 1606 bytes, Stack size 32 bytes, powf.o(i.__hardfp_powf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = __hardfp_powf &rArr; __set_errno
 </UL>
-<BR>[Calls]<UL><LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
-<LI><a href="#[18c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_overflow
-<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
-<LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan2
-<LI><a href="#[18d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_divzero
-<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
+<BR>[Calls]<UL><LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
+<LI><a href="#[18b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_overflow
+<LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
+<LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan2
+<LI><a href="#[18c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_divzero
+<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
 </UL>
-<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
+<BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
 </UL>
 
 <P><STRONG><a name="[227]"></a>__mathlib_powf</STRONG> (Thumb, 0 bytes, Stack size 32 bytes, powf.o(i.__hardfp_powf), UNUSED)
 
-<P><STRONG><a name="[176]"></a>__hardfp_sinf</STRONG> (Thumb, 344 bytes, Stack size 16 bytes, sinf.o(i.__hardfp_sinf))
+<P><STRONG><a name="[175]"></a>__hardfp_sinf</STRONG> (Thumb, 344 bytes, Stack size 16 bytes, sinf.o(i.__hardfp_sinf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = __hardfp_sinf &rArr; __mathlib_rredf2
 </UL>
-<BR>[Calls]<UL><LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_rredf2
-<LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
-<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
-<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan
-<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
+<BR>[Calls]<UL><LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_rredf2
+<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
+<LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan
+<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
-<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
+<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 <LI><a href="#[19e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_circle_eval
 <LI><a href="#[1ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_update_pose
 </UL>
@@ -2540,55 +2539,55 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
-<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
+<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
+<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
 <LI><a href="#[106]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IsPositionReached
-<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
+<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 <LI><a href="#[1b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_project_reference
 <LI><a href="#[1b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_limit_speed
 <LI><a href="#[1b4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_limit_accel_change
 <LI><a href="#[1a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_reference_update
-<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_update
+<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_update
 </UL>
 
-<P><STRONG><a name="[18d]"></a>__mathlib_flt_divzero</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_divzero))
-<BR><BR>[Called By]<UL><LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<P><STRONG><a name="[18c]"></a>__mathlib_flt_divzero</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_divzero))
+<BR><BR>[Called By]<UL><LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
 </UL>
 
-<P><STRONG><a name="[189]"></a>__mathlib_flt_infnan</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_infnan))
-<BR><BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<P><STRONG><a name="[188]"></a>__mathlib_flt_infnan</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_infnan))
+<BR><BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
 </UL>
 
-<P><STRONG><a name="[186]"></a>__mathlib_flt_infnan2</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_infnan2))
-<BR><BR>[Called By]<UL><LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
-<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
+<P><STRONG><a name="[185]"></a>__mathlib_flt_infnan2</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_infnan2))
+<BR><BR>[Called By]<UL><LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
 </UL>
 
-<P><STRONG><a name="[188]"></a>__mathlib_flt_invalid</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_invalid))
-<BR><BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<P><STRONG><a name="[187]"></a>__mathlib_flt_invalid</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_invalid))
+<BR><BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
 </UL>
 
-<P><STRONG><a name="[18c]"></a>__mathlib_flt_overflow</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_overflow))
-<BR><BR>[Called By]<UL><LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<P><STRONG><a name="[18b]"></a>__mathlib_flt_overflow</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_overflow))
+<BR><BR>[Called By]<UL><LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
 </UL>
 
-<P><STRONG><a name="[185]"></a>__mathlib_flt_underflow</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_underflow))
-<BR><BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
-<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
+<P><STRONG><a name="[184]"></a>__mathlib_flt_underflow</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, funder.o(i.__mathlib_flt_underflow))
+<BR><BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_powf
+<LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
 </UL>
 
-<P><STRONG><a name="[187]"></a>__mathlib_rredf2</STRONG> (Thumb, 316 bytes, Stack size 20 bytes, rredf.o(i.__mathlib_rredf2))
+<P><STRONG><a name="[186]"></a>__mathlib_rredf2</STRONG> (Thumb, 316 bytes, Stack size 20 bytes, rredf.o(i.__mathlib_rredf2))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = __mathlib_rredf2
 </UL>
-<BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
 </UL>
 
 <P><STRONG><a name="[83]"></a>_is_digit</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, __printf_wp.o(i._is_digit))
@@ -2596,7 +2595,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[1e7]"></a>abs_float</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, main.o(i.abs_float))
-<BR><BR>[Called By]<UL><LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_update
+<BR><BR>[Called By]<UL><LI><a href="#[14d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_update
 </UL>
 
 <P><STRONG><a name="[134]"></a>abs_int</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, main.o(i.abs_int))
@@ -2604,29 +2603,29 @@ Global Symbols
 <LI><a href="#[1e4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_error_queue_get_average
 </UL>
 
-<P><STRONG><a name="[160]"></a>ai_tune_apply_pending</STRONG> (Thumb, 32 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_apply_pending))
+<P><STRONG><a name="[15f]"></a>ai_tune_apply_pending</STRONG> (Thumb, 32 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_apply_pending))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = ai_tune_apply_pending &rArr; __aeabi_memcpy4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[11e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy4
 </UL>
-<BR>[Called By]<UL><LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
+<BR>[Called By]<UL><LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
 </UL>
 
-<P><STRONG><a name="[161]"></a>ai_tune_get_active</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, ai_tune.o(i.ai_tune_get_active))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
+<P><STRONG><a name="[160]"></a>ai_tune_get_active</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, ai_tune.o(i.ai_tune_get_active))
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
 </UL>
 
-<P><STRONG><a name="[17f]"></a>ai_tune_guard_update</STRONG> (Thumb, 198 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_guard_update))
+<P><STRONG><a name="[17e]"></a>ai_tune_guard_update</STRONG> (Thumb, 198 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_guard_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = ai_tune_guard_update &rArr; __aeabi_memcpy4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[11e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy4
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[18e]"></a>ai_tune_init</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_init))
+<P><STRONG><a name="[18d]"></a>ai_tune_init</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = ai_tune_init &rArr; __aeabi_memcpy4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[11e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy4
@@ -2634,27 +2633,27 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[180]"></a>ai_tune_is_guarded</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, ai_tune.o(i.ai_tune_is_guarded))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<P><STRONG><a name="[17f]"></a>ai_tune_is_guarded</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, ai_tune.o(i.ai_tune_is_guarded))
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[162]"></a>ai_tune_segment_start</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_segment_start))
+<P><STRONG><a name="[161]"></a>ai_tune_segment_start</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, ai_tune.o(i.ai_tune_segment_start))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = ai_tune_segment_start
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
+<BR>[Called By]<UL><LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
 </UL>
 
-<P><STRONG><a name="[16c]"></a>ai_tune_uart_idle_irq</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, ai_tune.o(i.ai_tune_uart_idle_irq))
+<P><STRONG><a name="[16b]"></a>ai_tune_uart_idle_irq</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, ai_tune.o(i.ai_tune_uart_idle_irq))
 <BR><BR>[Called By]<UL><LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART5_IRQHandler
 </UL>
 
 <P><STRONG><a name="[95]"></a>can_ReceiveFifo0</STRONG> (Thumb, 108 bytes, Stack size 56 bytes, can.o(i.can_ReceiveFifo0))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = can_ReceiveFifo0 &rArr; HAL_CAN_GetRxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_GetRxMessage
-<LI><a href="#[190]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_GetRxFifoFillLevel
+<BR>[Calls]<UL><LI><a href="#[18e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_GetRxMessage
+<LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_GetRxFifoFillLevel
 <LI><a href="#[11e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy4
 </UL>
 <BR>[Called By]<UL><LI><a href="#[22]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CAN1_RX0_IRQHandler
@@ -2672,51 +2671,51 @@ Global Symbols
 <LI><a href="#[9e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Stop_Now
 </UL>
 
-<P><STRONG><a name="[179]"></a>feedforward_accel_update</STRONG> (Thumb, 100 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_accel_update))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<P><STRONG><a name="[178]"></a>feedforward_accel_update</STRONG> (Thumb, 100 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_accel_update))
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[17a]"></a>feedforward_accel_x</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_accel_x))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<P><STRONG><a name="[179]"></a>feedforward_accel_x</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_accel_x))
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[17b]"></a>feedforward_accel_y</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_accel_y))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<P><STRONG><a name="[17a]"></a>feedforward_accel_y</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_accel_y))
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[144]"></a>feedforward_reset</STRONG> (Thumb, 24 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_reset))
-<BR><BR>[Called By]<UL><LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
+<P><STRONG><a name="[143]"></a>feedforward_reset</STRONG> (Thumb, 24 bytes, Stack size 0 bytes, feedforward.o(i.feedforward_reset))
+<BR><BR>[Called By]<UL><LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
 </UL>
 
-<P><STRONG><a name="[17d]"></a>fuzzy_pid_calc</STRONG> (Thumb, 210 bytes, Stack size 56 bytes, fuzzy.o(i.fuzzy_pid_calc))
+<P><STRONG><a name="[17c]"></a>fuzzy_pid_calc</STRONG> (Thumb, 210 bytes, Stack size 56 bytes, fuzzy.o(i.fuzzy_pid_calc))
 <BR><BR>[Stack]<UL><LI>Max Depth = 88<LI>Call Chain = fuzzy_pid_calc &rArr; __hardfp_fmaxf &rArr; __ARM_fcmp4
 </UL>
-<BR>[Calls]<UL><LI><a href="#[18a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_fmaxf
-<LI><a href="#[194]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc_angle
-<LI><a href="#[195]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
-<LI><a href="#[193]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_level
+<BR>[Calls]<UL><LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_fmaxf
+<LI><a href="#[193]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc_angle
+<LI><a href="#[194]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
+<LI><a href="#[192]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_level
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[78]"></a>main</STRONG> (Thumb, 386 bytes, Stack size 16 bytes, main.o(i.main))
+<P><STRONG><a name="[78]"></a>main</STRONG> (Thumb, 394 bytes, Stack size 16 bytes, main.o(i.main))
 <BR><BR>[Stack]<UL><LI>Max Depth = 248<LI>Call Chain = main &rArr; MX_FREERTOS_Init &rArr; osThreadCreate &rArr; xTaskCreate &rArr; pvPortMalloc &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[19a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_init
 <LI><a href="#[19c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_enable
-<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;turnplate_sync_position
+<LI><a href="#[198]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;turnplate_sync_position
 <LI><a href="#[19d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osKernelStart
-<LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
+<LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
 <LI><a href="#[199]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_init
-<LI><a href="#[18e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_init
-<LI><a href="#[196]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Usart4_DMA_IDLE_Init
-<LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USER_CAN1_Filter_Init
-<LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
-<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
+<LI><a href="#[18d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ai_tune_init
+<LI><a href="#[195]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Usart4_DMA_IDLE_Init
+<LI><a href="#[16f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USER_CAN1_Filter_Init
+<LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
 <LI><a href="#[19b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PoseCoordination_Init
 <LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Mecanum_SendVelocity
-<LI><a href="#[198]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Mecanum_Init
+<LI><a href="#[197]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Mecanum_Init
 <LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USART6_UART_Init
 <LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USART3_UART_Init
 <LI><a href="#[12e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USART1_UART_Init
@@ -2744,125 +2743,125 @@ Global Symbols
 <LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Init
 <LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[be]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_Start
-<LI><a href="#[197]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_ActivateNotification
+<LI><a href="#[196]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_ActivateNotification
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Pos_Control
 <LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Emm_V5_Origin_Interrupt
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AttitudeStabilization_Init
-<LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
+<LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemClock_Config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[77]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_entry_main
 </UL>
 
 <P><STRONG><a name="[1a6]"></a>motion_path_stop</STRONG> (Thumb, 86 bytes, Stack size 0 bytes, motion.o(i.motion_path_stop))
-<BR><BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<BR><BR>[Called By]<UL><LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
 </UL>
 
-<P><STRONG><a name="[147]"></a>motion_path_update</STRONG> (Thumb, 430 bytes, Stack size 40 bytes, motion.o(i.motion_path_update))
+<P><STRONG><a name="[146]"></a>motion_path_update</STRONG> (Thumb, 430 bytes, Stack size 40 bytes, motion.o(i.motion_path_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 260<LI>Call Chain = motion_path_update &rArr; motion_path_set_progress &rArr; motion_path_reference_update &rArr; motion_path_eval &rArr; motion_circle_eval &rArr; __hardfp_sinf &rArr; __mathlib_rredf2
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
 <LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
-<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
-<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2f
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_get_yaw_deg
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
 <LI><a href="#[1a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_set_progress
 <LI><a href="#[1a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_project_progress
 <LI><a href="#[1a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_speed
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
-<P><STRONG><a name="[17c]"></a>motion_plan_accel</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_accel))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<P><STRONG><a name="[17b]"></a>motion_plan_accel</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_accel))
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[17e]"></a>motion_plan_cruise</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_cruise))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<P><STRONG><a name="[17d]"></a>motion_plan_cruise</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_cruise))
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 </UL>
 
-<P><STRONG><a name="[140]"></a>motion_plan_init</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_init))
-<BR><BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_reset
+<P><STRONG><a name="[13f]"></a>motion_plan_init</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_init))
+<BR><BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
-</UL>
-
-<P><STRONG><a name="[143]"></a>motion_plan_reset</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_reset))
-<BR><BR>[Called By]<UL><LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_init
+<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
 </UL>
 
-<P><STRONG><a name="[142]"></a>motion_plan_set_cruise</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_set_cruise))
-<BR><BR>[Called By]<UL><LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
+<P><STRONG><a name="[142]"></a>motion_plan_reset</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_reset))
+<BR><BR>[Called By]<UL><LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionPlanner_Reset
+<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_init
+</UL>
+
+<P><STRONG><a name="[141]"></a>motion_plan_set_cruise</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_set_cruise))
+<BR><BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
 </UL>
 
 <P><STRONG><a name="[1a4]"></a>motion_plan_speed</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_speed))
-<BR><BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<BR><BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
 </UL>
 
-<P><STRONG><a name="[178]"></a>motion_plan_update</STRONG> (Thumb, 256 bytes, Stack size 24 bytes, motion_plan.o(i.motion_plan_update))
+<P><STRONG><a name="[177]"></a>motion_plan_update</STRONG> (Thumb, 256 bytes, Stack size 24 bytes, motion_plan.o(i.motion_plan_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = motion_plan_update &rArr; __hardfp_sqrtf &rArr; __set_errno
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
 <LI><a href="#[1a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_limit
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
-<P><STRONG><a name="[13c]"></a>motion_reset</STRONG> (Thumb, 120 bytes, Stack size 8 bytes, motion.o(i.motion_reset))
+<P><STRONG><a name="[13b]"></a>motion_reset</STRONG> (Thumb, 120 bytes, Stack size 8 bytes, motion.o(i.motion_reset))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = motion_reset &rArr; motion_observer_reset &rArr; __aeabi_memclr4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_get_yaw_deg
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
 <LI><a href="#[1a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_stop
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_reset
 <LI><a href="#[19f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_reset
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_reset
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_reset
+<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_reset
+<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<BR>[Called By]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 <LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_prepare_material_turnplate
 <LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_pick_trophies
 </UL>
 
-<P><STRONG><a name="[15c]"></a>motion_set_linear_velocity</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion.o(i.motion_set_linear_velocity))
-<BR><BR>[Calls]<UL><LI><a href="#[165]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_velocity
+<P><STRONG><a name="[15b]"></a>motion_set_linear_velocity</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion.o(i.motion_set_linear_velocity))
+<BR><BR>[Calls]<UL><LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_velocity
 </UL>
-<BR>[Called By]<UL><LI><a href="#[15b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetLinearVelocity
+<BR>[Called By]<UL><LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetLinearVelocity
 </UL>
 
-<P><STRONG><a name="[165]"></a>motion_set_velocity</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion.o(i.motion_set_velocity))
-<BR><BR>[Called By]<UL><LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_linear_velocity
-<LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetVelocity
+<P><STRONG><a name="[164]"></a>motion_set_velocity</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, motion.o(i.motion_set_velocity))
+<BR><BR>[Called By]<UL><LI><a href="#[15b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_set_linear_velocity
+<LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetVelocity
 </UL>
 
 <P><STRONG><a name="[1a7]"></a>move_to_pose_target</STRONG> (Thumb, 68 bytes, Stack size 8 bytes, motion.o(i.move_to_pose_target))
 <BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = move_to_pose_target &rArr; SetTargetPose &rArr; SetTargetPosition &rArr; position_mpc_reset &rArr; __aeabi_memclr4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
-<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PoseCoordination_Enable
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;stop
+<LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
+<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PoseCoordination_Enable
 <LI><a href="#[104]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IsPoseReached
 </UL>
 <BR>[Called By]<UL><LI><a href="#[1cf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_move_target
 </UL>
 
 <P><STRONG><a name="[93]"></a>odometer_get_yaw_deg</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, odometer.o(i.odometer_get_yaw_deg))
-<BR><BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
-<LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
-<LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
+<BR><BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
+<LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
+<LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AttitudeStabilization_Init
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
 <LI><a href="#[105]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IsYawReached
 </UL>
 
@@ -2874,21 +2873,21 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[154]"></a>odometer_is_zeroed</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, odometer.o(i.odometer_is_zeroed))
-<BR><BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<P><STRONG><a name="[153]"></a>odometer_is_zeroed</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, odometer.o(i.odometer_is_zeroed))
+<BR><BR>[Called By]<UL><LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 </UL>
 
-<P><STRONG><a name="[152]"></a>odometer_request_zero</STRONG> (Thumb, 64 bytes, Stack size 16 bytes, odometer.o(i.odometer_request_zero))
+<P><STRONG><a name="[151]"></a>odometer_request_zero</STRONG> (Thumb, 64 bytes, Stack size 16 bytes, odometer.o(i.odometer_request_zero))
 <BR><BR>[Stack]<UL><LI>Max Depth = 80<LI>Call Chain = odometer_request_zero &rArr; HAL_UART_Transmit &rArr; UART_WaitOnFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[102]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Transmit
 <LI><a href="#[1aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_crc16
 </UL>
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 </UL>
 
-<P><STRONG><a name="[16b]"></a>odometer_rx_parse</STRONG> (Thumb, 120 bytes, Stack size 24 bytes, odometer.o(i.odometer_rx_parse))
+<P><STRONG><a name="[16a]"></a>odometer_rx_parse</STRONG> (Thumb, 120 bytes, Stack size 24 bytes, odometer.o(i.odometer_rx_parse))
 <BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = odometer_rx_parse &rArr; odometer_update_pose &rArr; odometer_observer_update &rArr; odometer_observer_reset &rArr; __aeabi_memclr4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_update_pose
@@ -2897,7 +2896,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[42]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART4_IRQHandler
 </UL>
 
-<P><STRONG><a name="[168]"></a>osDelay</STRONG> (Thumb, 14 bytes, Stack size 8 bytes, cmsis_os.o(i.osDelay))
+<P><STRONG><a name="[167]"></a>osDelay</STRONG> (Thumb, 14 bytes, Stack size 8 bytes, cmsis_os.o(i.osDelay))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = osDelay &rArr; vTaskDelay &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelay
@@ -2925,22 +2924,22 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[11d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_FREERTOS_Init
 </UL>
 
-<P><STRONG><a name="[195]"></a>pid_calc</STRONG> (Thumb, 158 bytes, Stack size 16 bytes, pid.o(i.pid_calc))
+<P><STRONG><a name="[194]"></a>pid_calc</STRONG> (Thumb, 158 bytes, Stack size 16 bytes, pid.o(i.pid_calc))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = pid_calc
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_limit
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
-<LI><a href="#[194]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc_angle
-<LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
+<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_update
+<LI><a href="#[193]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc_angle
+<LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
 </UL>
 
-<P><STRONG><a name="[194]"></a>pid_calc_angle</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, pid.o(i.pid_calc_angle))
+<P><STRONG><a name="[193]"></a>pid_calc_angle</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, pid.o(i.pid_calc_angle))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = pid_calc_angle &rArr; pid_calc
 </UL>
-<BR>[Calls]<UL><LI><a href="#[195]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
+<BR>[Calls]<UL><LI><a href="#[194]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
+<BR>[Called By]<UL><LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
 </UL>
 
 <P><STRONG><a name="[1b2]"></a>pid_calc_cam</STRONG> (Thumb, 174 bytes, Stack size 16 bytes, pid.o(i.pid_calc_cam))
@@ -2948,11 +2947,11 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_limit
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_update
+<BR>[Called By]<UL><LI><a href="#[14d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_update
 </UL>
 
 <P><STRONG><a name="[91]"></a>pid_init</STRONG> (Thumb, 38 bytes, Stack size 0 bytes, pid.o(i.pid_init))
-<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
+<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AttitudeStabilization_Init
 <LI><a href="#[1b3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_init_cam
 <LI><a href="#[1da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_start
@@ -2966,8 +2965,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[19a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_init
 </UL>
 
-<P><STRONG><a name="[13f]"></a>pid_set_integral_limit</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, pid.o(i.pid_set_integral_limit))
-<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
+<P><STRONG><a name="[13e]"></a>pid_set_integral_limit</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, pid.o(i.pid_set_integral_limit))
+<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Init
 </UL>
 
 <P><STRONG><a name="[1c6]"></a>pvPortMalloc</STRONG> (Thumb, 216 bytes, Stack size 24 bytes, heap_4.o(i.pvPortMalloc))
@@ -2987,8 +2986,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[1c3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvInitialiseNewTask
 </UL>
 
-<P><STRONG><a name="[156]"></a>run_task1</STRONG> (Thumb, 330 bytes, Stack size 8 bytes, task1.o(i.run_task1))
-<BR><BR>[Stack]<UL><LI>Max Depth = 188<LI>Call Chain = run_task1 &rArr; task1_relative_action &rArr; POS_move &rArr; Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<P><STRONG><a name="[155]"></a>run_task1</STRONG> (Thumb, 344 bytes, Stack size 8 bytes, task1.o(i.run_task1))
+<BR><BR>[Stack]<UL><LI>Max Depth = 196<LI>Call Chain = run_task1 &rArr; task1_relative_action &rArr; POS_move &rArr; Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
@@ -3003,10 +3002,10 @@ Global Symbols
 <LI><a href="#[1cd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_material_point
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
 <LI><a href="#[1d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_finish
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
 <LI><a href="#[106]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IsPositionReached
 </UL>
-<BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<BR>[Called By]<UL><LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 </UL>
 
 <P><STRONG><a name="[1d6]"></a>servo_init</STRONG> (Thumb, 30 bytes, Stack size 8 bytes, servo.o(i.servo_init))
@@ -3014,7 +3013,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[ef]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PWM_Start
 </UL>
-<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<BR>[Called By]<UL><LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
 </UL>
 
 <P><STRONG><a name="[1d7]"></a>servo_smooth_move_start</STRONG> (Thumb, 126 bytes, Stack size 32 bytes, servo.o(i.servo_smooth_move_start))
@@ -3034,63 +3033,62 @@ Global Symbols
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
 </UL>
 
-<P><STRONG><a name="[155]"></a>start_task1</STRONG> (Thumb, 84 bytes, Stack size 16 bytes, task1.o(i.start_task1))
+<P><STRONG><a name="[154]"></a>start_task1</STRONG> (Thumb, 84 bytes, Stack size 16 bytes, task1.o(i.start_task1))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = start_task1 &rArr; Servo_Action_Group &rArr; HAL_Delay
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
 <LI><a href="#[1d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;servo_init
-<LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
+<LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_stop
 <LI><a href="#[1a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_stop
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
 </UL>
-<BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
+<BR>[Called By]<UL><LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_ServiceTick
 </UL>
 
-<P><STRONG><a name="[13a]"></a>stop</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, motion.o(i.stop))
-<BR><BR>[Calls]<UL><LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetVelocity
+<P><STRONG><a name="[139]"></a>stop</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, motion.o(i.stop))
+<BR><BR>[Calls]<UL><LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetVelocity
 </UL>
-<BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 <LI><a href="#[1a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;move_to_pose_target
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
 </UL>
 
-<P><STRONG><a name="[14a]"></a>task1_arc_control_update</STRONG> (Thumb, 266 bytes, Stack size 32 bytes, task1.o(i.task1_arc_control_update))
+<P><STRONG><a name="[149]"></a>task1_arc_control_update</STRONG> (Thumb, 266 bytes, Stack size 32 bytes, task1.o(i.task1_arc_control_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = task1_arc_control_update &rArr; __hardfp_sinf &rArr; __mathlib_rredf2
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
-<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
-<LI><a href="#[195]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
-<LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetVelocity
+<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<LI><a href="#[194]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
+<LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetVelocity
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
 <P><STRONG><a name="[1dc]"></a>task1_arc_set_omega</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, task1.o(i.task1_arc_set_omega))
 <BR><BR>[Called By]<UL><LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_prepare_material_turnplate
 </UL>
 
-<P><STRONG><a name="[14b]"></a>task1_podium_prepare_update</STRONG> (Thumb, 60 bytes, Stack size 16 bytes, task1.o(i.task1_podium_prepare_update))
-<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = task1_podium_prepare_update &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<P><STRONG><a name="[14a]"></a>task1_podium_prepare_update</STRONG> (Thumb, 60 bytes, Stack size 16 bytes, task1.o(i.task1_podium_prepare_update))
+<BR><BR>[Stack]<UL><LI>Max Depth = 164<LI>Call Chain = task1_podium_prepare_update &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
-<LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
+<LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
-<P><STRONG><a name="[136]"></a>turnplate_sync_position</STRONG> (Thumb, 32 bytes, Stack size 0 bytes, task1.o(i.turnplate_sync_position))
+<P><STRONG><a name="[198]"></a>turnplate_sync_position</STRONG> (Thumb, 32 bytes, Stack size 0 bytes, task1.o(i.turnplate_sync_position))
 <BR><BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 </UL>
 
 <P><STRONG><a name="[1ba]"></a>uxListRemove</STRONG> (Thumb, 38 bytes, Stack size 0 bytes, list.o(i.uxListRemove))
-<BR><BR>[Called By]<UL><LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
+<BR><BR>[Called By]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
 <LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvIdleTask
 <LI><a href="#[1b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvAddCurrentTaskToDelayedList
 <LI><a href="#[1ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskResumeAll
@@ -3115,7 +3113,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[1bb]"></a>vListInsertEnd</STRONG> (Thumb, 24 bytes, Stack size 0 bytes, list.o(i.vListInsertEnd))
-<BR><BR>[Called By]<UL><LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
+<BR><BR>[Called By]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
 <LI><a href="#[1bd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvAddNewTaskToReadyList
 <LI><a href="#[1b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvAddCurrentTaskToDelayedList
 <LI><a href="#[1ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskResumeAll
@@ -3155,10 +3153,10 @@ Global Symbols
 <LI><a href="#[1ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskResumeAll
 <LI><a href="#[1c7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskSuspendAll
 </UL>
-<BR>[Called By]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
+<BR>[Called By]<UL><LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
 </UL>
 
-<P><STRONG><a name="[167]"></a>vTaskDelayUntil</STRONG> (Thumb, 132 bytes, Stack size 16 bytes, tasks.o(i.vTaskDelayUntil))
+<P><STRONG><a name="[166]"></a>vTaskDelayUntil</STRONG> (Thumb, 132 bytes, Stack size 16 bytes, tasks.o(i.vTaskDelayUntil))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = vTaskDelayUntil &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvAddCurrentTaskToDelayedList
@@ -3179,7 +3177,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[1c7]"></a>vTaskSuspendAll</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, tasks.o(i.vTaskSuspendAll))
-<BR><BR>[Called By]<UL><LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
+<BR><BR>[Called By]<UL><LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
 <LI><a href="#[1ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelay
 <LI><a href="#[1c2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vPortFree
 <LI><a href="#[1c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pvPortMalloc
@@ -3195,7 +3193,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[19c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_enable
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
 <LI><a href="#[1e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_is_reached
 </UL>
 <BR>[Called By]<UL><LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_relative_action
@@ -3214,19 +3212,19 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[14d]"></a>vision_process_usart1_packet</STRONG> (Thumb, 112 bytes, Stack size 16 bytes, vision.o(i.vision_process_usart1_packet))
+<P><STRONG><a name="[14c]"></a>vision_process_usart1_packet</STRONG> (Thumb, 126 bytes, Stack size 16 bytes, vision.o(i.vision_process_usart1_packet))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = vision_process_usart1_packet
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
-<P><STRONG><a name="[14e]"></a>vision_update</STRONG> (Thumb, 170 bytes, Stack size 32 bytes, vision.o(i.vision_update))
+<P><STRONG><a name="[14d]"></a>vision_update</STRONG> (Thumb, 170 bytes, Stack size 32 bytes, vision.o(i.vision_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = vision_update &rArr; pid_calc_cam
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1e7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;abs_float
 <LI><a href="#[1b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc_cam
 </UL>
-<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
+<BR>[Called By]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Robot_RealtimeControl
 </UL>
 
 <P><STRONG><a name="[1e0]"></a>vision_wait_for_uart</STRONG> (Thumb, 52 bytes, Stack size 16 bytes, vision.o(i.vision_wait_for_uart))
@@ -3269,11 +3267,11 @@ Global Symbols
 <LI><a href="#[1ad]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskStartScheduler
 </UL>
 
-<P><STRONG><a name="[166]"></a>xTaskGetTickCount</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, tasks.o(i.xTaskGetTickCount))
+<P><STRONG><a name="[165]"></a>xTaskGetTickCount</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, tasks.o(i.xTaskGetTickCount))
 <BR><BR>[Called By]<UL><LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartControlTask
 </UL>
 
-<P><STRONG><a name="[169]"></a>xTaskIncrementTick</STRONG> (Thumb, 194 bytes, Stack size 24 bytes, tasks.o(i.xTaskIncrementTick))
+<P><STRONG><a name="[168]"></a>xTaskIncrementTick</STRONG> (Thumb, 194 bytes, Stack size 24 bytes, tasks.o(i.xTaskIncrementTick))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1eb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvResetNextTaskUnblockTime
@@ -3287,14 +3285,14 @@ Global Symbols
 <P><STRONG><a name="[1ca]"></a>xTaskResumeAll</STRONG> (Thumb, 182 bytes, Stack size 32 bytes, tasks.o(i.xTaskResumeAll))
 <BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
-<BR>[Calls]<UL><LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
+<BR>[Calls]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
 <LI><a href="#[1eb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvResetNextTaskUnblockTime
 <LI><a href="#[1bb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vListInsertEnd
 <LI><a href="#[1ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;uxListRemove
 <LI><a href="#[1c0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vPortExitCritical
 <LI><a href="#[1be]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vPortEnterCritical
 </UL>
-<BR>[Called By]<UL><LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
+<BR>[Called By]<UL><LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
 <LI><a href="#[1ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelay
 <LI><a href="#[1c2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vPortFree
 <LI><a href="#[1c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pvPortMalloc
@@ -3304,10 +3302,10 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[1ec]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_fcmp4
 </UL>
 
-<P><STRONG><a name="[18b]"></a>__ARM_fcmp4</STRONG> (Thumb, 0 bytes, Stack size 16 bytes, fcmp4.o(x$fpl$fcmp4))
+<P><STRONG><a name="[18a]"></a>__ARM_fcmp4</STRONG> (Thumb, 0 bytes, Stack size 16 bytes, fcmp4.o(x$fpl$fcmp4))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = __ARM_fcmp4
 </UL>
-<BR>[Called By]<UL><LI><a href="#[18a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_fmaxf
+<BR>[Called By]<UL><LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_fmaxf
 </UL>
 
 <P><STRONG><a name="[1ec]"></a>_fcmp4</STRONG> (Thumb, 58 bytes, Stack size 16 bytes, fcmp4.o(x$fpl$fcmp4), UNUSED)
@@ -3338,8 +3336,8 @@ Local Symbols
 <P><STRONG><a name="[bf]"></a>can_tx_kick</STRONG> (Thumb, 66 bytes, Stack size 24 bytes, can.o(i.can_tx_kick))
 <BR><BR>[Stack]<UL><LI>Max Depth = 44<LI>Call Chain = can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[192]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_GetTxMailboxesFreeLevel
-<LI><a href="#[191]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_AddTxMessage
+<BR>[Calls]<UL><LI><a href="#[191]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_GetTxMailboxesFreeLevel
+<LI><a href="#[190]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_AddTxMessage
 </UL>
 <BR>[Called By]<UL><LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;can_SendCmd
 <LI><a href="#[b3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_CAN_TxMailbox2CompleteCallback
@@ -3426,7 +3424,7 @@ Local Symbols
 <P><STRONG><a name="[64]"></a>UART_DMAReceiveCplt</STRONG> (Thumb, 134 bytes, Stack size 8 bytes, stm32f4xx_hal_uart.o(i.UART_DMAReceiveCplt))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = UART_DMAReceiveCplt
 </UL>
-<BR>[Calls]<UL><LI><a href="#[16d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_RxCpltCallback
+<BR>[Calls]<UL><LI><a href="#[16c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_RxCpltCallback
 <LI><a href="#[f9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UARTEx_RxEventCallback
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> stm32f4xx_hal_uart.o(i.UART_Start_Receive_DMA)
@@ -3434,7 +3432,7 @@ Local Symbols
 <P><STRONG><a name="[65]"></a>UART_DMARxHalfCplt</STRONG> (Thumb, 30 bytes, Stack size 8 bytes, stm32f4xx_hal_uart.o(i.UART_DMARxHalfCplt))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = UART_DMARxHalfCplt
 </UL>
-<BR>[Calls]<UL><LI><a href="#[16e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_RxHalfCpltCallback
+<BR>[Calls]<UL><LI><a href="#[16d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_RxHalfCpltCallback
 <LI><a href="#[f9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UARTEx_RxEventCallback
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> stm32f4xx_hal_uart.o(i.UART_Start_Receive_DMA)
@@ -3460,7 +3458,7 @@ Local Symbols
 <P><STRONG><a name="[f6]"></a>UART_Receive_IT</STRONG> (Thumb, 194 bytes, Stack size 8 bytes, stm32f4xx_hal_uart.o(i.UART_Receive_IT))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = UART_Receive_IT
 </UL>
-<BR>[Calls]<UL><LI><a href="#[16d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_RxCpltCallback
+<BR>[Calls]<UL><LI><a href="#[16c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_RxCpltCallback
 <LI><a href="#[f9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UARTEx_RxEventCallback
 </UL>
 <BR>[Called By]<UL><LI><a href="#[f5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_IRQHandler
@@ -3469,7 +3467,7 @@ Local Symbols
 <P><STRONG><a name="[fd]"></a>UART_SetConfig</STRONG> (Thumb, 258 bytes, Stack size 16 bytes, stm32f4xx_hal_uart.o(i.UART_SetConfig))
 <BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = UART_SetConfig &rArr; __aeabi_uldivmod
 </UL>
-<BR>[Calls]<UL><LI><a href="#[16f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_GetPCLK2Freq
+<BR>[Calls]<UL><LI><a href="#[16e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_GetPCLK2Freq
 <LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_GetPCLK1Freq
 <LI><a href="#[d4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_uldivmod
 </UL>
@@ -3492,7 +3490,7 @@ Local Symbols
 <LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_Init
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
 </UL>
-<BR>[Called By]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
+<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_LCD_Init
 </UL>
 
 <P><STRONG><a name="[1e4]"></a>vision_error_queue_get_average</STRONG> (Thumb, 134 bytes, Stack size 32 bytes, vision.o(i.vision_error_queue_get_average))
@@ -3524,55 +3522,55 @@ Local Symbols
 </UL>
 
 <P><STRONG><a name="[1b1]"></a>pid_limit</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, pid.o(i.pid_limit))
-<BR><BR>[Called By]<UL><LI><a href="#[195]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
+<BR><BR>[Called By]<UL><LI><a href="#[194]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc
 <LI><a href="#[1b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pid_calc_cam
 </UL>
 
-<P><STRONG><a name="[193]"></a>fuzzy_level</STRONG> (Thumb, 40 bytes, Stack size 0 bytes, fuzzy.o(i.fuzzy_level))
-<BR><BR>[Called By]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
+<P><STRONG><a name="[192]"></a>fuzzy_level</STRONG> (Thumb, 40 bytes, Stack size 0 bytes, fuzzy.o(i.fuzzy_level))
+<BR><BR>[Called By]<UL><LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;fuzzy_pid_calc
 </UL>
 
 <P><STRONG><a name="[1a5]"></a>motion_plan_limit</STRONG> (Thumb, 32 bytes, Stack size 0 bytes, motion_plan.o(i.motion_plan_limit))
-<BR><BR>[Called By]<UL><LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_update
+<BR><BR>[Called By]<UL><LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_update
 </UL>
 
 <P><STRONG><a name="[132]"></a>ClampFloat</STRONG> (Thumb, 32 bytes, Stack size 0 bytes, motion.o(i.ClampFloat))
-<BR><BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
-<LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
+<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
+<LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
 <LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Mecanum_Kinematics
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
-<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
+<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
 <LI><a href="#[1b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_project_reference
 <LI><a href="#[1a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_set_progress
 <LI><a href="#[1a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_project_progress
-<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
+<LI><a href="#[171]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
 </UL>
 
-<P><STRONG><a name="[15e]"></a>NormalizeYawError</STRONG> (Thumb, 40 bytes, Stack size 0 bytes, motion.o(i.NormalizeYawError))
-<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
-<LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
-<LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
-<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
-<LI><a href="#[173]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
+<P><STRONG><a name="[15d]"></a>NormalizeYawError</STRONG> (Thumb, 40 bytes, Stack size 0 bytes, motion.o(i.NormalizeYawError))
+<BR><BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePoseCoordination
+<LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
+<LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
+<LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPose
+<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;yaw_plan_update
 </UL>
 
-<P><STRONG><a name="[13d]"></a>PositionPlanner_Reset</STRONG> (Thumb, 14 bytes, Stack size 8 bytes, motion.o(i.PositionPlanner_Reset))
+<P><STRONG><a name="[13c]"></a>PositionPlanner_Reset</STRONG> (Thumb, 14 bytes, Stack size 8 bytes, motion.o(i.PositionPlanner_Reset))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = PositionPlanner_Reset
 </UL>
-<BR>[Calls]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_reset
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_reset
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;feedforward_reset
+<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
-<LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
 </UL>
 
 <P><STRONG><a name="[19e]"></a>motion_circle_eval</STRONG> (Thumb, 350 bytes, Stack size 80 bytes, motion.o(i.motion_circle_eval))
 <BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = motion_circle_eval &rArr; __hardfp_sinf &rArr; __mathlib_rredf2
 </UL>
-<BR>[Calls]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<BR>[Calls]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[1a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_eval
 </UL>
@@ -3583,19 +3581,19 @@ Local Symbols
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
-<LI><a href="#[172]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
+<BR>[Called By]<UL><LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[171]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_update
 </UL>
 
-<P><STRONG><a name="[172]"></a>motion_observer_update</STRONG> (Thumb, 258 bytes, Stack size 16 bytes, motion.o(i.motion_observer_update))
+<P><STRONG><a name="[171]"></a>motion_observer_update</STRONG> (Thumb, 258 bytes, Stack size 16 bytes, motion.o(i.motion_observer_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = motion_observer_update &rArr; motion_observer_reset &rArr; __aeabi_memclr4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[19f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_observer_reset
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
-<LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
 </UL>
 
 <P><STRONG><a name="[1a0]"></a>motion_path_eval</STRONG> (Thumb, 18 bytes, Stack size 32 bytes, motion.o(i.motion_path_eval))
@@ -3611,7 +3609,7 @@ Local Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
 </UL>
 
 <P><STRONG><a name="[1a2]"></a>motion_path_reference_update</STRONG> (Thumb, 202 bytes, Stack size 48 bytes, motion.o(i.motion_path_reference_update))
@@ -3629,15 +3627,15 @@ Local Symbols
 <BR>[Calls]<UL><LI><a href="#[1a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_reference_update
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
+<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_path_update
 </UL>
 
 <P><STRONG><a name="[1b7]"></a>position_mpc_clamp_target</STRONG> (Thumb, 60 bytes, Stack size 0 bytes, motion.o(i.position_mpc_clamp_target))
-<BR><BR>[Called By]<UL><LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<BR><BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 </UL>
 
 <P><STRONG><a name="[1b8]"></a>position_mpc_filter_velocity</STRONG> (Thumb, 88 bytes, Stack size 0 bytes, motion.o(i.position_mpc_filter_velocity))
-<BR><BR>[Called By]<UL><LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<BR><BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 </UL>
 
 <P><STRONG><a name="[1b4]"></a>position_mpc_limit_accel_change</STRONG> (Thumb, 70 bytes, Stack size 16 bytes, motion.o(i.position_mpc_limit_accel_change))
@@ -3645,7 +3643,7 @@ Local Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 </UL>
 
 <P><STRONG><a name="[1b5]"></a>position_mpc_limit_speed</STRONG> (Thumb, 78 bytes, Stack size 24 bytes, motion.o(i.position_mpc_limit_speed))
@@ -3653,7 +3651,7 @@ Local Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 </UL>
 
 <P><STRONG><a name="[1b6]"></a>position_mpc_project_reference</STRONG> (Thumb, 304 bytes, Stack size 32 bytes, motion.o(i.position_mpc_project_reference))
@@ -3662,49 +3660,49 @@ Local Symbols
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 </UL>
 
-<P><STRONG><a name="[163]"></a>position_mpc_reset</STRONG> (Thumb, 94 bytes, Stack size 16 bytes, motion.o(i.position_mpc_reset))
+<P><STRONG><a name="[162]"></a>position_mpc_reset</STRONG> (Thumb, 94 bytes, Stack size 16 bytes, motion.o(i.position_mpc_reset))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = position_mpc_reset &rArr; __aeabi_memclr4
 </UL>
 <BR>[Calls]<UL><LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
 </UL>
-<BR>[Called By]<UL><LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
+<BR>[Called By]<UL><LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetPosition
+<LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_update
 </UL>
 
-<P><STRONG><a name="[177]"></a>position_mpc_update</STRONG> (Thumb, 976 bytes, Stack size 120 bytes, motion.o(i.position_mpc_update))
+<P><STRONG><a name="[176]"></a>position_mpc_update</STRONG> (Thumb, 976 bytes, Stack size 120 bytes, motion.o(i.position_mpc_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 176<LI>Call Chain = position_mpc_update &rArr; position_mpc_project_reference &rArr; __hardfp_sqrtf &rArr; __set_errno
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
-<LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_reset
+<LI><a href="#[162]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_reset
 <LI><a href="#[1b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_project_reference
 <LI><a href="#[1b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_limit_speed
 <LI><a href="#[1b4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_limit_accel_change
 <LI><a href="#[1b8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_filter_velocity
 <LI><a href="#[1b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;position_mpc_clamp_target
-<LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_cruise
+<LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_plan_cruise
 </UL>
-<BR>[Called By]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
+<BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdatePositionControl
 </UL>
 
 <P><STRONG><a name="[94]"></a>yaw_plan_reset</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, motion.o(i.yaw_plan_reset))
-<BR><BR>[Called By]<UL><LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
-<LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
+<BR><BR>[Called By]<UL><LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
+<LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AttitudeStabilization_Init
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
 </UL>
 
-<P><STRONG><a name="[173]"></a>yaw_plan_update</STRONG> (Thumb, 154 bytes, Stack size 24 bytes, motion.o(i.yaw_plan_update))
+<P><STRONG><a name="[172]"></a>yaw_plan_update</STRONG> (Thumb, 154 bytes, Stack size 24 bytes, motion.o(i.yaw_plan_update))
 <BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = yaw_plan_update &rArr; __hardfp_sqrtf &rArr; __set_errno
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sqrtf
-<LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
+<LI><a href="#[15d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NormalizeYawError
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ClampFloat
 </UL>
-<BR>[Called By]<UL><LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
+<BR>[Called By]<UL><LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UpdateAttitudeStabilization
 </UL>
 
 <P><STRONG><a name="[1da]"></a>task1_arc_control_start</STRONG> (Thumb, 82 bytes, Stack size 8 bytes, task1.o(i.task1_arc_control_start))
@@ -3717,19 +3715,19 @@ Local Symbols
 </UL>
 
 <P><STRONG><a name="[1d9]"></a>task1_arc_control_stop</STRONG> (Thumb, 26 bytes, Stack size 0 bytes, task1.o(i.task1_arc_control_stop))
-<BR><BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
+<BR><BR>[Called By]<UL><LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;start_task1
 <LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_prepare_material_turnplate
 <LI><a href="#[1d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_pick_trophies
 </UL>
 
 <P><STRONG><a name="[1d5]"></a>task1_finish</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, task1.o(i.task1_finish))
-<BR><BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR><BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
-<P><STRONG><a name="[1cb]"></a>task1_go_first_qrcode</STRONG> (Thumb, 162 bytes, Stack size 24 bytes, task1.o(i.task1_go_first_qrcode))
-<BR><BR>[Stack]<UL><LI>Max Depth = 164<LI>Call Chain = task1_go_first_qrcode &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<P><STRONG><a name="[1cb]"></a>task1_go_first_qrcode</STRONG> (Thumb, 164 bytes, Stack size 24 bytes, task1.o(i.task1_go_first_qrcode))
+<BR><BR>[Stack]<UL><LI>Max Depth = 172<LI>Call Chain = task1_go_first_qrcode &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
+<BR>[Calls]<UL><LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetTargetYaw
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
@@ -3738,9 +3736,9 @@ Local Symbols
 <LI><a href="#[1db]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_qrcode_servo_slowdown
 <LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_next_step
 <LI><a href="#[1cf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_move_target
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
 <P><STRONG><a name="[1cd]"></a>task1_go_material_point</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, task1.o(i.task1_go_material_point))
@@ -3748,31 +3746,31 @@ Local Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_next_step
 <LI><a href="#[1cf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_move_target
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_SetMaxSpeed
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
 <P><STRONG><a name="[1d3]"></a>task1_go_podium_point</STRONG> (Thumb, 76 bytes, Stack size 16 bytes, task1.o(i.task1_go_podium_point))
-<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = task1_go_podium_point &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<BR><BR>[Stack]<UL><LI>Max Depth = 164<LI>Call Chain = task1_go_podium_point &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
+<BR>[Calls]<UL><LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 <LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_next_step
 <LI><a href="#[1cf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_move_target
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
-<P><STRONG><a name="[1ce]"></a>task1_go_second_qrcode</STRONG> (Thumb, 118 bytes, Stack size 16 bytes, task1.o(i.task1_go_second_qrcode))
-<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = task1_go_second_qrcode &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<P><STRONG><a name="[1ce]"></a>task1_go_second_qrcode</STRONG> (Thumb, 120 bytes, Stack size 16 bytes, task1.o(i.task1_go_second_qrcode))
+<BR><BR>[Stack]<UL><LI>Max Depth = 164<LI>Call Chain = task1_go_second_qrcode &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 <LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_next_step
 <LI><a href="#[1cf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_move_target
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
 <P><STRONG><a name="[1cf]"></a>task1_move_target</STRONG> (Thumb, 34 bytes, Stack size 0 bytes, task1.o(i.task1_move_target))
@@ -3780,7 +3778,7 @@ Local Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;move_to_pose_target
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 <LI><a href="#[1ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_second_qrcode
 <LI><a href="#[1d3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_podium_point
 <LI><a href="#[1cd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_material_point
@@ -3792,7 +3790,7 @@ Local Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 <LI><a href="#[1d4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_wait_vision
 <LI><a href="#[1d2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_relative_action
 <LI><a href="#[1ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_second_qrcode
@@ -3801,37 +3799,37 @@ Local Symbols
 <LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
 </UL>
 
-<P><STRONG><a name="[1d1]"></a>task1_pick_trophies</STRONG> (Thumb, 100 bytes, Stack size 16 bytes, task1.o(i.task1_pick_trophies))
+<P><STRONG><a name="[1d1]"></a>task1_pick_trophies</STRONG> (Thumb, 98 bytes, Stack size 8 bytes, task1.o(i.task1_pick_trophies))
 <BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = task1_pick_trophies &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
+<BR>[Calls]<UL><LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_stop
 <LI><a href="#[1da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_start
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
 <P><STRONG><a name="[1cc]"></a>task1_prepare_material_turnplate</STRONG> (Thumb, 194 bytes, Stack size 8 bytes, task1.o(i.task1_prepare_material_turnplate))
-<BR><BR>[Stack]<UL><LI>Max Depth = 148<LI>Call Chain = task1_prepare_material_turnplate &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = task1_prepare_material_turnplate &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
-<BR>[Calls]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
+<BR>[Calls]<UL><LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableAttitudeStabilization
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
-<LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PositionControl_Enable
+<LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
 <LI><a href="#[1dd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Get_Materialcolor
 <LI><a href="#[1dc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_set_omega
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 <LI><a href="#[1d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_stop
 <LI><a href="#[1da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_arc_control_start
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motion_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
 <P><STRONG><a name="[1db]"></a>task1_qrcode_servo_slowdown</STRONG> (Thumb, 86 bytes, Stack size 24 bytes, task1.o(i.task1_qrcode_servo_slowdown))
@@ -3839,28 +3837,28 @@ Local Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;servo_smooth_move_update
 <LI><a href="#[1d7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;servo_smooth_move_start
-<LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
+<LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
 <LI><a href="#[106]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IsPositionReached
 </UL>
 <BR>[Called By]<UL><LI><a href="#[1cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_go_first_qrcode
 </UL>
 
 <P><STRONG><a name="[1d2]"></a>task1_relative_action</STRONG> (Thumb, 234 bytes, Stack size 24 bytes, task1.o(i.task1_relative_action))
-<BR><BR>[Stack]<UL><LI>Max Depth = 180<LI>Call Chain = task1_relative_action &rArr; POS_move &rArr; Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<BR><BR>[Stack]<UL><LI>Max Depth = 188<LI>Call Chain = task1_relative_action &rArr; POS_move &rArr; Pos_moveconctrl &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[1de]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_center
-<LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
+<LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Servo_Action_Group
+<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;POS_move
 <LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 <LI><a href="#[1df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_select_material_turnplate
 <LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_next_step
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
 <P><STRONG><a name="[1df]"></a>task1_select_material_turnplate</STRONG> (Thumb, 114 bytes, Stack size 16 bytes, task1.o(i.task1_select_material_turnplate))
-<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = task1_select_material_turnplate &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
+<BR><BR>[Stack]<UL><LI>Max Depth = 164<LI>Call Chain = task1_select_material_turnplate &rArr; Move_to_turnplate &rArr; Emm_V5_Pos_Control &rArr; can_SendCmd &rArr; can_tx_kick &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Move_to_turnplate
 </UL>
@@ -3873,26 +3871,26 @@ Local Symbols
 <BR>[Calls]<UL><LI><a href="#[1e0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vision_wait_for_uart
 <LI><a href="#[1d0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;task1_next_step
 </UL>
-<BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
+<BR>[Called By]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;run_task1
 </UL>
 
-<P><STRONG><a name="[181]"></a>color_classify</STRONG> (Thumb, 186 bytes, Stack size 20 bytes, qama.o(i.color_classify))
+<P><STRONG><a name="[180]"></a>color_classify</STRONG> (Thumb, 186 bytes, Stack size 20 bytes, qama.o(i.color_classify))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = color_classify
 </UL>
-<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Update_Materialcolor
+<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Update_Materialcolor
 </UL>
 
-<P><STRONG><a name="[182]"></a>color_median</STRONG> (Thumb, 66 bytes, Stack size 16 bytes, qama.o(i.color_median))
+<P><STRONG><a name="[181]"></a>color_median</STRONG> (Thumb, 66 bytes, Stack size 16 bytes, qama.o(i.color_median))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = color_median
 </UL>
-<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Update_Materialcolor
+<BR>[Called By]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Update_Materialcolor
 </UL>
 
 <P><STRONG><a name="[1aa]"></a>odometer_crc16</STRONG> (Thumb, 52 bytes, Stack size 16 bytes, odometer.o(i.odometer_crc16))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = odometer_crc16
 </UL>
-<BR>[Called By]<UL><LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
-<LI><a href="#[16b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_rx_parse
+<BR>[Called By]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_request_zero
+<LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_rx_parse
 </UL>
 
 <P><STRONG><a name="[1a8]"></a>odometer_observer_reset</STRONG> (Thumb, 56 bytes, Stack size 16 bytes, odometer.o(i.odometer_observer_reset))
@@ -3917,12 +3915,12 @@ Local Symbols
 <P><STRONG><a name="[1ab]"></a>odometer_update_pose</STRONG> (Thumb, 248 bytes, Stack size 48 bytes, odometer.o(i.odometer_update_pose))
 <BR><BR>[Stack]<UL><LI>Max Depth = 92<LI>Call Chain = odometer_update_pose &rArr; odometer_observer_update &rArr; odometer_observer_reset &rArr; __aeabi_memclr4
 </UL>
-<BR>[Calls]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
+<BR>[Calls]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_sinf
+<LI><a href="#[174]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_cosf
 <LI><a href="#[1a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_observer_update
 <LI><a href="#[1a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_observer_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[16b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_rx_parse
+<BR>[Called By]<UL><LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;odometer_rx_parse
 </UL>
 
 <P><STRONG><a name="[1b9]"></a>prvAddCurrentTaskToDelayedList</STRONG> (Thumb, 102 bytes, Stack size 24 bytes, tasks.o(i.prvAddCurrentTaskToDelayedList))
@@ -3932,7 +3930,7 @@ Local Symbols
 <LI><a href="#[1bc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vListInsert
 <LI><a href="#[1ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;uxListRemove
 </UL>
-<BR>[Called By]<UL><LI><a href="#[167]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
+<BR>[Called By]<UL><LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
 <LI><a href="#[1ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelay
 </UL>
 
@@ -3977,7 +3975,7 @@ Local Symbols
 </UL>
 
 <P><STRONG><a name="[1eb]"></a>prvResetNextTaskUnblockTime</STRONG> (Thumb, 26 bytes, Stack size 0 bytes, tasks.o(i.prvResetNextTaskUnblockTime))
-<BR><BR>[Called By]<UL><LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
+<BR><BR>[Called By]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskIncrementTick
 <LI><a href="#[1ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskResumeAll
 </UL>
 

@@ -68,18 +68,18 @@ static const Point2D_t task1_targets[] = {
         {336.69f, 949.89f, -68.0f},
         {450.51f, 668.22f, -68.0f},
         {953.85f, 737.46f, -68.0f},
-        {625.0f, 300.25f, 0.0f},
+        {625.0f, 350.25f, 0.0f},
         {1021.66f + 75.0f, 348.24f, -144.0f},
-        {270.0f-25.0f, 1816.29f, -90.0f},
-        {0.0f-25.0f, 1816.29f - 20.0f, -90.0f},
-        {-270.0f-40.0f, 1816.29f - 10.0f, -90.0f},
+        {270.0f-25.0f, 1816.29f- 40.0f, -90.0f},
+        {0.0f-25.0f, 1816.29f - 30.0f, -90.0f},
+        {-270.0f-25.0f, 1816.29f - 15.0f, -90.0f},
         {0.0f, 0.0f, -90.0f},
         {0.0f, 200.25f, 0.0f},
 
 };
 
 /** 伸缩环 PWM 位置表。 */
-const int Telescopic_ring[] = {1500, 1890, 1340, 1800, 1950};
+const int Telescopic_ring[] = {1500, 1890, 1340, 1800, 2100};
 static uint8_t task1_vision_timeout;
 static servo_smooth_move_t task1_qrcode_servo_move;
 static uint8_t task1_qrcode_servo_group1_set;
@@ -87,7 +87,7 @@ static uint8_t task1_qrcode_servo_group2_set;
 /** 到达二维码点后的等待起始时间，单位 ms。 */
 static uint32_t task1_qrcode_wait_start_ms;
 static uint8_t task1_turnplate_last_slot = 0xFFU;
-static uint32_t task1_turnplate_current_pulses;
+static int32_t task1_turnplate_absolute_pulses;
 static uint8_t task1_podium_prepare_done;
 task1_arc_control_t task1_arc_control;
 
@@ -184,8 +184,8 @@ void turnplate_sync_position(uint8_t num) {
 		return;
 	}
 
-	task1_turnplate_current_pulses =
-	        TurnplatePosition[num] % TURNPLATE_PULSES_PER_REV;
+	task1_turnplate_absolute_pulses = (int32_t)
+	        (TurnplatePosition[num] % TURNPLATE_PULSES_PER_REV);
 	task1_turnplate_last_slot = num;
 }
 
@@ -197,9 +197,11 @@ void turnplate_sync_position(uint8_t num) {
  */
 void Move_to_turnplate(uint8_t num) {
 	uint32_t target_pulses;
+	uint32_t current_pulses;
 	uint32_t cw_pulses;
 	uint32_t ccw_pulses;
-	uint32_t move_pulses;
+	uint32_t absolute_pulses;
+	int32_t target_absolute_pulses;
 	uint8_t direction;
 
 	if (num >= TURNPLATE_POSITION_COUNT ||
@@ -208,23 +210,38 @@ void Move_to_turnplate(uint8_t num) {
 	}
 
 	target_pulses = TurnplatePosition[num] % TURNPLATE_PULSES_PER_REV;
+	current_pulses = (uint32_t)((task1_turnplate_absolute_pulses %
+	        (int32_t)TURNPLATE_PULSES_PER_REV +
+	        (int32_t)TURNPLATE_PULSES_PER_REV) %
+	        (int32_t)TURNPLATE_PULSES_PER_REV);
 	/* 两个方向均使用单圈取模，结果始终为正脉冲数。 */
 	cw_pulses = (target_pulses + TURNPLATE_PULSES_PER_REV -
-	        task1_turnplate_current_pulses) % TURNPLATE_PULSES_PER_REV;
+	        current_pulses) % TURNPLATE_PULSES_PER_REV;
 	if (cw_pulses == 0U) {
-		turnplate_sync_position(num);
+		task1_turnplate_last_slot = num;
 		return;
 	}
 	ccw_pulses = TURNPLATE_PULSES_PER_REV - cw_pulses;
 
-	/* 较短路径决定方向，相等时固定选择顺时针。 */
-	direction = (cw_pulses <= ccw_pulses) ? TURNPLATE_CW : TURNPLATE_CCW;
-	move_pulses = (cw_pulses <= ccw_pulses) ? cw_pulses : ccw_pulses;
+	/* 最短弧生成单圈等价的绝对目标，方向位表示绝对位置的正负。 */
+	if (cw_pulses <= ccw_pulses) {
+		target_absolute_pulses = task1_turnplate_absolute_pulses +
+		        (int32_t)cw_pulses;
+	} else {
+		target_absolute_pulses = task1_turnplate_absolute_pulses -
+		        (int32_t)ccw_pulses;
+	}
+	direction = (target_absolute_pulses >= 0) ?
+	        TURNPLATE_CW : TURNPLATE_CCW;
+	absolute_pulses = (target_absolute_pulses >= 0) ?
+	        (uint32_t)target_absolute_pulses :
+	        (uint32_t)(-target_absolute_pulses);
 
 	Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, direction,
 	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
-	        move_pulses, 0U, 0U);
-	turnplate_sync_position(num);
+	        absolute_pulses, 1U, 0U);
+	task1_turnplate_absolute_pulses = target_absolute_pulses;
+	task1_turnplate_last_slot = num;
 }
 
 
@@ -386,9 +403,9 @@ static void task1_qrcode_servo_slowdown(void) {
 	}
 
 	if (task1_qrcode_servo_group1_set &&
-	        !task1_qrcode_servo_group2_set && IsPositionReached(0.28f)) {
+	        !task1_qrcode_servo_group2_set && IsPositionReached(0.30f)) {
 		servo_smooth_move_start(&task1_qrcode_servo_move, &htim14,
-		        TIM_CHANNEL_1, 2000U, 1790U, 900U);
+		        TIM_CHANNEL_1, 2000U, 1790U, 1200U);
 		task1_qrcode_servo_group2_set = 1U;
 	}
 
@@ -447,14 +464,14 @@ static void task1_prepare_material_turnplate(void) {
 	osDelay(650);
 	Move_to_turnplate(3U);
 	
-	task1_arc_set_omega(-1.70);
+	task1_arc_set_omega(-1.60);
 	
 	osDelay(650);
 	Get_Materialcolor(0U);
 //	osDelay(300);
 	Move_to_turnplate(4U);
 	
-	task1_arc_set_omega(-1.75);
+	task1_arc_set_omega(-1.65);
 
 	osDelay(650);
 	Get_Materialcolor(1U);
@@ -541,7 +558,7 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 			uint8_t slot_distance =
 			        (target_slot <= TURNPLATE_SLOT_COUNT / 2U) ?
 			        target_slot : TURNPLATE_SLOT_COUNT - target_slot;
-			HAL_Delay((uint32_t)slot_distance * 500U);
+			HAL_Delay((uint32_t)slot_distance * 600U);
 		}
 	}
 
@@ -563,7 +580,7 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 		if (target_slot != 0U) {
 			uint8_t slot_distance = (uint8_t)(6U - target_slot);
 			/* 按跨越槽位数等待电机运动，为后续取放动作保留机械到位时间。 */
-			HAL_Delay((uint32_t)slot_distance * 500U);
+			HAL_Delay((uint32_t)slot_distance * 600U);
 		}
 	}
 
@@ -577,7 +594,6 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 	/* 伸缩环移动到取放位置，随后执行机构完成一次竖直取放。 */
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[3]);
 	POS_move();
-
 	/* E 点结束后直接转向第二二维码所需槽位，其余步骤回到零号槽位。 */
 	if (task1_state.current_step != 25U) {
 		Move_to_turnplate(0U);
@@ -641,15 +657,15 @@ static void task1_pick_trophies(void) {
 	EnableAttitudeStabilization(0U);
 	task1_arc_control_start(&task1_trophy_arc);
 
-	osDelay(600U);
+	osDelay(700U);
 	Move_to_turnplate(2U);
-	osDelay(800U);
+	osDelay(900U);
 
 	Move_to_turnplate(1U);
-	osDelay(800U);
+	osDelay(1000U);
 	
 	Move_to_turnplate(0U);
-	osDelay(600U);
+	osDelay(200);
 	task1_arc_control_stop();
 	motion_reset();
 	task1_state.current_step = 31U;
@@ -660,12 +676,14 @@ static void task1_pick_trophies(void) {
 
 /** 前往亚军台。 */
 static void task1_go_second_podium(void) {
+	PositionControl_SetMaxSpeed(1.0f);
 	task1_go_podium_point(8, 6, 5);
 }
 
 
 /** 前往冠军台。 */
 static void task1_go_champion_podium(void) {
+	PositionControl_SetMaxSpeed(0.6f);
 	task1_go_podium_point(9, 4, 3);
 }
 

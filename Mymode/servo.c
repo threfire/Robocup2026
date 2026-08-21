@@ -81,7 +81,7 @@ void Servo_Action_Group(uint8_t num)
     }
     else if (num == 2U)/* 放地上 */
     {
-        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1220);
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1200);
         __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1790);
     }
     else if (num == 3U) /* 举起来（冠军台） */
@@ -97,7 +97,7 @@ void Servo_Action_Group(uint8_t num)
         for (uint16_t i = 1U; i <= 100U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1420) / 100);
+                    pwm13_last - i * (pwm13_last - 1460) / 100);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
                     pwm14_last - i * (pwm14_last - 1520) / 100);
             HAL_Delay(2U);
@@ -113,12 +113,12 @@ void Servo_Action_Group(uint8_t num)
         uint16_t pwm13_last = 1460;
         uint16_t pwm14_last = 1760;
 
-        for (uint16_t i = 1U; i <= 100U; i++)
+        for (uint16_t i = 1U; i <= 200U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1300U) / 100);
+                    pwm13_last - i * (pwm13_last - 1380U) / 200);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
-                    pwm14_last - i * (pwm14_last - 1620U) / 100);
+                    pwm14_last - i * (pwm14_last - 1600U) / 200);
             HAL_Delay(2U);
         }
     }
@@ -130,7 +130,7 @@ void Servo_Action_Group(uint8_t num)
         for (uint16_t i = 1U; i <= 150U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1220) / 150);
+                    pwm13_last - i * (pwm13_last - 1200) / 150);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
                     pwm14_last - i * (pwm14_last - 1790) / 150);
             HAL_Delay(3U);
