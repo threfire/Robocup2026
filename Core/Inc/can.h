@@ -58,12 +58,20 @@ extern CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN Private defines */
 extern __IO CAN_t can;
+/** CAN 发送队列满时累计丢弃的完整命令数量。 */
+extern volatile uint32_t can_tx_overflow_count;
 /* USER CODE END Private defines */
 
 void MX_CAN1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void USER_CAN1_Filter_Init(void);
+/**
+ * @brief 将命令写入 CAN 非阻塞发送队列。
+ *
+ * @param cmd 命令数据，前两个字节依次为设备地址和功能码。
+ * @param len 命令总字节数。
+ */
 void can_SendCmd(__IO uint8_t *cmd, uint8_t len);
 
 /**

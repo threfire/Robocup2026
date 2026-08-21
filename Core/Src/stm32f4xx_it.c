@@ -514,4 +514,9 @@ void USART6_IRQHandler(void)
 
 /* USER CODE BEGIN 1 */
 
+/** CAN1 发送邮箱中断入口。 */
+void CAN1_TX_IRQHandler(void) {
+	HAL_CAN_IRQHandler(&hcan1);
+}
+
 /* USER CODE END 1 */

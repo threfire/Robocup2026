@@ -264,7 +264,8 @@ int main(void)
 	if (HAL_CAN_Start(&hcan1) != HAL_OK) {
 		Error_Handler();
 	}
-	if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) !=
+	if (HAL_CAN_ActivateNotification(&hcan1,
+	        CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY) !=
 	        HAL_OK) {
 		Error_Handler();
 	}
@@ -280,7 +281,7 @@ int main(void)
 	Mecanum_Init(config);
 	/* 复位后立即下发四轮 0 RPM，清除电机保留的上一条速度指令。 */
 	Mecanum_SendVelocity();
-//					Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_DIRECTION,
+//					Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_CW,
 //	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
 //	        0, 1U, 0U);
 //	Emm_V5_En_Control(TURNPLATE_MOTOR_ADDR, 1U, 0U);
@@ -297,7 +298,7 @@ int main(void)
 	HAL_Delay(2000);
 					Emm_V5_Origin_Interrupt(TURNPLATE_MOTOR_ADDR);
 										HAL_Delay(100);
-					Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_DIRECTION,
+					Emm_V5_Pos_Control(TURNPLATE_MOTOR_ADDR, TURNPLATE_CW,
 	        TURNPLATE_SPEED_RPM, TURNPLATE_ACCEL,
 	        control_ctx.material_position_pulses[1] , 1U, 0U);
 	turnplate_sync_position(1U);
@@ -446,6 +447,7 @@ void Robot_RealtimeControl(float dt) {
 			UpdatePositionControl(dt);
 		}
 		task1_arc_control_update(dt);
+		task1_podium_prepare_update();
 #if (AI_TUNE_MODE_ENABLE != 0U)
 		ai_tune_update_trajectory();
 		{

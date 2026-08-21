@@ -20,6 +20,8 @@ void start_task1(void);
 void run_task1(void);
 /** 在 1 ms 实时任务中更新圆弧径向 PID。 */
 void task1_arc_control_update(float dt);
+/** 在 1 ms 实时任务中检查亚军台提前动作。 */
+void task1_podium_prepare_update(void);
 /** 动态设置圆弧闭环基础角速度，单位 rad/s。 */
 void task1_arc_set_omega(float base_omega_rad_s);
 /** 同步转盘当前槽位，不下发电机命令。 */

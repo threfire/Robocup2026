@@ -22,6 +22,44 @@
 
 /* USER CODE BEGIN 0 */
 __IO CAN_t can = {0};
+
+/** CAN 发送环形队列槽位数量。 */
+#define CAN_TX_QUEUE_SIZE 128U
+
+/** CAN 发送队列帧。 */
+typedef struct {
+	CAN_TxHeaderTypeDef header;
+	uint8_t data[8];
+} CAN_TxFrame_t;
+
+/** CAN 待发送帧队列。 */
+static CAN_TxFrame_t can_tx_queue[CAN_TX_QUEUE_SIZE];
+/** CAN 发送队列写入下标。 */
+static volatile uint8_t can_tx_head;
+/** CAN 发送队列读取下标。 */
+static volatile uint8_t can_tx_tail;
+/** CAN 发送队列满时累计丢弃的完整命令数量。 */
+volatile uint32_t can_tx_overflow_count;
+
+/** 尝试将队列中的待发帧填入空闲邮箱。 */
+static void can_tx_kick(void) {
+	uint32_t mailbox;
+
+	while ((can_tx_tail != can_tx_head) &&
+	        (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0U)) {
+		CAN_TxFrame_t *frame = &can_tx_queue[can_tx_tail];
+
+		if (HAL_CAN_AddTxMessage(&hcan1, &frame->header,
+		            frame->data, &mailbox) != HAL_OK) {
+			return;
+		}
+
+		can_tx_tail++;
+		if (can_tx_tail >= CAN_TX_QUEUE_SIZE) {
+			can_tx_tail = 0U;
+		}
+	}
+}
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan1;
@@ -87,7 +125,8 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
-
+	HAL_NVIC_SetPriority(CAN1_TX_IRQn, 5, 0);
+	HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
   /* USER CODE END CAN1_MspInit 1 */
   }
 }
@@ -112,7 +151,7 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
     /* CAN1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
-
+	HAL_NVIC_DisableIRQ(CAN1_TX_IRQn);
   /* USER CODE END CAN1_MspDeInit 1 */
   }
 }
@@ -224,54 +263,86 @@ bool can_GetRxFrame(CAN_RxHeaderTypeDef *rx_header, uint8_t *frame_data) {
 }
 
 /**
- * @brief   CAN发送多个字节
- * @param   无
- * @retval  无
+ * @brief 将命令按现有扩展帧协议写入非阻塞发送队列。
+ *
+ * @param cmd 命令数据，前两个字节依次为设备地址和功能码。
+ * @param len 命令总字节数。
  */
 void can_SendCmd(__IO uint8_t *cmd, uint8_t len) {
-	static uint32_t TxMailbox;
-	__IO uint8_t i = 0, j = 0, k = 0, l = 0, packNum = 0;
+	uint8_t data_index = 0U;
+	uint8_t data_length;
+	uint8_t frame_count;
+	uint8_t free_count;
+	uint8_t pack_num = 0U;
+	uint8_t primask;
 
-	// 除去ID地址和功能码后的数据长度
-	j = len - 2;
+	if ((cmd == NULL) || (len <= 2U)) {
+		return;
+	}
 
-	// 发送数据
-	while (i < j) {
-		// 数据个数
-		k = j - i;
+	data_length = (uint8_t)(len - 2U);
+	frame_count = (uint8_t)((data_length + 6U) / 7U);
+	primask = (uint8_t)__get_PRIMASK();
+	__disable_irq();
 
-		// 填充缓存
-		can.CAN_TxMsg.StdId = 0x00;
-		can.CAN_TxMsg.ExtId =
-		        ((uint32_t)cmd[0] << 8) | (uint32_t)packNum;
-		can.txData[0] = cmd[1];
-		can.CAN_TxMsg.IDE = CAN_ID_EXT;
-		can.CAN_TxMsg.RTR = CAN_RTR_DATA;
-
-		// 小于8字节命令
-		if (k < 8) {
-			for (l = 0; l < k; l++, i++) {
-				can.txData[l + 1] = cmd[i + 2];
-			}
-			can.CAN_TxMsg.DLC = k + 1;
+	free_count = (can_tx_tail > can_tx_head) ?
+	        (uint8_t)(can_tx_tail - can_tx_head - 1U) :
+	        (uint8_t)(CAN_TX_QUEUE_SIZE - can_tx_head + can_tx_tail - 1U);
+	if (free_count < frame_count) {
+		can_tx_overflow_count++;
+		if (primask == 0U) {
+			__enable_irq();
 		}
-		// 大于8字节命令，分包发送，每包数据最多发送8个字节
-		else {
-			for (l = 0; l < 7; l++, i++) {
-				can.txData[l + 1] = cmd[i + 2];
-			}
-			can.CAN_TxMsg.DLC = 8;
+		return;
+	}
+
+	while (data_index < data_length) {
+		CAN_TxFrame_t *frame = &can_tx_queue[can_tx_head];
+		uint8_t payload_length = (uint8_t)(data_length - data_index);
+		uint8_t i;
+
+		if (payload_length > 7U) {
+			payload_length = 7U;
 		}
+		frame->header.StdId = 0U;
+		frame->header.ExtId = ((uint32_t)cmd[0] << 8U) | pack_num;
+		frame->header.IDE = CAN_ID_EXT;
+		frame->header.RTR = CAN_RTR_DATA;
+		frame->header.DLC = (uint32_t)payload_length + 1U;
+		frame->header.TransmitGlobalTime = DISABLE;
+		frame->data[0] = cmd[1];
+		for (i = 0U; i < payload_length; i++) {
+			frame->data[i + 1U] = cmd[data_index + i + 2U];
+		}
+		data_index = (uint8_t)(data_index + payload_length);
+		pack_num++;
+		can_tx_head++;
+		if (can_tx_head >= CAN_TX_QUEUE_SIZE) {
+			can_tx_head = 0U;
+		}
+	}
 
-		// 发送数据
-		while (HAL_CAN_AddTxMessage((&hcan1),
-		               (CAN_TxHeaderTypeDef *)(&can.CAN_TxMsg),
-		               (uint8_t *)(&can.txData),
-		               (&TxMailbox)) != HAL_OK)
-			;
+	can_tx_kick();
+	if (primask == 0U) {
+		__enable_irq();
+	}
+}
 
-		// 记录发送的第几包的数据
-		++packNum;
+void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan) {
+	if (hcan->Instance == CAN1) {
+		can_tx_kick();
+	}
+}
+
+void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan) {
+	if (hcan->Instance == CAN1) {
+		can_tx_kick();
+	}
+}
+
+void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan) {
+	if (hcan->Instance == CAN1) {
+		can_tx_kick();
 	}
 }
 

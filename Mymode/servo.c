@@ -87,52 +87,52 @@ void Servo_Action_Group(uint8_t num)
     else if (num == 3U) /* 举起来（冠军台） */
     {
         __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1460);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1880);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1700);
     }
     else if (num == 4U) /* 放平（冠军台） */
     {
         uint16_t pwm13_last = 1460;
-        uint16_t pwm14_last = 1880;
+        uint16_t pwm14_last = 1700;
 
-        for (uint16_t i = 1U; i <= 200U; i++)
+        for (uint16_t i = 1U; i <= 100U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1380) / 200);
+                    pwm13_last - i * (pwm13_last - 1420) / 100);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
-                    pwm14_last - i * (pwm14_last - 1520) / 200);
+                    pwm14_last - i * (pwm14_last - 1520) / 100);
             HAL_Delay(2U);
         }
     }
     else if (num == 5U) /* 举起来（亚军台） */
     {
-        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1390);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1860);
+        __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1460);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1760);
     }
     else if (num == 6U) /* 放平（亚军台） */
     {
-        uint16_t pwm13_last = 1390;
-        uint16_t pwm14_last = 1860;
+        uint16_t pwm13_last = 1460;
+        uint16_t pwm14_last = 1760;
 
-        for (uint16_t i = 1U; i <= 200U; i++)
+        for (uint16_t i = 1U; i <= 100U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1260U) / 200);
+                    pwm13_last - i * (pwm13_last - 1300U) / 100);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
-                    pwm14_last - i * (pwm14_last - 1700U) / 200);
+                    pwm14_last - i * (pwm14_last - 1620U) / 100);
             HAL_Delay(2U);
         }
     }
     else if (num == 7U) /* 放平（季军台） */
     {
-        uint16_t pwm13_last = 1460;
-        uint16_t pwm14_last = 1680;
+        uint16_t pwm13_last = 1390;
+        uint16_t pwm14_last = 1700;
 
-        for (uint16_t i = 1U; i <= 200U; i++)
+        for (uint16_t i = 1U; i <= 150U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1030) / 200);
+                    pwm13_last - i * (pwm13_last - 1220) / 150);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
-                    pwm14_last - i * (pwm14_last - 1820) / 200);
+                    pwm14_last - i * (pwm14_last - 1790) / 150);
             HAL_Delay(3U);
         }
     }
