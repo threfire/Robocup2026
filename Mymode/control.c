@@ -77,11 +77,10 @@ void POS_move(void) {
 	Is_vel_mode = 0;
 	Pos_moveconctrl(0U, TASK1_EMM_BACKWARD_SPEED_RPM,
 	        TASK1_EMM_BACKWARD_PULSES);
-	HAL_Delay(TASK1_EMM_BACKWARD_WAIT_MS / 2);
-	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[4]);
-	HAL_Delay(TASK1_EMM_BACKWARD_WAIT_MS / 2);
+	HAL_Delay(TASK1_EMM_BACKWARD_WAIT_MS);
 	motion_reset();
 	Is_vel_mode = 1;
+	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[4]);
 }
 static PID_Controller line_follow_pid;
 void Line_Follow_Enable(uint8_t enable) {

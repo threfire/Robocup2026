@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 /** 视觉 X/Y 轴 PID 一次比例系数。 */
-#define VISION_PID_KP 0.15f
+#define VISION_PID_KP 0.125f
 /** 视觉 X/Y 轴 PID 二次比例系数。 */
 #define VISION_PID_KP2 0.0f
 /** 视觉 X/Y 轴 PID 积分系数。 */

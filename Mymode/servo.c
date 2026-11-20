@@ -72,12 +72,12 @@ void Servo_Action_Group(uint8_t num)
 	
 		if (num == 0U)
 		{
-      __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2100);
+      __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2200);
 		}
 		else if (num == 1U)
     {
         __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1220);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2000);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 2200);
     }
     else if (num == 2U)/* 放地上 */
     {
@@ -97,28 +97,28 @@ void Servo_Action_Group(uint8_t num)
         for (uint16_t i = 1U; i <= 100U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1460) / 100);
+                    pwm13_last - i * (pwm13_last - 1470) / 100);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
-                    pwm14_last - i * (pwm14_last - 1520) / 100);
+                    pwm14_last - i * (pwm14_last - 1540) / 100);
             HAL_Delay(2U);
         }
     }
     else if (num == 5U) /* 举起来（亚军台） */
     {
         __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1, 1460);
-        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1760);
+        __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, 1720);
     }
     else if (num == 6U) /* 放平（亚军台） */
     {
         uint16_t pwm13_last = 1460;
-        uint16_t pwm14_last = 1760;
+        uint16_t pwm14_last = 1720;
 
         for (uint16_t i = 1U; i <= 200U; i++)
         {
             __HAL_TIM_SetCompare(&htim13, TIM_CHANNEL_1,
-                    pwm13_last - i * (pwm13_last - 1380U) / 200);
+                    pwm13_last - i * (pwm13_last - 1390U) / 200);
             __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1,
-                    pwm14_last - i * (pwm14_last - 1600U) / 200);
+                    pwm14_last - i * (pwm14_last - 1590U) / 200);
             HAL_Delay(2U);
         }
     }

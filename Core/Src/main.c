@@ -325,7 +325,7 @@ int main(void)
 	LCD_DisplayText(48, 0, "Init Success!");
 					HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);		//0	PF7
 					HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);		//4	PE11
-					__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 200);
+					__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 150);
 	HAL_Delay(100);
 	/* 已完成 2 s 里程计稳定等待，补足 8 s 后发送最后一条初始化指令。 */
 	HAL_Delay(ODOMETER_ZERO_FINAL_WAIT_MS);
@@ -527,7 +527,7 @@ void Robot_RealtimeControl(float dt) {
 		/* 串口 DMA 周期性重启，维持 MaixCam 接收链路。 */
 		DMA_resend();
 		if (IsLight)
-			__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 200);
+			__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 150);
 		else
 			__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 0);
 		Robot_ControlTiming_Update(control_start_cycle);

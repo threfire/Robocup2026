@@ -31,23 +31,23 @@
 #define POSITION_SPEED_MID_MPS 2.0f     /* 中速位置控制速度，单位 m/s */
 #define POSITION_SPEED_LOW_MPS 1.5f     /* 低速位置控制速度，单位 m/s */
 #define POSITION_SPEED_LOWEST_MPS 0.65f /* 最低位置控制速度，单位 m/s */
-#define TASK1_EMM_BACKWARD_SPEED_RPM 300U /* 任务一 EMM 后退转速，单位 RPM */
+#define TASK1_EMM_BACKWARD_SPEED_RPM 100U /* 任务一 EMM 后退转速，单位 RPM */
 #define TASK1_EMM_BACKWARD_PULSES 1442U  /* 任务一 EMM 后退脉冲数 */
 #define TASK1_EMM_BACKWARD_WAIT_MS 800U  /* 任务一 EMM 后退等待时间，单位 ms */
 #define TASK1_START_CRUISE_SPEED_MPS 0.4f /* 出发巡航速度，单位 m/s */
-#define TASK1_QRCODE_TIMEOUT_MS 1500U /* 二维码到点等待超时，单位 ms */
+#define TASK1_QRCODE_TIMEOUT_MS 2000U /* 二维码到点等待超时，单位 ms */
 #define TASK1_QRCODE_TRANSITION_TOLERANCE_M 0.1f /* 二维码前过渡点到点容差，单位 m */
 
 #define TASK1_HOME_CRUISE_SPEED_MPS 1.1f /* 回家巡航速度，单位 m/s */
 #define TASK1_HOME_APPROACH_SPEED_MPS 1.0f /* 回家接近速度，单位 m/s */
 #define TASK1_HOME_APPROACH_DISTANCE_M 0.80f /* 回家降速距离，单位 m */
 #define TASK2_TEST_SPEED_MPS 0.5f        /* 任务二测试速度，单位 m/s */
-#define TASK1_five_CRUISE_SPEED_MPS 0.8	/* 第五个点速度，单位 m/s */
+#define TASK1_five_CRUISE_SPEED_MPS 0.6	/* 第五个点速度，单位 m/s */
 
 
 /* 任务一圆弧径向循迹参数 */
 #define TASK1_MATERIAL_ARC_SPEED_MPS (-0.75f) /* 五圆柱圆弧线速度，单位 m/s */
-#define TASK1_TROPHY_ARC_SPEED_MPS (-0.5f) /* 奖杯圆弧线速度，单位 m/s */
+#define TASK1_TROPHY_ARC_SPEED_MPS (-0.45f) /* 奖杯圆弧线速度，单位 m/s */
 #define TASK1_ARC_PID_KP 22.50f /* 圆弧径向 PID 比例系数，输入单位 m */
 #define TASK1_ARC_PID_KI 0.1f /* 圆弧径向 PID 积分系数 */
 #define TASK1_ARC_PID_KD 0.5f /* 圆弧径向 PID 微分系数 */
@@ -59,7 +59,7 @@
 #define TASK1_MATERIAL_ARC_CENTER_Y_MM 1074.43f /* 五圆柱目标圆心 Y 坐标，单位 mm */
 #define TASK1_MATERIAL_ARC_RADIUS_MM 948.49f /* 五圆柱目标圆弧半径，单位 mm */
 #define TASK1_MATERIAL_ARC_DIRECTION (-1) /* 五圆柱圆弧旋转方向 */
-#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.775f) /* 五圆柱圆弧基础角速度，单位 rad/s */
+#define TASK1_MATERIAL_ARC_BASE_OMEGA_RAD_S (-2.72f) /* 五圆柱圆弧基础角速度，单位 rad/s */
 #define TASK1_TROPHY_ARC_CENTER_X_MM 615.51f /* 奖杯目标圆心 X 坐标，单位 mm */
 #define TASK1_TROPHY_ARC_CENTER_Y_MM 1075.00f /* 奖杯目标圆心 Y 坐标，单位 mm */
 #define TASK1_TROPHY_ARC_RADIUS_MM 968.49f /* 奖杯目标圆弧半径，单位 mm */
@@ -80,7 +80,7 @@
 #define POSITION_FUZZY_RATE_FILTER_ALPHA 0.10f /* 位置误差变化率滤波系数 */
 #define POSITION_PLANNER_MIN_SPEED_MPS 0.08f /* 速度规划器最小速度，单位 m/s */
 
-#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.1f /* 速度规划器巡航速度，单位 m/s */
+#define POSITION_PLANNER_CRUISE_SPEED_MPS 1.15f /* 速度规划器巡航速度，单位 m/s */
 
 #define POSITION_TRAJECTORY_CRUISE_SPEED_MPS POSITION_PLANNER_CRUISE_SPEED_MPS /* 任务代码巡航速度别名 */
 #define POSITION_PLANNER_MAX_ACCEL_MPS2 10.5f /* 速度规划器最大加速度，单位 m/s² */
@@ -144,8 +144,8 @@
 /* 速度斜坡由位置规划器生成，EMM 采用 0 以避免内部 RPM 斜坡叠加延迟。 */
 #define CHASSIS_OPEN_LOOP_VELOCITY_ACCEL 0U  /* 开环 EMM 速度模式内部加速度 */
 #define CHASSIS_CLOSED_LOOP_VELOCITY_ACCEL 0U /* 闭环 EMM 速度模式内部加速度 */
-#define CHASSIS_POS_FORWARD_ACCEL 110U  /* EMM 前进位置模式加速度 */
-#define CHASSIS_POS_BACKWARD_ACCEL 110U  /* EMM 后退位置模式加速度 */
+#define CHASSIS_POS_FORWARD_ACCEL 50U  /* EMM 前进位置模式加速度 */
+#define CHASSIS_POS_BACKWARD_ACCEL 50U  /* EMM 后退位置模式加速度 */
 #define POSITION_MAX_LINEAR_SPEED_MPS 7.0f /* 位置控制最大线速度，单位 m/s */
 #define ATTITUDE_MAX_OMEGA 20.0f        /* 姿态控制最大角速度，单位 rad/s */
 #define CAM_DEAD_ZONE 0.0f              /* 视觉控制死区 */
@@ -160,7 +160,7 @@
 #define TURNPLATE_POSITION_COUNT 8U
 #define TURNPLATE_PULSES_PER_REV 3200U /* 转盘一圈对应的驱动器脉冲数 */
 /* 转盘单圈零点保存与上电回零配置。 */
-#define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 0 /* 首次标定后改为 0U */
+#define TURNPLATE_ORIGIN_SAVE_ON_STARTUP 1 /* 首次标定后改为 0U */
 #define TURNPLATE_ORIGIN_MODE 0U
 
 /* 兼容旧任务代码的速度宏 */

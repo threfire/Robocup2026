@@ -63,23 +63,23 @@ static const task1_arc_config_t task1_trophy_arc = {
 /** 任务一路径点，单位 mm。 */
 static const Point2D_t task1_targets[] = {
         {-650.0f, 255.25f, 0.0f},
-        {-449.36f, 985.96f, -54.0f},
-        {-243.68f, 704.72f, -54.0f},
-        {336.69f, 949.89f, -68.0f},
-        {450.51f, 668.22f, -68.0f},
-        {953.85f, 737.46f, -68.0f},
-        {625.0f, 350.25f, 0.0f},
+        {-449.36f - 10.0f, 985.96f+ 5.0f, -54.0f},
+        {-243.68f - 10.0f, 704.72f+ 5.0f, -54.0f},
+        {336.69f - 10.0f, 949.89f+ 5.0f, -68.0f},
+        {450.51f - 10.0f, 668.22f+ 5.0f, -68.0f},
+        {953.85f - 5.0f, 737.46f+ 5.0f, -68.0f},
+        {630.0f, 300.25f, 0.0f},
         {1021.66f + 75.0f, 348.24f, -144.0f},
         {270.0f-25.0f, 1816.29f- 40.0f, -90.0f},
-        {0.0f-25.0f, 1816.29f - 30.0f, -90.0f},
-        {-270.0f-25.0f, 1816.29f - 15.0f, -90.0f},
+        {0.0f-25.0f, 1816.29f - 38.0f, -90.0f},
+        {-270.0f-25.0f, 1816.29f - 10.0f, -90.0f},
         {0.0f, 0.0f, -90.0f},
         {0.0f, 200.25f, 0.0f},
 
 };
 
 /** 伸缩环 PWM 位置表。 */
-const int Telescopic_ring[] = {1500, 1890, 1340, 1800, 2100};
+const int Telescopic_ring[] = {1500, 1890, 1340, 1800, 2000};
 static uint8_t task1_vision_timeout;
 static servo_smooth_move_t task1_qrcode_servo_move;
 static uint8_t task1_qrcode_servo_group1_set;
@@ -266,12 +266,15 @@ static uint8_t task1_select_material_turnplate(uint8_t material_index) {
 	}
 
 	if (tasknum == 2U && qanum > 0U && qanum <= 6U) {
-		/* 二维码只决定奖台顺序，奖杯编号直接对应 1、2、3 号槽位。 */
 		if (material_index == 0U || material_index > 3U) {
 			return 0U;
 		}
-		Move_to_turnplate(material_index);
-		return material_index;
+		for (i = 0U; i < 3U; i++) {
+			if (task2_scheme[qanum - 1U][i] == material_index) {
+				Move_to_turnplate(i + 1U);
+				return (uint8_t)(i + 1U);
+			}
+		}
 	}
 
 	return 0U;
@@ -403,9 +406,9 @@ static void task1_qrcode_servo_slowdown(void) {
 	}
 
 	if (task1_qrcode_servo_group1_set &&
-	        !task1_qrcode_servo_group2_set && IsPositionReached(0.30f)) {
+	        !task1_qrcode_servo_group2_set && IsPositionReached(0.35f)) {
 		servo_smooth_move_start(&task1_qrcode_servo_move, &htim14,
-		        TIM_CHANNEL_1, 2000U, 1790U, 1200U);
+		        TIM_CHANNEL_1, 2200U, 1790U, 1200U);
 		task1_qrcode_servo_group2_set = 1U;
 	}
 
@@ -514,7 +517,11 @@ static void task1_go_material_point(
 	PositionControl_SetMaxSpeed(TASK1_five_CRUISE_SPEED_MPS);
 	if (task1_move_target(target_index, 0.0f,
 	        task1_targets[target_index].yaw_deg)) {
+		
+		Move_to_turnplate(0U);
+		osDelay (500);
 		__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[2]);
+		osDelay (200);
 		task1_next_step();
 	}
 }
@@ -522,7 +529,14 @@ static void task1_go_material_point(
 
 /** 等待视觉结果或视觉超时。 */
 static void task1_wait_vision(uint8_t point_index) {
+	/* 奖台视觉识别从 8 号点开始，等待坐标期间保持补光。 */
+	if (point_index >= 8U) {
+		IsLight = 1U;
+	}
 	task1_vision_timeout = (uint8_t)!vision_wait_for_uart(point_index);
+	if (task1_vision_timeout && point_index >= 8U) {
+		IsLight = 0U;
+	}
 	task1_next_step();
 }
 
@@ -594,10 +608,10 @@ static void task1_relative_action(uint8_t servo_after, uint32_t delay_after_ms) 
 	/* 伸缩环移动到取放位置，随后执行机构完成一次竖直取放。 */
 	__HAL_TIM_SetCompare(&htim11, TIM_CHANNEL_1, Telescopic_ring[3]);
 	POS_move();
-	/* E 点结束后直接转向第二二维码所需槽位，其余步骤回到零号槽位。 */
-	if (task1_state.current_step != 25U) {
-		Move_to_turnplate(0U);
-	}
+//	/* E 点结束后直接转向第二二维码所需槽位，其余步骤回到零号槽位。 */
+//	if (task1_state.current_step != 25U) {
+//		Move_to_turnplate(0U);
+//	}
 
 	/* 非零动作组用于奖台放置后的舵机姿态切换。 */
 	if (servo_after != 0U) {
@@ -662,7 +676,7 @@ static void task1_pick_trophies(void) {
 	osDelay(900U);
 
 	Move_to_turnplate(1U);
-	osDelay(1000U);
+	osDelay(1200U);
 	
 	Move_to_turnplate(0U);
 	osDelay(200);
@@ -676,7 +690,7 @@ static void task1_pick_trophies(void) {
 
 /** 前往亚军台。 */
 static void task1_go_second_podium(void) {
-	PositionControl_SetMaxSpeed(1.0f);
+	PositionControl_SetMaxSpeed(0.8f);
 	task1_go_podium_point(8, 6, 5);
 }
 

@@ -246,11 +246,11 @@ void vision_process_usart1_packet(void)
         int16_t x_coord = (int16_t)(camera_packet[3] + camera_packet[4]);
         int16_t y_coord = (int16_t)(camera_packet[5] + camera_packet[6]);
 
-        vision_error.x = 180 - x_coord;
+        vision_error.x = 185 - x_coord;
         if (task1_state.current_step > 30U) {
-            vision_error.y = 130 - y_coord;
+            vision_error.y = 137 - y_coord;
         } else {
-            vision_error.y = 125 - y_coord;
+            vision_error.y = 123 - y_coord;
         }
         Is_coordgot = 1;
     }
